@@ -10,11 +10,11 @@ const ColorControl = memo(function ColorControl({
   onChange,
   className = "",
 }) {
-  const textColor = useMemo(() => contrastTextColor(color), [color]);
-  const swatchColor = useMemo(() => hsl(color), [color]);
+  const textColor = contrastTextColor(color);
+  const swatchColor = hsl(color);
 
   return (
-    <section className={`space-y-3 ${className}`.trim()}>
+    <section className={`space-y-3 ${className}`}>
       <header>
         <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-300">
           {label}
@@ -44,13 +44,10 @@ const TextColorControl = memo(function TextColorControl({
   autoHeaderColor,
   autoBodyColor,
 }) {
-  const autoHeader = useMemo(() => autoHeaderColor.toUpperCase(), [autoHeaderColor]);
-  const autoBody = useMemo(() => autoBodyColor.toUpperCase(), [autoBodyColor]);
-  const manualSwatch = useMemo(() => hsl(manualColor), [manualColor]);
-  const manualContrast = useMemo(
-    () => contrastTextColor(manualColor).toUpperCase(),
-    [manualColor]
-  );
+  const autoHeader = autoHeaderColor.toUpperCase();
+  const autoBody = autoBodyColor.toUpperCase();
+  const manualSwatch = hsl(manualColor);
+  const manualContrast = contrastTextColor(manualColor).toUpperCase();
 
   return (
     <section className="space-y-3">
@@ -96,6 +93,20 @@ const TextColorControl = memo(function TextColorControl({
 });
 TextColorControl.displayName = "TextColorControl";
 
+function LabeledToggle({ label, checked, onChange }) {
+  return (
+    <label className="flex w-full items-center justify-between rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm">
+      <span className="font-medium text-slate-300">{label}</span>
+      <input
+        type="checkbox"
+        className="h-4 w-4"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+      />
+    </label>
+  );
+}
+
 export default function SettingsPage({
   matchInfo,
   matchIdInput,
@@ -122,55 +133,28 @@ export default function SettingsPage({
   useFullAssociationName,
   setUseFullAssociationName,
 }) {
-  const { autoHeaderColor, autoBodyColor } = useMemo(
-    () => ({
-      autoHeaderColor: contrastTextColor(primaryColor),
-      autoBodyColor: contrastTextColor(secondaryColor),
-    }),
-    [primaryColor, secondaryColor]
-  );
+  // Cheap calculations inline; only memoize expensive work
+  const autoHeaderColor = contrastTextColor(primaryColor);
+  const autoBodyColor = contrastTextColor(secondaryColor);
+  const resolvedTextColor = manualTextColorEnabled ? manualTextColor : null;
 
-  const resolvedTextColor = useMemo(
-    () => (manualTextColorEnabled ? manualTextColor : null),
-    [manualTextColorEnabled, manualTextColor]
-  );
-
+  // Keep this memo if deriveMatchState does meaningful work
   const matchState = useMemo(() => deriveMatchState(matchInfo), [matchInfo]);
-
   const { games, activeGameIndex, activeGameNumber, activeGameStatusLabel } =
     matchState;
-  return (
-    <div className="min-h-[calc(100vh-64px)] bg-slate-950 py-10 text-slate-100">
-      <div className="mx-auto flex max-w-6xl flex-col gap-8 px-6 lg:flex-row">
-        <div className="flex-1">
-          <h1 className="text-3xl font-semibold text-lime-400">
-            Display Preview
-          </h1>
-          <p className="mt-2 text-sm text-slate-400">
-            Adjust colors and see the scoreboard update instantly.
-          </p>
-          <div
-            className="mt-8 rounded-3xl border border-slate-800 p-12 shadow-lg"
-            style={{ backgroundColor: hsl(tickerBackground) }}
-          >
-            <Scoreboard
-              matchInfo={matchInfo}
-              primaryColor={primaryColor}
-              secondaryColor={secondaryColor}
-              showBorder={showBorder}
-              manualTextColor={resolvedTextColor}
-              useFullAssociationName={useFullAssociationName}
-            />
-          </div>
-        </div>
 
-        <aside className="w-full max-w-[456px] rounded-3xl border border-slate-800 bg-slate-900/70 p-6 shadow-lg">
+  const tickerBg = hsl(tickerBackground);
+
+  return (
+    <div className="min-h-[calc(100vh-64px)] bg-slate-950 py-10 mb-200 text-slate-100">
+      <div className="mx-auto flex max-w-[1600px] flex-col gap-8 px-6 lg:flex-row">
+        <aside className="rounded-3xl border border-slate-800 bg-slate-900/70 p-6 shadow-lg">
           <h2 className="text-xl font-semibold text-white">Theme Controls</h2>
           <p className="mb-6 mt-1 text-xs text-slate-500">
             Colors apply to both preview and ticker output.
           </p>
 
-          <div className="grid gap-6 sm:grid-cols-2 mb-6">
+          <div className="mb-6 grid gap-6 sm:grid-cols-2">
             <ColorControl
               label="Header & Footer"
               color={primaryColor}
@@ -198,32 +182,19 @@ export default function SettingsPage({
               onChange={setTickerBackground}
             />
           </div>
-          <div className="space-y-3">
-            <label className="flex w-full items-center justify-between rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm">
-              <span className="font-medium text-slate-300">
-                Show inner border
-              </span>
-              <input
-                type="checkbox"
-                className="h-4 w-4"
-                checked={showBorder}
-                onChange={(event) => setShowBorder(event.target.checked)}
-              />
-            </label>
 
-            <label className="flex w-full items-center justify-between rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm">
-              <span className="font-medium text-slate-300">
-                Use full association name
-              </span>
-              <input
-                type="checkbox"
-                className="h-4 w-4"
-                checked={useFullAssociationName}
-                onChange={(event) =>
-                  setUseFullAssociationName(event.target.checked)
-                }
-              />
-            </label>
+          <div className="space-y-3">
+            <LabeledToggle
+              label="Show inner border"
+              checked={showBorder}
+              onChange={setShowBorder}
+            />
+
+            <LabeledToggle
+              label="Use full association name"
+              checked={useFullAssociationName}
+              onChange={setUseFullAssociationName}
+            />
 
             <label className="flex w-full flex-col gap-2 rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm">
               <span className="font-medium text-slate-300">Match ID</span>
@@ -240,6 +211,7 @@ export default function SettingsPage({
                   className="rounded-full border border-slate-700 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-200 transition hover:border-lime-400 hover:text-lime-300 disabled:opacity-40"
                   onClick={onApplyMatchId}
                   disabled={matchLoading}
+                  aria-label="Load match by ID"
                 >
                   Load
                 </button>
@@ -288,7 +260,7 @@ export default function SettingsPage({
                 >
                   Prev
                 </button>
-                <div className="w-16 text-center text-sm font-semibold text-slate-200">
+                <div className="w-16 text-center text-sm font-semibold text-slate-2 00">
                   Game {activeGameNumber}
                 </div>
                 <button
@@ -303,6 +275,27 @@ export default function SettingsPage({
             </div>
           </div>
         </aside>
+        <div className="relative w-200">
+          <h1 className="text-3xl font-semibold text-lime-400">
+            Display Preview
+          </h1>
+          <p className="mt-2 text-sm text-slate-400">
+            Adjust colors and see the scoreboard update instantly.
+          </p>
+          <div
+            className="mt-8 rounded-3xl border border-slate-800 p-12 shadow-lg fixed"
+            style={{ backgroundColor: tickerBg }}
+          >
+            <Scoreboard
+              matchInfo={matchInfo}
+              primaryColor={primaryColor}
+              secondaryColor={secondaryColor}
+              showBorder={showBorder}
+              manualTextColor={resolvedTextColor}
+              useFullAssociationName={useFullAssociationName}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );
