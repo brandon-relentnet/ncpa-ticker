@@ -1,8 +1,26 @@
-export default function TickerPage() {
+import Scoreboard from "../components/Scoreboard";
+import { hsl } from "../utils/colors";
+
+export default function TickerPage({
+  matchInfo,
+  primaryColor,
+  secondaryColor,
+  showBorder,
+  manualTextColor,
+  tickerBackground,
+}) {
   return (
     <div
-      className="min-h-screen bg-[#00ff00]"
-      aria-label="Ticker output"
-    />
+      className="flex min-h-screen items-center justify-center p-10"
+      style={{ backgroundColor: hsl(tickerBackground) }}
+    >
+      <Scoreboard
+        matchInfo={matchInfo}
+        primaryColor={primaryColor}
+        secondaryColor={secondaryColor}
+        showBorder={showBorder}
+        manualTextColor={manualTextColor}
+      />
+    </div>
   );
 }

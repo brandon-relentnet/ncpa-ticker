@@ -5,10 +5,12 @@ export default function Scoreboard({
   primaryColor,
   secondaryColor,
   showBorder,
+  manualTextColor,
   className = "",
 }) {
-  const headerTextColor = contrastTextColor(primaryColor);
-  const bodyTextColor = contrastTextColor(secondaryColor);
+  const manualColorValue = manualTextColor ? hsl(manualTextColor) : null;
+  const headerTextColor = manualColorValue ?? contrastTextColor(primaryColor);
+  const bodyTextColor = manualColorValue ?? contrastTextColor(secondaryColor);
 
   return (
     <div
@@ -36,8 +38,8 @@ export default function Scoreboard({
           style={{ backgroundColor: hsl(secondaryColor), color: bodyTextColor }}
         >
           <div className="flex border-b">
-            <div className="flex size-15 items-center justify-center">
-              <img src={matchInfo.active_game.t1_logo} alt="t1_logo" />
+            <div className="flex aspect-square w-15 items-center justify-center">
+              <img src={matchInfo.active_game.t1_logo} alt="Team one logo" />
             </div>
             <div className="flex flex-1 flex-col justify-center pl-2">
               <div className="font-semibold">
@@ -53,8 +55,8 @@ export default function Scoreboard({
           </div>
 
           <div className="flex">
-            <div className="flex size-15 items-center justify-center">
-              <img src={matchInfo.active_game.t2_logo} alt="t2_logo" />
+            <div className="flex aspect-square w-15 items-center justify-center">
+              <img src={matchInfo.active_game.t2_logo} alt="Team two logo" />
             </div>
             <div className="flex flex-1 flex-col justify-center pl-2">
               <div className="font-semibold">

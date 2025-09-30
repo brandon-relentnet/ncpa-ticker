@@ -1,10 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
-import { NavLink, Navigate, Route, Routes } from "react-router-dom";
+import { NavLink, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import "./App.css";
 import match_info from "./DummyData";
 import SettingsPage from "./pages/Settings";
 import TickerPage from "./pages/Ticker";
-import { DEFAULT_PRIMARY, DEFAULT_SECONDARY } from "./utils/colors";
+import {
+  DEFAULT_PRIMARY,
+  DEFAULT_SECONDARY,
+  DEFAULT_TICKER_BACKGROUND,
+  DEFAULT_TEXT_COLOR,
+  hexToHsl,
+} from "./utils/colors";
 
 const STORAGE_KEY = "pickleball-ticker-theme";
 
@@ -21,11 +27,14 @@ const loadStoredTheme = () => {
 };
 
 const NAV_LINKS = [
-  { to: "/settings", label: "Settings" },
-  { to: "/ticker", label: "Ticker" },
+  { to: "/settings", label: "Settings", external: false },
+  { to: "/ticker", label: "Ticker", external: true },
 ];
 
 export default function App() {
+  const location = useLocation();
+  const isTickerRoute = location.pathname.startsWith("/ticker");
+
   const storedTheme = useMemo(loadStoredTheme, []);
 
   const [primaryColor, setPrimaryColor] = useState(
@@ -33,6 +42,24 @@ export default function App() {
   );
   const [secondaryColor, setSecondaryColor] = useState(
     storedTheme?.secondaryColor ?? DEFAULT_SECONDARY
+  );
+  const [tickerBackground, setTickerBackground] = useState(
+    storedTheme?.tickerBackground ?? DEFAULT_TICKER_BACKGROUND
+  );
+  const [manualTextColorEnabled, setManualTextColorEnabled] = useState(
+    storedTheme?.manualTextColorEnabled ?? false
+  );
+  const initialManualTextColor = useMemo(() => {
+    const manual = storedTheme?.manualTextColor;
+    if (!manual) return DEFAULT_TEXT_COLOR;
+    if (typeof manual === "string") {
+      return hexToHsl(manual) ?? DEFAULT_TEXT_COLOR;
+    }
+    return manual;
+  }, [storedTheme]);
+
+  const [manualTextColor, setManualTextColor] = useState(
+    initialManualTextColor
   );
   const [showBorder, setShowBorder] = useState(
     storedTheme?.showBorder ?? true
@@ -44,37 +71,76 @@ export default function App() {
     try {
       window.localStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify({ primaryColor, secondaryColor, showBorder })
+        JSON.stringify({
+          primaryColor,
+          secondaryColor,
+          tickerBackground,
+          manualTextColorEnabled,
+          manualTextColor,
+          showBorder,
+        })
       );
     } catch (error) {
       console.warn("Failed to persist ticker theme", error);
     }
-  }, [primaryColor, secondaryColor, showBorder]);
+  }, [
+    primaryColor,
+    secondaryColor,
+    tickerBackground,
+    manualTextColorEnabled,
+    manualTextColor,
+    showBorder,
+  ]);
+
+  const appClassName = isTickerRoute
+    ? "min-h-screen"
+    : "min-h-screen bg-slate-950 text-slate-100";
+
+  const navLinkBaseClasses =
+    "rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wide transition-colors hover:text-lime-300";
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
-      <header className="border-b border-slate-900 bg-slate-950/90 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between p-4">
-          <NavLink to="/settings" className="text-xl font-semibold text-lime-400">
-            Pickleball Ticker
-          </NavLink>
-          <nav className="flex gap-3 text-xs font-semibold uppercase tracking-wide">
-            {NAV_LINKS.map((link) => (
-              <NavLink
-                key={link.to}
-                to={link.to}
-                className={({ isActive }) =>
-                  `rounded-full px-4 py-2 transition-colors hover:text-lime-300 ${
-                    isActive ? "bg-slate-900 text-lime-300" : "text-slate-400"
-                  }`
+    <div className={appClassName}>
+      {!isTickerRoute && (
+        <header className="border-b border-slate-900 bg-slate-950/90 backdrop-blur">
+          <div className="mx-auto flex max-w-6xl items-center justify-between p-4">
+            <NavLink to="/settings" className="text-xl font-semibold text-lime-400">
+              Pickleball Ticker
+            </NavLink>
+            <nav className="flex gap-3">
+              {NAV_LINKS.map((link) => {
+                if (link.external) {
+                  return (
+                    <a
+                      key={link.to}
+                      href={link.to}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`${navLinkBaseClasses} bg-slate-900/60 text-slate-300 hover:bg-slate-900`}
+                    >
+                      {link.label}
+                    </a>
+                  );
                 }
-              >
-                {link.label}
-              </NavLink>
-            ))}
-          </nav>
-        </div>
-      </header>
+
+                return (
+                  <NavLink
+                    key={link.to}
+                    to={link.to}
+                    className={({ isActive }) =>
+                      `${navLinkBaseClasses} ${
+                        isActive ? "bg-slate-900 text-lime-300" : "text-slate-400"
+                      }`
+                    }
+                  >
+                    {link.label}
+                  </NavLink>
+                );
+              })}
+            </nav>
+          </div>
+        </header>
+      )}
 
       <Routes>
         <Route
@@ -86,12 +152,32 @@ export default function App() {
               secondaryColor={secondaryColor}
               setPrimaryColor={setPrimaryColor}
               setSecondaryColor={setSecondaryColor}
+              tickerBackground={tickerBackground}
+              setTickerBackground={setTickerBackground}
+              manualTextColor={manualTextColor}
+              manualTextColorEnabled={manualTextColorEnabled}
+              setManualTextColor={setManualTextColor}
+              setManualTextColorEnabled={setManualTextColorEnabled}
               showBorder={showBorder}
               setShowBorder={setShowBorder}
             />
           }
         />
-        <Route path="/ticker" element={<TickerPage />} />
+        <Route
+          path="/ticker"
+          element={
+            <TickerPage
+              matchInfo={match_info}
+              primaryColor={primaryColor}
+              secondaryColor={secondaryColor}
+              showBorder={showBorder}
+              manualTextColor={
+                manualTextColorEnabled ? manualTextColor : null
+              }
+              tickerBackground={tickerBackground}
+            />
+          }
+        />
         <Route path="*" element={<Navigate to="/settings" replace />} />
       </Routes>
     </div>

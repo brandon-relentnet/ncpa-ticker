@@ -1,5 +1,7 @@
 export const DEFAULT_PRIMARY = { h: 0, s: 85, l: 60 };
 export const DEFAULT_SECONDARY = { h: 46, s: 86, l: 47 };
+export const DEFAULT_TICKER_BACKGROUND = { h: 120, s: 100, l: 45 };
+export const DEFAULT_TEXT_COLOR = { h: 0, s: 0, l: 100 };
 
 export const hsl = ({ h, s, l }) => `hsl(${h} ${s}% ${l}%)`;
 
@@ -36,4 +38,48 @@ export function luminance(rgb) {
 export function contrastTextColor(color) {
   const lum = luminance(hslToRgb(color));
   return lum > 0.5 ? "black" : "white";
+}
+
+export function hexToHsl(hex) {
+  if (typeof hex !== "string") return null;
+  const match = hex.trim().match(/^#?([a-f0-9]{6})$/i);
+  if (!match) return null;
+
+  const value = match[1];
+  const r = parseInt(value.slice(0, 2), 16) / 255;
+  const g = parseInt(value.slice(2, 4), 16) / 255;
+  const b = parseInt(value.slice(4, 6), 16) / 255;
+
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const delta = max - min;
+
+  let h = 0;
+  if (delta !== 0) {
+    if (max === r) {
+      h = ((g - b) / delta) % 6;
+    } else if (max === g) {
+      h = (b - r) / delta + 2;
+    } else {
+      h = (r - g) / delta + 4;
+    }
+    h = Math.round(h * 60);
+    if (h < 0) h += 360;
+  }
+
+  const l = (max + min) / 2;
+  const s = delta === 0 ? 0 : delta / (1 - Math.abs(2 * l - 1));
+
+  return {
+    h: Math.round(h),
+    s: Math.round(s * 100),
+    l: Math.round(l * 100),
+  };
+}
+
+export function hslToHex({ h, s, l }) {
+  const rgb = hslToRgb({ h, s, l });
+  return `#${rgb
+    .map((channel) => channel.toString(16).padStart(2, "0"))
+    .join("")}`;
 }
