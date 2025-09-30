@@ -1,5 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { NavLink, Navigate, Route, Routes, useLocation } from "react-router-dom";
+import {
+  NavLink,
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+} from "react-router-dom";
 import "./App.css";
 import match_info from "./DummyData";
 import SettingsPage from "./pages/Settings";
@@ -62,7 +68,7 @@ export default function App() {
     initialManualTextColor
   );
   const [showBorder, setShowBorder] = useState(
-    storedTheme?.showBorder ?? true
+    storedTheme?.showBorder ?? false
   );
 
   useEffect(() => {
@@ -104,7 +110,10 @@ export default function App() {
       {!isTickerRoute && (
         <header className="border-b border-slate-900 bg-slate-950/90 backdrop-blur">
           <div className="mx-auto flex max-w-6xl items-center justify-between p-4">
-            <NavLink to="/settings" className="text-xl font-semibold text-lime-400">
+            <NavLink
+              to="/settings"
+              className="text-xl font-semibold text-lime-400"
+            >
               Pickleball Ticker
             </NavLink>
             <nav className="flex gap-3">
@@ -129,7 +138,9 @@ export default function App() {
                     to={link.to}
                     className={({ isActive }) =>
                       `${navLinkBaseClasses} ${
-                        isActive ? "bg-slate-900 text-lime-300" : "text-slate-400"
+                        isActive
+                          ? "bg-slate-900 text-lime-300"
+                          : "text-slate-400"
                       }`
                     }
                   >
@@ -171,9 +182,7 @@ export default function App() {
               primaryColor={primaryColor}
               secondaryColor={secondaryColor}
               showBorder={showBorder}
-              manualTextColor={
-                manualTextColorEnabled ? manualTextColor : null
-              }
+              manualTextColor={manualTextColorEnabled ? manualTextColor : null}
               tickerBackground={tickerBackground}
             />
           }

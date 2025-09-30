@@ -144,6 +144,7 @@ export default function SettingsPage({
               color={secondaryColor}
               onChange={setSecondaryColor}
             />
+
             <TextColorControl
               manualEnabled={manualTextColorEnabled}
               manualColor={manualTextColor}
