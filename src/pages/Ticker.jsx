@@ -8,6 +8,7 @@ export default function TickerPage({
   showBorder,
   manualTextColor,
   tickerBackground,
+  useFullAssociationName,
 }) {
   return (
     <div
@@ -20,6 +21,7 @@ export default function TickerPage({
         secondaryColor={secondaryColor}
         showBorder={showBorder}
         manualTextColor={manualTextColor}
+        useFullAssociationName={useFullAssociationName}
       />
     </div>
   );

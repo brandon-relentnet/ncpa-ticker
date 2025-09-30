@@ -6,21 +6,25 @@ export default function Scoreboard({
   secondaryColor,
   showBorder,
   manualTextColor,
+  useFullAssociationName,
   className = "",
 }) {
   const manualColorValue = manualTextColor ? hsl(manualTextColor) : null;
   const headerTextColor = manualColorValue ?? contrastTextColor(primaryColor);
   const bodyTextColor = manualColorValue ?? contrastTextColor(secondaryColor);
+  const associationLabel = useFullAssociationName
+    ? "National College Pickleball Association"
+    : "NCPA";
 
   return (
     <div
       className={`flex flex-col items-center justify-between ${className}`.trim()}
     >
       <div
-        className="w-fit rounded-t px-3 py-1 text-center text-sm font-semibold uppercase tracking-wide"
+        className="w-fit rounded-t px-3 py-1 text-center text-sm font-semibold tracking-wide"
         style={{ backgroundColor: hsl(primaryColor), color: headerTextColor }}
       >
-        National College Pickleball Association - {matchInfo.tournament_name}
+        {associationLabel} - {matchInfo.tournament_name}
       </div>
 
       <div

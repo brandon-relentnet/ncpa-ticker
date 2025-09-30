@@ -97,6 +97,8 @@ export default function SettingsPage({
   setManualTextColorEnabled,
   showBorder,
   setShowBorder,
+  useFullAssociationName,
+  setUseFullAssociationName,
 }) {
   const autoHeaderColor = contrastTextColor(primaryColor);
   const autoBodyColor = contrastTextColor(secondaryColor);
@@ -122,6 +124,7 @@ export default function SettingsPage({
               secondaryColor={secondaryColor}
               showBorder={showBorder}
               manualTextColor={resolvedTextColor}
+              useFullAssociationName={useFullAssociationName}
             />
           </div>
         </div>
@@ -160,17 +163,33 @@ export default function SettingsPage({
               onChange={setTickerBackground}
             />
           </div>
-          <label className="flex w-full items-center justify-between rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm">
-            <span className="font-medium text-slate-300">
-              Show inner border
-            </span>
-            <input
-              type="checkbox"
-              className="h-4 w-4"
-              checked={showBorder}
-              onChange={(event) => setShowBorder(event.target.checked)}
-            />
-          </label>
+          <div className="space-y-3">
+            <label className="flex w-full items-center justify-between rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm">
+              <span className="font-medium text-slate-300">
+                Show inner border
+              </span>
+              <input
+                type="checkbox"
+                className="h-4 w-4"
+                checked={showBorder}
+                onChange={(event) => setShowBorder(event.target.checked)}
+              />
+            </label>
+
+            <label className="flex w-full items-center justify-between rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm">
+              <span className="font-medium text-slate-300">
+                Use full association name
+              </span>
+              <input
+                type="checkbox"
+                className="h-4 w-4"
+                checked={useFullAssociationName}
+                onChange={(event) =>
+                  setUseFullAssociationName(event.target.checked)
+                }
+              />
+            </label>
+          </div>
         </aside>
       </div>
     </div>

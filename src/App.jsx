@@ -70,6 +70,9 @@ export default function App() {
   const [showBorder, setShowBorder] = useState(
     storedTheme?.showBorder ?? false
   );
+  const [useFullAssociationName, setUseFullAssociationName] = useState(
+    storedTheme?.useFullAssociationName ?? true
+  );
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -84,6 +87,7 @@ export default function App() {
           manualTextColorEnabled,
           manualTextColor,
           showBorder,
+          useFullAssociationName,
         })
       );
     } catch (error) {
@@ -96,6 +100,7 @@ export default function App() {
     manualTextColorEnabled,
     manualTextColor,
     showBorder,
+    useFullAssociationName,
   ]);
 
   const appClassName = isTickerRoute
@@ -171,6 +176,8 @@ export default function App() {
               setManualTextColorEnabled={setManualTextColorEnabled}
               showBorder={showBorder}
               setShowBorder={setShowBorder}
+              useFullAssociationName={useFullAssociationName}
+              setUseFullAssociationName={setUseFullAssociationName}
             />
           }
         />
@@ -184,6 +191,7 @@ export default function App() {
               showBorder={showBorder}
               manualTextColor={manualTextColorEnabled ? manualTextColor : null}
               tickerBackground={tickerBackground}
+              useFullAssociationName={useFullAssociationName}
             />
           }
         />
