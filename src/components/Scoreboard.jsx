@@ -15,6 +15,29 @@ export default function Scoreboard({
   const associationLabel = useFullAssociationName
     ? "National College Pickleball Association"
     : "NCPA";
+  const games = matchInfo.games ?? [];
+  const latestIndex = Math.max(0, games.length - 1);
+  const selectedIndex =
+    typeof matchInfo.activeGameIndex === "number"
+      ? Math.min(Math.max(matchInfo.activeGameIndex, 0), latestIndex)
+      : latestIndex;
+  const activeGame = games[selectedIndex];
+  const activeGameNumber = activeGame?.number ?? selectedIndex + 1;
+
+  if (!activeGame) {
+    return (
+      <div
+        className={`flex flex-col items-center justify-between ${className}`.trim()}
+      >
+        <div
+          className="w-fit rounded px-4 py-2 text-center text-sm font-semibold"
+          style={{ backgroundColor: hsl(primaryColor), color: headerTextColor }}
+        >
+          No game data available
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -43,35 +66,35 @@ export default function Scoreboard({
         >
           <div className="flex border-b">
             <div className="flex aspect-square w-15 items-center justify-center">
-              <img src={matchInfo.active_game.t1_logo} alt="Team one logo" />
+              <img src={activeGame.t1_logo} alt="Team one logo" />
             </div>
             <div className="flex flex-1 flex-col justify-center pl-2">
               <div className="font-semibold">
-                {matchInfo.active_game.t1_name}
+                {activeGame.t1_name}
               </div>
               <div className="flex truncate text-sm">
-                {matchInfo.active_game.t1_players.join(" & ")}
+                {activeGame.t1_players.join(" & ")}
               </div>
             </div>
             <div className="flex aspect-square items-center justify-center border-l px-4 text-3xl font-bold">
-              {matchInfo.active_game.t1_score}
+              {activeGame.t1_score}
             </div>
           </div>
 
           <div className="flex">
             <div className="flex aspect-square w-15 items-center justify-center">
-              <img src={matchInfo.active_game.t2_logo} alt="Team two logo" />
+              <img src={activeGame.t2_logo} alt="Team two logo" />
             </div>
             <div className="flex flex-1 flex-col justify-center pl-2">
               <div className="font-semibold">
-                {matchInfo.active_game.t2_name}
+                {activeGame.t2_name}
               </div>
               <div className="flex truncate text-sm">
-                {matchInfo.active_game.t2_players.join(" & ")}
+                {activeGame.t2_players.join(" & ")}
               </div>
             </div>
             <div className="flex aspect-square items-center justify-center border-l px-4 text-3xl font-bold">
-              {matchInfo.active_game.t2_score}
+              {activeGame.t2_score}
             </div>
           </div>
         </div>
@@ -81,7 +104,7 @@ export default function Scoreboard({
         className="w-fit rounded-b px-3 py-1 text-center text-sm font-medium"
         style={{ backgroundColor: hsl(primaryColor), color: headerTextColor }}
       >
-        Game {matchInfo.game_index} of {matchInfo.best_of} / {matchInfo.rules} /{" "}
+        Game {activeGameNumber} of {matchInfo.best_of} / {matchInfo.rules} /{" "}
         {matchInfo.winning}
       </div>
     </div>

@@ -7,7 +7,7 @@ import {
   useLocation,
 } from "react-router-dom";
 import "./App.css";
-import match_info from "./DummyData";
+import match_info, { sampleMatches } from "./DummyData";
 import SettingsPage from "./pages/Settings";
 import TickerPage from "./pages/Ticker";
 import {
@@ -42,6 +42,34 @@ export default function App() {
   const isTickerRoute = location.pathname.startsWith("/ticker");
 
   const storedTheme = useMemo(loadStoredTheme, []);
+
+  const cloneMatchInfo = (value) => ({
+    ...value,
+    games: Array.isArray(value.games)
+      ? value.games.map((game) => ({ ...game }))
+      : [],
+  });
+
+  const [matchInfo, setMatchInfo] = useState(() => cloneMatchInfo(match_info));
+
+  const handleMatchIdChange = (nextMatchId) =>
+    setMatchInfo((previous) => ({ ...previous, match_id: nextMatchId }));
+
+  const handleActiveGameIndexChange = (nextIndex) =>
+    setMatchInfo((previous) => {
+      const maxIndex = previous.games.length - 1;
+      const clampedIndex = Math.max(0, Math.min(maxIndex, nextIndex));
+      return { ...previous, activeGameIndex: clampedIndex };
+    });
+
+  const handleLoadSampleMatch = (targetMatchId) => {
+    const sampleMatch = sampleMatches.find(
+      (item) => item.match_id === targetMatchId
+    );
+    if (!sampleMatch) return;
+
+    setMatchInfo(cloneMatchInfo(sampleMatch));
+  };
 
   const [primaryColor, setPrimaryColor] = useState(
     storedTheme?.primaryColor ?? DEFAULT_PRIMARY
@@ -163,7 +191,11 @@ export default function App() {
           path="/settings"
           element={
             <SettingsPage
-              matchInfo={match_info}
+              matchInfo={matchInfo}
+              onMatchIdChange={handleMatchIdChange}
+              onActiveGameIndexChange={handleActiveGameIndexChange}
+              onLoadSampleMatch={handleLoadSampleMatch}
+              sampleMatches={sampleMatches}
               primaryColor={primaryColor}
               secondaryColor={secondaryColor}
               setPrimaryColor={setPrimaryColor}
@@ -185,7 +217,7 @@ export default function App() {
           path="/ticker"
           element={
             <TickerPage
-              matchInfo={match_info}
+              matchInfo={matchInfo}
               primaryColor={primaryColor}
               secondaryColor={secondaryColor}
               showBorder={showBorder}

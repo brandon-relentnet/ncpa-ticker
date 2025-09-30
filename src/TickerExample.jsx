@@ -3,20 +3,20 @@ import "./App.css";
 /**
  * Tournament Name      - match_info.tournament_name
  * Match ID             - match_info.match_id (internal use)
- * Game Index           - match_info.game_index
+ * Active Game Index    - match_info.activeGameIndex
  * Best Of              - match_info.best_of
  * Winner Team ID       - match_info.winner_team_id (if decided)
  *
- * Team 1 Name          - match_info.active_game.t1_name
- * Team 2 Name          - match_info.active_game.t2_name
- * Team 1 Score         - match_info.active_game.t1_score
- * Team 2 Score         - match_info.active_game.t2_score
- * Team 1 Logo          - match_info.active_game.t1_logo
- * Team 2 Logo          - match_info.active_game.t2_logo
- * Team 1 Players       - match_info.active_game.t1_players.map()
- * Team 2 Players       - match_info.active_game.t2_players.map()
+ * Team 1 Name          - activeGame.t1_name
+ * Team 2 Name          - activeGame.t2_name
+ * Team 1 Score         - activeGame.t1_score
+ * Team 2 Score         - activeGame.t2_score
+ * Team 1 Logo          - activeGame.t1_logo
+ * Team 2 Logo          - activeGame.t2_logo
+ * Team 1 Players       - activeGame.t1_players.map()
+ * Team 2 Players       - activeGame.t2_players.map()
  *
- * Round [] of []       - match_info.game_index / match_info.best_of
+ * Round [] of []       - activeGame.number / match_info.best_of
  * 1st to [] (win by 2) - match_info.rules
  * [] Leads []          - match_info.winning
  * 
@@ -24,21 +24,37 @@ import "./App.css";
  * {
     "match_id": "match_123",
     "tournament_name": "Midwest Regional",
-    "game_index": 2,
     "best_of": 3,
     "rules": "First to 11 (win by 2)",
     "winning": "Team Alpha leads 1–0",
     "winner_team_id": null,
-    "active_game": {
-      "t1_name": "Team Alpha",
-      "t1_score": 7,
-      "t1_logo": "/logos/alpha.png",
-      "t1_players": ["Ryan Smith", "Dodo Kong"],
-      "t2_name": "Team Beta",
-      "t2_score": 6,
-      "t2_logo": "/logos/beta.png",
-      "t2_players": ["Ethan Mahony", "Mary Layne Holloway"]
-    }
+    "games": [
+      {
+        "number": 1,
+        "status": "final",
+        "t1_name": "Team Alpha",
+        "t1_score": 11,
+        "t1_logo": "/logos/alpha.png",
+        "t1_players": ["Ryan Smith", "Dodo Kong"],
+        "t2_name": "Team Beta",
+        "t2_score": 8,
+        "t2_logo": "/logos/beta.png",
+        "t2_players": ["Ethan Mahony", "Mary Layne Holloway"]
+      },
+      {
+        "number": 2,
+        "status": "in_progress",
+        "t1_name": "Team Alpha",
+        "t1_score": 7,
+        "t1_logo": "/logos/alpha.png",
+        "t1_players": ["Ryan Smith", "Dodo Kong"],
+        "t2_name": "Team Beta",
+        "t2_score": 6,
+        "t2_logo": "/logos/beta.png",
+        "t2_players": ["Ethan Mahony", "Mary Layne Holloway"]
+      }
+    ],
+    "activeGameIndex": 1
  * }
  */
 
@@ -78,7 +94,7 @@ export default function TickerExample() {
 
         {/* Round / Rules / Winning */}
         <div className="bg-yellow-500 pl-1.5 w-[475px]">
-          Game {`match_info.game_index`} of {`match_info.best_of`} /{" "}
+          Game {`match_info.games[match_info.activeGameIndex].number`} of {`match_info.best_of`} /
           {`match_info.rules`} / {`match_info.winning`}
         </div>
       </div>
