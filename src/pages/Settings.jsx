@@ -85,10 +85,14 @@ function TextColorControl({
 
 export default function SettingsPage({
   matchInfo,
-  onMatchIdChange,
+  matchIdInput,
+  activeMatchId,
+  onMatchIdInputChange,
+  onApplyMatchId,
+  onReloadMatch,
   onActiveGameIndexChange,
-  onLoadSampleMatch,
-  sampleMatches,
+  matchLoading,
+  matchError,
   primaryColor,
   secondaryColor,
   setPrimaryColor,
@@ -107,11 +111,12 @@ export default function SettingsPage({
   const autoHeaderColor = contrastTextColor(primaryColor);
   const autoBodyColor = contrastTextColor(secondaryColor);
   const resolvedTextColor = manualTextColorEnabled ? manualTextColor : null;
-  const games = matchInfo.games ?? [];
+  const safeMatch = matchInfo ?? { games: [] };
+  const games = safeMatch.games ?? [];
   const latestIndex = Math.max(0, games.length - 1);
   const activeGameIndex =
-    typeof matchInfo.activeGameIndex === "number"
-      ? Math.min(Math.max(matchInfo.activeGameIndex, 0), latestIndex)
+    typeof safeMatch.activeGameIndex === "number"
+      ? Math.min(Math.max(safeMatch.activeGameIndex, 0), latestIndex)
       : latestIndex;
   const activeGame = games[activeGameIndex];
   const activeGameNumber = activeGame?.number ?? activeGameIndex + 1;
@@ -120,12 +125,6 @@ export default function SettingsPage({
     .split("_")
     .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
     .join(" ");
-  const availableSampleMatches = sampleMatches ?? [];
-  const sampleMatchIds = availableSampleMatches.map((item) => item.match_id);
-  const sampleSelectValue = sampleMatchIds.includes(matchInfo.match_id)
-    ? matchInfo.match_id
-    : "custom";
-
   return (
     <div className="min-h-[calc(100vh-64px)] bg-slate-950 py-10 text-slate-100">
       <div className="mx-auto flex max-w-6xl flex-col gap-8 px-6 lg:flex-row">
@@ -214,37 +213,41 @@ export default function SettingsPage({
 
             <label className="flex w-full flex-col gap-2 rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm">
               <span className="font-medium text-slate-300">Match ID</span>
-              <input
-                type="text"
-                className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-lime-400 focus:outline-none focus:ring-1 focus:ring-lime-400"
-                value={matchInfo.match_id ?? ""}
-                onChange={(event) => onMatchIdChange(event.target.value)}
-              />
-            </label>
-
-            {availableSampleMatches.length > 0 && onLoadSampleMatch && (
-              <label className="flex w-full flex-col gap-2 rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm">
-                <span className="font-medium text-slate-300">
-                  Sample Matches
-                </span>
-                <select
-                  className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-lime-400 focus:outline-none focus:ring-1 focus:ring-lime-400"
-                  value={sampleSelectValue}
-                  onChange={(event) => {
-                    const { value } = event.target;
-                    if (value === "custom") return;
-                    onLoadSampleMatch(value);
-                  }}
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  className="flex-1 rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-lime-400 focus:outline-none focus:ring-1 focus:ring-lime-400"
+                  value={matchIdInput}
+                  onChange={(event) => onMatchIdInputChange(event.target.value)}
+                  placeholder="Enter match ID"
+                />
+                <button
+                  type="button"
+                  className="rounded-full border border-slate-700 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-200 transition hover:border-lime-400 hover:text-lime-300 disabled:opacity-40"
+                  onClick={onApplyMatchId}
+                  disabled={matchLoading}
                 >
-                  <option value="custom">Custom match</option>
-                  {availableSampleMatches.map((item) => (
-                    <option key={item.match_id} value={item.match_id}>
-                      {item.match_id} · {item.tournament_name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            )}
+                  Load
+                </button>
+              </div>
+              <div className="flex items-center justify-between text-[11px] uppercase tracking-wide text-slate-500">
+                <span>Active: {activeMatchId || "—"}</span>
+                <button
+                  type="button"
+                  className="rounded-full border border-slate-700 px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-200 transition hover:border-lime-400 hover:text-lime-300 disabled:opacity-40"
+                  onClick={onReloadMatch}
+                  disabled={matchLoading || !activeMatchId}
+                >
+                  Refresh
+                </button>
+              </div>
+              {matchLoading && (
+                <p className="text-[11px] text-lime-300">Loading match…</p>
+              )}
+              {matchError && (
+                <p className="text-[11px] text-red-400">{matchError}</p>
+              )}
+            </label>
 
             <div className="flex w-full items-center justify-between rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm">
               <div>

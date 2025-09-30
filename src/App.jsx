@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   NavLink,
   Navigate,
@@ -7,9 +7,7 @@ import {
   useLocation,
 } from "react-router-dom";
 import "./App.css";
-import match_info, { sampleMatches } from "./DummyData";
 import SettingsPage from "./pages/Settings";
-import TestingPage from "./pages/Testing";
 import TickerPage from "./pages/Ticker";
 import {
   DEFAULT_PRIMARY,
@@ -18,6 +16,7 @@ import {
   DEFAULT_TEXT_COLOR,
   hexToHsl,
 } from "./utils/colors";
+import { fetchMatchBundle } from "./utils/matchService";
 
 const STORAGE_KEY = "pickleball-ticker-theme";
 
@@ -35,7 +34,6 @@ const loadStoredTheme = () => {
 
 const NAV_LINKS = [
   { to: "/settings", label: "Settings", external: false },
-  { to: "/testing", label: "Testing", external: false },
   { to: "/ticker", label: "Ticker", external: true },
 ];
 
@@ -45,34 +43,68 @@ export default function App() {
 
   const storedTheme = useMemo(loadStoredTheme, []);
 
-  const cloneMatchInfo = (value) => ({
-    ...value,
-    games: Array.isArray(value.games)
-      ? value.games.map((game) => ({ ...game }))
-      : [],
-  });
+  const defaultMatchId = import.meta.env.VITE_DEFAULT_MATCH_ID ?? "5092";
 
-  const [matchInfo, setMatchInfo] = useState(() => cloneMatchInfo(match_info));
-
-  const applyMatchInfo = (value) => setMatchInfo(cloneMatchInfo(value));
-
-  const handleMatchIdChange = (nextMatchId) =>
-    setMatchInfo((previous) => ({ ...previous, match_id: nextMatchId }));
+  const [matchIdInput, setMatchIdInput] = useState(defaultMatchId);
+  const [activeMatchId, setActiveMatchId] = useState(defaultMatchId);
+  const [matchInfo, setMatchInfo] = useState(null);
+  const [gamesPayload, setGamesPayload] = useState(null);
+  const [teamsPayload, setTeamsPayload] = useState(null);
+  const [matchError, setMatchError] = useState(null);
+  const [matchLoading, setMatchLoading] = useState(false);
 
   const handleActiveGameIndexChange = (nextIndex) =>
     setMatchInfo((previous) => {
+      if (!previous?.games) return previous;
       const maxIndex = previous.games.length - 1;
       const clampedIndex = Math.max(0, Math.min(maxIndex, nextIndex));
       return { ...previous, activeGameIndex: clampedIndex };
     });
 
-  const handleLoadSampleMatch = (targetMatchId) => {
-    const sampleMatch = sampleMatches.find(
-      (item) => item.match_id === targetMatchId
-    );
-    if (!sampleMatch) return;
+  const loadMatch = useCallback(async (targetMatchId) => {
+    if (!targetMatchId) {
+      setMatchError("Enter a match ID to load data");
+      return;
+    }
 
-    applyMatchInfo(sampleMatch);
+    setMatchLoading(true);
+    setMatchError(null);
+
+    try {
+      const bundle = await fetchMatchBundle(targetMatchId);
+      setMatchInfo(bundle.matchInfo);
+      setGamesPayload(bundle.gamesPayload);
+      setTeamsPayload(bundle.teamsPayload);
+    } catch (error) {
+      setMatchError(error.message ?? "Failed to load match data");
+    } finally {
+      setMatchLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadMatch(activeMatchId);
+  }, [activeMatchId, loadMatch]);
+
+  const handleMatchIdInputChange = (value) => {
+    setMatchIdInput(value);
+  };
+
+  const handleApplyMatchId = () => {
+    const trimmed = matchIdInput.trim();
+    if (!trimmed) {
+      setMatchError("Match ID cannot be empty");
+      return;
+    }
+    if (trimmed === activeMatchId) {
+      loadMatch(trimmed);
+    } else {
+      setActiveMatchId(trimmed);
+    }
+  };
+
+  const handleReloadMatch = () => {
+    loadMatch(activeMatchId);
   };
 
   const [primaryColor, setPrimaryColor] = useState(
@@ -103,7 +135,7 @@ export default function App() {
     storedTheme?.showBorder ?? false
   );
   const [useFullAssociationName, setUseFullAssociationName] = useState(
-    storedTheme?.useFullAssociationName ?? true
+    storedTheme?.useFullAssociationName ?? false
   );
 
   useEffect(() => {
@@ -196,10 +228,14 @@ export default function App() {
           element={
             <SettingsPage
               matchInfo={matchInfo}
-              onMatchIdChange={handleMatchIdChange}
+              matchIdInput={matchIdInput}
+              activeMatchId={activeMatchId}
+              onMatchIdInputChange={handleMatchIdInputChange}
+              onApplyMatchId={handleApplyMatchId}
+              onReloadMatch={handleReloadMatch}
               onActiveGameIndexChange={handleActiveGameIndexChange}
-              onLoadSampleMatch={handleLoadSampleMatch}
-              sampleMatches={sampleMatches}
+              matchLoading={matchLoading}
+              matchError={matchError}
               primaryColor={primaryColor}
               secondaryColor={secondaryColor}
               setPrimaryColor={setPrimaryColor}
@@ -214,24 +250,6 @@ export default function App() {
               setShowBorder={setShowBorder}
               useFullAssociationName={useFullAssociationName}
               setUseFullAssociationName={setUseFullAssociationName}
-            />
-          }
-        />
-        <Route
-          path="/testing"
-          element={
-            <TestingPage
-              matchInfo={matchInfo}
-              onApplyMatch={applyMatchInfo}
-              onActiveGameIndexChange={handleActiveGameIndexChange}
-              onLoadSampleMatch={handleLoadSampleMatch}
-              sampleMatches={sampleMatches}
-              primaryColor={primaryColor}
-              secondaryColor={secondaryColor}
-              showBorder={showBorder}
-              manualTextColor={manualTextColorEnabled ? manualTextColor : null}
-              tickerBackground={tickerBackground}
-              useFullAssociationName={useFullAssociationName}
             />
           }
         />

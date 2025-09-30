@@ -9,17 +9,18 @@ export default function Scoreboard({
   useFullAssociationName,
   className = "",
 }) {
+  const safeMatch = matchInfo ?? { games: [] };
   const manualColorValue = manualTextColor ? hsl(manualTextColor) : null;
   const headerTextColor = manualColorValue ?? contrastTextColor(primaryColor);
   const bodyTextColor = manualColorValue ?? contrastTextColor(secondaryColor);
   const associationLabel = useFullAssociationName
     ? "National College Pickleball Association"
     : "NCPA";
-  const games = matchInfo.games ?? [];
+  const games = safeMatch.games ?? [];
   const latestIndex = Math.max(0, games.length - 1);
   const selectedIndex =
-    typeof matchInfo.activeGameIndex === "number"
-      ? Math.min(Math.max(matchInfo.activeGameIndex, 0), latestIndex)
+    typeof safeMatch.activeGameIndex === "number"
+      ? Math.min(Math.max(safeMatch.activeGameIndex, 0), latestIndex)
       : latestIndex;
   const activeGame = games[selectedIndex];
   const activeGameNumber = activeGame?.number ?? selectedIndex + 1;
@@ -47,7 +48,8 @@ export default function Scoreboard({
         className="w-fit rounded-t px-3 py-1 text-center text-sm font-semibold tracking-wide"
         style={{ backgroundColor: hsl(primaryColor), color: headerTextColor }}
       >
-        {associationLabel} - {matchInfo.tournament_name}
+        {associationLabel}
+        {safeMatch.tournament_name ? ` - ${safeMatch.tournament_name}` : ""}
       </div>
 
       <div
@@ -100,8 +102,15 @@ export default function Scoreboard({
         className="w-fit rounded-b px-3 py-1 text-center text-sm font-medium"
         style={{ backgroundColor: hsl(primaryColor), color: headerTextColor }}
       >
-        Game {activeGameNumber} of {matchInfo.best_of} / {matchInfo.rules} /{" "}
-        {matchInfo.winning}
+        {[
+          `Game ${activeGameNumber}${
+            safeMatch.best_of ? ` of ${safeMatch.best_of}` : ""
+          }`,
+          safeMatch.rules,
+          safeMatch.winning,
+        ]
+          .filter(Boolean)
+          .join(" / ")}
       </div>
     </div>
   );
