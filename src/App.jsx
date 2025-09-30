@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   NavLink,
   Navigate,
@@ -19,6 +19,7 @@ import {
 import { fetchMatchBundle } from "./utils/matchService";
 
 const STORAGE_KEY = "pickleball-ticker-theme";
+const SYNC_STORAGE_KEY = "pickleball-ticker-sync";
 
 const loadStoredTheme = () => {
   if (typeof window === "undefined") return null;
@@ -44,6 +45,12 @@ export default function App() {
   const storedTheme = useMemo(loadStoredTheme, []);
 
   const defaultMatchId = import.meta.env.VITE_DEFAULT_MATCH_ID ?? "5092";
+  const tabId = useMemo(() => {
+    if (typeof crypto !== "undefined" && crypto.randomUUID) {
+      return crypto.randomUUID();
+    }
+    return `tab-${Math.random().toString(36).slice(2)}`;
+  }, []);
 
   const [matchIdInput, setMatchIdInput] = useState(defaultMatchId);
   const [activeMatchId, setActiveMatchId] = useState(defaultMatchId);
@@ -52,6 +59,7 @@ export default function App() {
   const [teamsPayload, setTeamsPayload] = useState(null);
   const [matchError, setMatchError] = useState(null);
   const [matchLoading, setMatchLoading] = useState(false);
+  const skipSyncRef = useRef(false);
 
   const handleActiveGameIndexChange = (nextIndex) =>
     setMatchInfo((previous) => {
@@ -83,6 +91,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    if (skipSyncRef.current) return;
     loadMatch(activeMatchId);
   }, [activeMatchId, loadMatch]);
 
@@ -135,8 +144,65 @@ export default function App() {
     storedTheme?.showBorder ?? false
   );
   const [useFullAssociationName, setUseFullAssociationName] = useState(
-    storedTheme?.useFullAssociationName ?? false
+    storedTheme?.useFullAssociationName ?? true
   );
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+
+    const handleStorage = (event) => {
+      if (event.key !== SYNC_STORAGE_KEY || !event.newValue) return;
+
+      try {
+        const message = JSON.parse(event.newValue);
+        if (!message || message.sourceId === tabId) return;
+
+        const payload = message.payload ?? {};
+        skipSyncRef.current = true;
+
+        if (payload.matchInfo !== undefined) setMatchInfo(payload.matchInfo);
+        if (payload.gamesPayload !== undefined)
+          setGamesPayload(payload.gamesPayload);
+        if (payload.teamsPayload !== undefined)
+          setTeamsPayload(payload.teamsPayload);
+        if (payload.matchIdInput !== undefined)
+          setMatchIdInput(payload.matchIdInput ?? "");
+        if (payload.activeMatchId !== undefined)
+          setActiveMatchId(payload.activeMatchId ?? "");
+        if (payload.primaryColor !== undefined)
+          setPrimaryColor(payload.primaryColor ?? DEFAULT_PRIMARY);
+        if (payload.secondaryColor !== undefined)
+          setSecondaryColor(payload.secondaryColor ?? DEFAULT_SECONDARY);
+        if (payload.tickerBackground !== undefined)
+          setTickerBackground(
+            payload.tickerBackground ?? DEFAULT_TICKER_BACKGROUND
+          );
+        if (payload.manualTextColorEnabled !== undefined)
+          setManualTextColorEnabled(!!payload.manualTextColorEnabled);
+        if (payload.manualTextColor !== undefined)
+          setManualTextColor(payload.manualTextColor ?? DEFAULT_TEXT_COLOR);
+        if (payload.showBorder !== undefined)
+          setShowBorder(!!payload.showBorder);
+        if (payload.useFullAssociationName !== undefined)
+          setUseFullAssociationName(!!payload.useFullAssociationName);
+        if (payload.matchError !== undefined)
+          setMatchError(payload.matchError ?? null);
+        if (payload.matchLoading !== undefined)
+          setMatchLoading(!!payload.matchLoading);
+
+        requestAnimationFrame(() => {
+          skipSyncRef.current = false;
+        });
+      } catch (error) {
+        console.warn("Failed to apply shared ticker state", error);
+      }
+    };
+
+    window.addEventListener("storage", handleStorage);
+    return () => {
+      window.removeEventListener("storage", handleStorage);
+    };
+  }, [tabId]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -173,6 +239,56 @@ export default function App() {
 
   const navLinkBaseClasses =
     "rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wide transition-colors hover:text-lime-300";
+
+  const handleApplyTickerUpdate = useCallback(() => {
+    if (typeof window === "undefined") return;
+
+    const payload = {
+      matchInfo,
+      gamesPayload,
+      teamsPayload,
+      matchIdInput,
+      activeMatchId,
+      primaryColor,
+      secondaryColor,
+      tickerBackground,
+      manualTextColorEnabled,
+      manualTextColor,
+      showBorder,
+      useFullAssociationName,
+      matchError,
+      matchLoading,
+    };
+
+    try {
+      window.localStorage.setItem(
+        SYNC_STORAGE_KEY,
+        JSON.stringify({
+          sourceId: tabId,
+          timestamp: Date.now(),
+          payload,
+        })
+      );
+    } catch (error) {
+      console.warn("Failed to broadcast ticker update", error);
+    }
+  }, [
+    tabId,
+    matchInfo,
+    gamesPayload,
+    teamsPayload,
+    matchIdInput,
+    activeMatchId,
+    primaryColor,
+    secondaryColor,
+    tickerBackground,
+    manualTextColorEnabled,
+    manualTextColor,
+    showBorder,
+    useFullAssociationName,
+    matchError,
+    matchLoading,
+  ]);
 
   return (
     <div className={appClassName}>
@@ -236,6 +352,7 @@ export default function App() {
               onActiveGameIndexChange={handleActiveGameIndexChange}
               matchLoading={matchLoading}
               matchError={matchError}
+              onApplyTickerUpdate={handleApplyTickerUpdate}
               primaryColor={primaryColor}
               secondaryColor={secondaryColor}
               setPrimaryColor={setPrimaryColor}

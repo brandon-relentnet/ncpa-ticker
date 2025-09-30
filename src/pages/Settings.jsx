@@ -93,6 +93,7 @@ export default function SettingsPage({
   onActiveGameIndexChange,
   matchLoading,
   matchError,
+  onApplyTickerUpdate,
   primaryColor,
   secondaryColor,
   setPrimaryColor,
@@ -248,6 +249,15 @@ export default function SettingsPage({
                 <p className="text-[11px] text-red-400">{matchError}</p>
               )}
             </label>
+
+            <button
+              type="button"
+              className="w-full rounded-full border border-lime-400 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-lime-300 transition hover:bg-lime-400/10 disabled:opacity-40"
+              onClick={onApplyTickerUpdate}
+              disabled={matchLoading || !matchInfo}
+            >
+              Apply Update To Ticker
+            </button>
 
             <div className="flex w-full items-center justify-between rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm">
               <div>
