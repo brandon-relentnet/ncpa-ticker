@@ -1,6 +1,8 @@
+import { memo, useMemo } from "react";
 import { contrastTextColor, hsl } from "../utils/colors";
+import { deriveMatchState } from "../utils/matchState";
 
-export default function Scoreboard({
+function Scoreboard({
   matchInfo,
   primaryColor,
   secondaryColor,
@@ -9,21 +11,45 @@ export default function Scoreboard({
   useFullAssociationName,
   className = "",
 }) {
-  const safeMatch = matchInfo ?? { games: [] };
-  const manualColorValue = manualTextColor ? hsl(manualTextColor) : null;
-  const headerTextColor = manualColorValue ?? contrastTextColor(primaryColor);
-  const bodyTextColor = manualColorValue ?? contrastTextColor(secondaryColor);
-  const associationLabel = useFullAssociationName
-    ? "National College Pickleball Association"
-    : "NCPA";
-  const games = safeMatch.games ?? [];
-  const latestIndex = Math.max(0, games.length - 1);
-  const selectedIndex =
-    typeof safeMatch.activeGameIndex === "number"
-      ? Math.min(Math.max(safeMatch.activeGameIndex, 0), latestIndex)
-      : latestIndex;
-  const activeGame = games[selectedIndex];
-  const activeGameNumber = activeGame?.number ?? selectedIndex + 1;
+  const { match: safeMatch, activeGame, activeGameNumber } = useMemo(
+    () => deriveMatchState(matchInfo),
+    [matchInfo]
+  );
+
+  const { headerTextColor, bodyTextColor } = useMemo(() => {
+    if (manualTextColor) {
+      const manualColorValue = hsl(manualTextColor);
+      return {
+        headerTextColor: manualColorValue,
+        bodyTextColor: manualColorValue,
+      };
+    }
+
+    return {
+      headerTextColor: contrastTextColor(primaryColor),
+      bodyTextColor: contrastTextColor(secondaryColor),
+    };
+  }, [manualTextColor, primaryColor, secondaryColor]);
+
+  const associationLabel = useMemo(
+    () =>
+      useFullAssociationName
+        ? "National College Pickleball Association"
+        : "NCPA",
+    [useFullAssociationName]
+  );
+
+  const footerText = useMemo(() => {
+    const details = [
+      `Game ${activeGameNumber}${
+        safeMatch.best_of ? ` of ${safeMatch.best_of}` : ""
+      }`,
+      safeMatch.rules,
+      safeMatch.winning,
+    ];
+
+    return details.filter(Boolean).join(" / ");
+  }, [activeGameNumber, safeMatch.best_of, safeMatch.rules, safeMatch.winning]);
 
   if (!activeGame) {
     return (
@@ -102,16 +128,13 @@ export default function Scoreboard({
         className="w-fit rounded-b px-3 py-1 text-center text-sm font-medium"
         style={{ backgroundColor: hsl(primaryColor), color: headerTextColor }}
       >
-        {[
-          `Game ${activeGameNumber}${
-            safeMatch.best_of ? ` of ${safeMatch.best_of}` : ""
-          }`,
-          safeMatch.rules,
-          safeMatch.winning,
-        ]
-          .filter(Boolean)
-          .join(" / ")}
+        {footerText}
       </div>
     </div>
   );
 }
+
+const MemoizedScoreboard = memo(Scoreboard);
+MemoizedScoreboard.displayName = "Scoreboard";
+
+export default MemoizedScoreboard;

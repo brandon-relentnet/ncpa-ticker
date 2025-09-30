@@ -1,9 +1,17 @@
+import { memo, useMemo } from "react";
 import { HslColorPicker } from "react-colorful";
 import Scoreboard from "../components/Scoreboard";
 import { contrastTextColor, hsl } from "../utils/colors";
+import { deriveMatchState } from "../utils/matchState";
 
-function ColorControl({ label, color, onChange, className = "" }) {
-  const textColor = contrastTextColor(color);
+const ColorControl = memo(function ColorControl({
+  label,
+  color,
+  onChange,
+  className = "",
+}) {
+  const textColor = useMemo(() => contrastTextColor(color), [color]);
+  const swatchColor = useMemo(() => hsl(color), [color]);
 
   return (
     <section className={`space-y-3 ${className}`.trim()}>
@@ -11,23 +19,24 @@ function ColorControl({ label, color, onChange, className = "" }) {
         <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-300">
           {label}
         </h3>
-        <p className="text-[11px] text-slate-500">{hsl(color)}</p>
+        <p className="text-[11px] text-slate-500">{swatchColor}</p>
       </header>
       <div className="flex overflow-hidden rounded-xl border border-slate-800 bg-slate-900">
         <HslColorPicker color={color} onChange={onChange} />
       </div>
       <div
         className="flex items-center justify-between rounded-lg border border-slate-800 px-3 py-2 text-xs"
-        style={{ backgroundColor: hsl(color), color: textColor }}
+        style={{ backgroundColor: swatchColor, color: textColor }}
       >
         <span>Preview swatch</span>
         <span className="font-semibold">{textColor.toUpperCase()}</span>
       </div>
     </section>
   );
-}
+});
+ColorControl.displayName = "ColorControl";
 
-function TextColorControl({
+const TextColorControl = memo(function TextColorControl({
   manualEnabled,
   manualColor,
   onToggleManual,
@@ -35,10 +44,13 @@ function TextColorControl({
   autoHeaderColor,
   autoBodyColor,
 }) {
-  const autoHeader = autoHeaderColor.toUpperCase();
-  const autoBody = autoBodyColor.toUpperCase();
-  const manualSwatch = hsl(manualColor);
-  const manualContrast = contrastTextColor(manualColor).toUpperCase();
+  const autoHeader = useMemo(() => autoHeaderColor.toUpperCase(), [autoHeaderColor]);
+  const autoBody = useMemo(() => autoBodyColor.toUpperCase(), [autoBodyColor]);
+  const manualSwatch = useMemo(() => hsl(manualColor), [manualColor]);
+  const manualContrast = useMemo(
+    () => contrastTextColor(manualColor).toUpperCase(),
+    [manualColor]
+  );
 
   return (
     <section className="space-y-3">
@@ -81,7 +93,8 @@ function TextColorControl({
       </div>
     </section>
   );
-}
+});
+TextColorControl.displayName = "TextColorControl";
 
 export default function SettingsPage({
   matchInfo,
@@ -109,23 +122,23 @@ export default function SettingsPage({
   useFullAssociationName,
   setUseFullAssociationName,
 }) {
-  const autoHeaderColor = contrastTextColor(primaryColor);
-  const autoBodyColor = contrastTextColor(secondaryColor);
-  const resolvedTextColor = manualTextColorEnabled ? manualTextColor : null;
-  const safeMatch = matchInfo ?? { games: [] };
-  const games = safeMatch.games ?? [];
-  const latestIndex = Math.max(0, games.length - 1);
-  const activeGameIndex =
-    typeof safeMatch.activeGameIndex === "number"
-      ? Math.min(Math.max(safeMatch.activeGameIndex, 0), latestIndex)
-      : latestIndex;
-  const activeGame = games[activeGameIndex];
-  const activeGameNumber = activeGame?.number ?? activeGameIndex + 1;
-  const activeGameStatus = activeGame?.status ?? "scheduled";
-  const activeGameStatusLabel = activeGameStatus
-    .split("_")
-    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
-    .join(" ");
+  const { autoHeaderColor, autoBodyColor } = useMemo(
+    () => ({
+      autoHeaderColor: contrastTextColor(primaryColor),
+      autoBodyColor: contrastTextColor(secondaryColor),
+    }),
+    [primaryColor, secondaryColor]
+  );
+
+  const resolvedTextColor = useMemo(
+    () => (manualTextColorEnabled ? manualTextColor : null),
+    [manualTextColorEnabled, manualTextColor]
+  );
+
+  const matchState = useMemo(() => deriveMatchState(matchInfo), [matchInfo]);
+
+  const { games, activeGameIndex, activeGameNumber, activeGameStatusLabel } =
+    matchState;
   return (
     <div className="min-h-[calc(100vh-64px)] bg-slate-950 py-10 text-slate-100">
       <div className="mx-auto flex max-w-6xl flex-col gap-8 px-6 lg:flex-row">
