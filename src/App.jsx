@@ -9,6 +9,7 @@ import {
 import "./App.css";
 import match_info, { sampleMatches } from "./DummyData";
 import SettingsPage from "./pages/Settings";
+import TestingPage from "./pages/Testing";
 import TickerPage from "./pages/Ticker";
 import {
   DEFAULT_PRIMARY,
@@ -34,6 +35,7 @@ const loadStoredTheme = () => {
 
 const NAV_LINKS = [
   { to: "/settings", label: "Settings", external: false },
+  { to: "/testing", label: "Testing", external: false },
   { to: "/ticker", label: "Ticker", external: true },
 ];
 
@@ -52,6 +54,8 @@ export default function App() {
 
   const [matchInfo, setMatchInfo] = useState(() => cloneMatchInfo(match_info));
 
+  const applyMatchInfo = (value) => setMatchInfo(cloneMatchInfo(value));
+
   const handleMatchIdChange = (nextMatchId) =>
     setMatchInfo((previous) => ({ ...previous, match_id: nextMatchId }));
 
@@ -68,7 +72,7 @@ export default function App() {
     );
     if (!sampleMatch) return;
 
-    setMatchInfo(cloneMatchInfo(sampleMatch));
+    applyMatchInfo(sampleMatch);
   };
 
   const [primaryColor, setPrimaryColor] = useState(
@@ -210,6 +214,24 @@ export default function App() {
               setShowBorder={setShowBorder}
               useFullAssociationName={useFullAssociationName}
               setUseFullAssociationName={setUseFullAssociationName}
+            />
+          }
+        />
+        <Route
+          path="/testing"
+          element={
+            <TestingPage
+              matchInfo={matchInfo}
+              onApplyMatch={applyMatchInfo}
+              onActiveGameIndexChange={handleActiveGameIndexChange}
+              onLoadSampleMatch={handleLoadSampleMatch}
+              sampleMatches={sampleMatches}
+              primaryColor={primaryColor}
+              secondaryColor={secondaryColor}
+              showBorder={showBorder}
+              manualTextColor={manualTextColorEnabled ? manualTextColor : null}
+              tickerBackground={tickerBackground}
+              useFullAssociationName={useFullAssociationName}
             />
           }
         />

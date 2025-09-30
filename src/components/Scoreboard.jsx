@@ -51,7 +51,7 @@ export default function Scoreboard({
       </div>
 
       <div
-        className="flex overflow-hidden rounded"
+        className="flex overflow-hidden rounded min-w-120"
         style={{ backgroundColor: hsl(primaryColor), color: headerTextColor }}
       >
         <div className="flex w-40 items-center justify-center text-4xl font-bold">
@@ -65,35 +65,31 @@ export default function Scoreboard({
           style={{ backgroundColor: hsl(secondaryColor), color: bodyTextColor }}
         >
           <div className="flex border-b">
-            <div className="flex aspect-square w-15 items-center justify-center">
-              <img src={activeGame.t1_logo} alt="Team one logo" />
+            <div className="flex size-15 items-center justify-center">
+              <img src={activeGame.t1_logo} alt="t1 logo" />
             </div>
             <div className="flex flex-1 flex-col justify-center pl-2">
-              <div className="font-semibold">
-                {activeGame.t1_name}
-              </div>
+              <div className="font-semibold">{activeGame.t1_name}</div>
               <div className="flex truncate text-sm">
                 {activeGame.t1_players.join(" & ")}
               </div>
             </div>
-            <div className="flex aspect-square items-center justify-center border-l px-4 text-3xl font-bold">
+            <div className="flex size-15 items-center justify-center border-l px-4 text-3xl font-bold">
               {activeGame.t1_score}
             </div>
           </div>
 
           <div className="flex">
             <div className="flex aspect-square w-15 items-center justify-center">
-              <img src={activeGame.t2_logo} alt="Team two logo" />
+              <img src={activeGame.t2_logo} alt="t2 logo" />
             </div>
             <div className="flex flex-1 flex-col justify-center pl-2">
-              <div className="font-semibold">
-                {activeGame.t2_name}
-              </div>
+              <div className="font-semibold">{activeGame.t2_name}</div>
               <div className="flex truncate text-sm">
                 {activeGame.t2_players.join(" & ")}
               </div>
             </div>
-            <div className="flex aspect-square items-center justify-center border-l px-4 text-3xl font-bold">
+            <div className="flex size-15 items-center justify-center border-l px-4 text-3xl font-bold">
               {activeGame.t2_score}
             </div>
           </div>

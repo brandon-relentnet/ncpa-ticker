@@ -1,0 +1,148 @@
+{
+    "success": true,
+    "info": {
+        "games": [
+            {
+                "t1score": 11,
+                "t2score": 0,
+                "t1_players": [
+                    {
+                        "gender": "Male",
+                        "last_name": "Smith",
+                        "first_name": "Ryan"
+                    },
+                    {
+                        "gender": "Female",
+                        "last_name": "Kong",
+                        "first_name": "Dodo"
+                    }
+                ],
+                "t2_players": [
+                    {
+                        "gender": "Male",
+                        "last_name": "Mahony",
+                        "first_name": "Ethan"
+                    },
+                    {
+                        "gender": "Female",
+                        "last_name": "Holloway",
+                        "first_name": "Mary Layne"
+                    }
+                ],
+                "winner": 0
+            },
+            {
+                "t1score": 11,
+                "t2score": 1,
+                "t1_players": [
+                    {
+                        "gender": "Male",
+                        "last_name": "Larson",
+                        "first_name": "Bryce"
+                    },
+                    {
+                        "gender": "Female",
+                        "last_name": "Murray",
+                        "first_name": "Brenna"
+                    }
+                ],
+                "t2_players": [
+                    {
+                        "gender": "Male",
+                        "last_name": "Jones ",
+                        "first_name": "Samuel "
+                    },
+                    {
+                        "gender": "Female",
+                        "last_name": "Eldridge",
+                        "first_name": "Hannah"
+                    }
+                ],
+                "winner": 0
+            },
+            {
+                "t1score": 11,
+                "t2score": 4,
+                "t1_players": [
+                    {
+                        "gender": "Male",
+                        "last_name": "Schwendiman",
+                        "first_name": "Thatcher"
+                    },
+                    {
+                        "gender": "Male",
+                        "last_name": "Smith",
+                        "first_name": "Ryan"
+                    }
+                ],
+                "t2_players": [
+                    {
+                        "gender": "Male",
+                        "last_name": "Jones ",
+                        "first_name": "Samuel "
+                    },
+                    {
+                        "gender": "Male",
+                        "last_name": "Mahony",
+                        "first_name": "Ethan"
+                    }
+                ],
+                "winner": 0
+            },
+            {
+                "t1score": 11,
+                "t2score": 1,
+                "t1_players": [
+                    {
+                        "gender": "Female",
+                        "last_name": "Murray",
+                        "first_name": "Brenna"
+                    },
+                    {
+                        "gender": "Female",
+                        "last_name": "Kong",
+                        "first_name": "Dodo"
+                    }
+                ],
+                "t2_players": [
+                    {
+                        "gender": "Female",
+                        "last_name": "Eldridge",
+                        "first_name": "Hannah"
+                    },
+                    {
+                        "gender": "Female",
+                        "last_name": "Holloway",
+                        "first_name": "Mary Layne"
+                    }
+                ],
+                "winner": 0
+            },
+            {
+                "t1score": null,
+                "t2score": null,
+                "t1_players": [],
+                "t2_players": [],
+                "winner": null
+            },
+            {
+                "t1score": null,
+                "t2score": null,
+                "t1_players": [],
+                "t2_players": [],
+                "winner": null
+            },
+            {
+                "t1score": null,
+                "t2score": null,
+                "t1_players": [],
+                "t2_players": [],
+                "winner": 1
+            }
+        ],
+        "winner": 0,
+        "t1_wins": 4,
+        "t2_wins": 1,
+        "current_game": -1
+    }
+}
