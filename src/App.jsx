@@ -61,6 +61,32 @@ export default function App() {
   const [matchLoading, setMatchLoading] = useState(false);
   const skipSyncRef = useRef(false);
 
+  const applySyncPayload = useCallback((payload = {}) => {
+    if (payload.matchInfo !== undefined) setMatchInfo(payload.matchInfo);
+    if (payload.gamesPayload !== undefined) setGamesPayload(payload.gamesPayload);
+    if (payload.teamsPayload !== undefined) setTeamsPayload(payload.teamsPayload);
+    if (payload.matchIdInput !== undefined)
+      setMatchIdInput(payload.matchIdInput ?? "");
+    if (payload.activeMatchId !== undefined)
+      setActiveMatchId(payload.activeMatchId ?? "");
+    if (payload.primaryColor !== undefined)
+      setPrimaryColor(payload.primaryColor ?? DEFAULT_PRIMARY);
+    if (payload.secondaryColor !== undefined)
+      setSecondaryColor(payload.secondaryColor ?? DEFAULT_SECONDARY);
+    if (payload.tickerBackground !== undefined)
+      setTickerBackground(payload.tickerBackground ?? DEFAULT_TICKER_BACKGROUND);
+    if (payload.manualTextColorEnabled !== undefined)
+      setManualTextColorEnabled(!!payload.manualTextColorEnabled);
+    if (payload.manualTextColor !== undefined)
+      setManualTextColor(payload.manualTextColor ?? DEFAULT_TEXT_COLOR);
+    if (payload.showBorder !== undefined) setShowBorder(!!payload.showBorder);
+    if (payload.useFullAssociationName !== undefined)
+      setUseFullAssociationName(!!payload.useFullAssociationName);
+    if (payload.matchError !== undefined) setMatchError(payload.matchError ?? null);
+    if (payload.matchLoading !== undefined)
+      setMatchLoading(!!payload.matchLoading);
+  }, []);
+
   const handleActiveGameIndexChange = (nextIndex) =>
     setMatchInfo((previous) => {
       if (!previous?.games) return previous;
@@ -80,15 +106,17 @@ export default function App() {
 
     try {
       const bundle = await fetchMatchBundle(targetMatchId);
-      setMatchInfo(bundle.matchInfo);
-      setGamesPayload(bundle.gamesPayload);
-      setTeamsPayload(bundle.teamsPayload);
+      applySyncPayload({
+        matchInfo: bundle.matchInfo,
+        gamesPayload: bundle.gamesPayload,
+        teamsPayload: bundle.teamsPayload,
+      });
     } catch (error) {
       setMatchError(error.message ?? "Failed to load match data");
     } finally {
       setMatchLoading(false);
     }
-  }, []);
+  }, [applySyncPayload]);
 
   useEffect(() => {
     if (skipSyncRef.current) return;
@@ -144,7 +172,7 @@ export default function App() {
     storedTheme?.showBorder ?? false
   );
   const [useFullAssociationName, setUseFullAssociationName] = useState(
-    storedTheme?.useFullAssociationName ?? true
+    storedTheme?.useFullAssociationName ?? false
   );
 
   useEffect(() => {
@@ -157,38 +185,8 @@ export default function App() {
         const message = JSON.parse(event.newValue);
         if (!message || message.sourceId === tabId) return;
 
-        const payload = message.payload ?? {};
         skipSyncRef.current = true;
-
-        if (payload.matchInfo !== undefined) setMatchInfo(payload.matchInfo);
-        if (payload.gamesPayload !== undefined)
-          setGamesPayload(payload.gamesPayload);
-        if (payload.teamsPayload !== undefined)
-          setTeamsPayload(payload.teamsPayload);
-        if (payload.matchIdInput !== undefined)
-          setMatchIdInput(payload.matchIdInput ?? "");
-        if (payload.activeMatchId !== undefined)
-          setActiveMatchId(payload.activeMatchId ?? "");
-        if (payload.primaryColor !== undefined)
-          setPrimaryColor(payload.primaryColor ?? DEFAULT_PRIMARY);
-        if (payload.secondaryColor !== undefined)
-          setSecondaryColor(payload.secondaryColor ?? DEFAULT_SECONDARY);
-        if (payload.tickerBackground !== undefined)
-          setTickerBackground(
-            payload.tickerBackground ?? DEFAULT_TICKER_BACKGROUND
-          );
-        if (payload.manualTextColorEnabled !== undefined)
-          setManualTextColorEnabled(!!payload.manualTextColorEnabled);
-        if (payload.manualTextColor !== undefined)
-          setManualTextColor(payload.manualTextColor ?? DEFAULT_TEXT_COLOR);
-        if (payload.showBorder !== undefined)
-          setShowBorder(!!payload.showBorder);
-        if (payload.useFullAssociationName !== undefined)
-          setUseFullAssociationName(!!payload.useFullAssociationName);
-        if (payload.matchError !== undefined)
-          setMatchError(payload.matchError ?? null);
-        if (payload.matchLoading !== undefined)
-          setMatchLoading(!!payload.matchLoading);
+        applySyncPayload(message.payload ?? {});
 
         requestAnimationFrame(() => {
           skipSyncRef.current = false;
@@ -202,7 +200,7 @@ export default function App() {
     return () => {
       window.removeEventListener("storage", handleStorage);
     };
-  }, [tabId]);
+  }, [applySyncPayload, tabId]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -240,10 +238,8 @@ export default function App() {
   const navLinkBaseClasses =
     "rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wide transition-colors hover:text-lime-300";
 
-  const handleApplyTickerUpdate = useCallback(() => {
-    if (typeof window === "undefined") return;
-
-    const payload = {
+  const buildSyncPayload = useCallback(
+    () => ({
       matchInfo,
       gamesPayload,
       teamsPayload,
@@ -258,7 +254,29 @@ export default function App() {
       useFullAssociationName,
       matchError,
       matchLoading,
-    };
+    }),
+    [
+      matchInfo,
+      gamesPayload,
+      teamsPayload,
+      matchIdInput,
+      activeMatchId,
+      primaryColor,
+      secondaryColor,
+      tickerBackground,
+      manualTextColorEnabled,
+      manualTextColor,
+      showBorder,
+      useFullAssociationName,
+      matchError,
+      matchLoading,
+    ]
+  );
+
+  const handleApplyTickerUpdate = useCallback(() => {
+    if (typeof window === "undefined") return;
+
+    const payload = buildSyncPayload();
 
     try {
       window.localStorage.setItem(
@@ -272,23 +290,7 @@ export default function App() {
     } catch (error) {
       console.warn("Failed to broadcast ticker update", error);
     }
-  }, [
-    tabId,
-    matchInfo,
-    gamesPayload,
-    teamsPayload,
-    matchIdInput,
-    activeMatchId,
-    primaryColor,
-    secondaryColor,
-    tickerBackground,
-    manualTextColorEnabled,
-    manualTextColor,
-    showBorder,
-    useFullAssociationName,
-    matchError,
-    matchLoading,
-  ]);
+  }, [buildSyncPayload, tabId]);
 
   return (
     <div className={appClassName}>
