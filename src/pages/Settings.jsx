@@ -2,6 +2,7 @@ import { HslColorPicker } from "react-colorful";
 import Scoreboard from "../components/Scoreboard";
 import { contrastTextColor, hsl } from "../utils/colors";
 import { deriveMatchState } from "../utils/matchState";
+import { DEFAULT_LOGO_POSITION } from "../utils/logo";
 
 function ColorControl({
   label,
@@ -129,6 +130,14 @@ export default function SettingsPage({
   setShowBorder,
   useFullAssociationName,
   setUseFullAssociationName,
+  logoImage,
+  setLogoImage,
+  logoTransparentBackground,
+  setLogoTransparentBackground,
+  logoTextHidden,
+  setLogoTextHidden,
+  logoPosition,
+  setLogoPosition,
 }) {
   const autoHeaderColor = contrastTextColor(primaryColor);
   const autoBodyColor = contrastTextColor(secondaryColor);
@@ -137,6 +146,29 @@ export default function SettingsPage({
     deriveMatchState(matchInfo);
 
   const tickerBg = hsl(tickerBackground);
+  const handleLogoFileChange = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setLogoImage(reader.result);
+        setLogoPosition({ ...DEFAULT_LOGO_POSITION });
+      }
+    };
+    reader.readAsDataURL(file);
+    event.target.value = "";
+  };
+
+  const handleRemoveLogo = () => {
+    setLogoImage(null);
+    setLogoPosition({ ...DEFAULT_LOGO_POSITION });
+  };
+
+  const handleResetLogoPosition = () => {
+    setLogoPosition({ ...DEFAULT_LOGO_POSITION });
+  };
 
   return (
     <div className="min-h-[calc(100vh-64px)] bg-slate-950 py-10 mb-200 text-slate-100">
@@ -175,6 +207,81 @@ export default function SettingsPage({
               onChange={setTickerBackground}
             />
           </div>
+
+          <section className="mb-6 space-y-4">
+            <header className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-white">
+                Logo Overlay
+              </h3>
+              {logoImage && (
+                <button
+                  type="button"
+                  className="text-xs font-semibold uppercase tracking-wide text-red-300 hover:text-red-200"
+                  onClick={handleRemoveLogo}
+                >
+                  Remove
+                </button>
+              )}
+            </header>
+            <p className="text-xs text-slate-400">
+              Upload an image to replace the NCPA badge. Drag it in the preview
+              to adjust placement.
+            </p>
+            <label className="flex flex-col gap-2 rounded-xl border border-dashed border-slate-700 bg-slate-900 px-4 py-3 text-xs text-slate-300">
+              <span className="font-semibold uppercase tracking-wide">
+                Upload logo image
+              </span>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleLogoFileChange}
+                className="text-slate-400 file:mr-4 file:rounded-full file:border-0 file:bg-lime-400/10 file:px-3 file:py-1 file:text-xs file:font-semibold file:uppercase file:tracking-wide file:text-lime-300 hover:file:bg-lime-400/20"
+              />
+            </label>
+            {logoImage && (
+              <div className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-900 px-4 py-3">
+                <div className="flex items-center gap-3">
+                  <img
+                    src={logoImage}
+                    alt="Custom logo preview"
+                    className="h-12 w-12 rounded object-contain"
+                  />
+                  <div className="text-xs text-slate-400">
+                    <div className="font-semibold text-slate-200">Logo loaded</div>
+                    <div>Drag the image on the preview to reposition.</div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="text-xs font-semibold uppercase tracking-wide text-lime-300 hover:text-lime-200"
+                  onClick={handleResetLogoPosition}
+                >
+                  Reset position
+                </button>
+              </div>
+            )}
+            <div className="space-y-3">
+              <LabeledToggle
+                label="Transparent badge background"
+                checked={logoTransparentBackground}
+                onChange={setLogoTransparentBackground}
+              />
+              <LabeledToggle
+                label="Hide NCPA text"
+                checked={logoTextHidden}
+                onChange={setLogoTextHidden}
+              />
+              {logoImage && (
+                <div className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-xs text-slate-400">
+                  <div className="font-semibold text-slate-200">Position</div>
+                  <div>
+                    X offset: {logoPosition?.x ?? 0}px &middot; Y offset: {" "}
+                    {logoPosition?.y ?? 0}px
+                  </div>
+                </div>
+              )}
+            </div>
+          </section>
 
           <div className="space-y-3">
             <LabeledToggle
@@ -286,6 +393,12 @@ export default function SettingsPage({
               showBorder={showBorder}
               manualTextColor={resolvedTextColor}
               useFullAssociationName={useFullAssociationName}
+              logoImage={logoImage}
+              logoTransparentBackground={logoTransparentBackground}
+              logoTextHidden={logoTextHidden}
+              logoPosition={logoPosition}
+              logoDraggable
+              onLogoPositionChange={setLogoPosition}
             />
           </div>
         </div>

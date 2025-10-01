@@ -1,5 +1,7 @@
+import { useCallback, useRef } from "react";
 import { contrastTextColor, hsl } from "../utils/colors";
 import { deriveMatchState } from "../utils/matchState";
+import { normalizeLogoPosition } from "../utils/logo";
 
 export default function Scoreboard({
   matchInfo,
@@ -8,6 +10,12 @@ export default function Scoreboard({
   showBorder,
   manualTextColor,
   useFullAssociationName,
+  logoImage,
+  logoTransparentBackground = false,
+  logoTextHidden = false,
+  logoPosition,
+  logoDraggable = false,
+  onLogoPositionChange,
   className = "",
 }) {
   const { match: safeMatch, activeGame, activeGameNumber } = deriveMatchState(
@@ -20,6 +28,51 @@ export default function Scoreboard({
   const associationLabel = useFullAssociationName
     ? "National College Pickleball Association"
     : "NCPA";
+  const normalizedLogoPosition = normalizeLogoPosition(logoPosition);
+  const badgeRef = useRef(null);
+  const isLogoInteractive = Boolean(
+    logoImage && logoDraggable && typeof onLogoPositionChange === "function"
+  );
+  const overlayTransform = `translate(-50%, -50%) translate(${normalizedLogoPosition.x}px, ${normalizedLogoPosition.y}px)`;
+  const badgeBackgroundColor = logoTransparentBackground
+    ? "transparent"
+    : hsl(primaryColor);
+  const rowBackgroundColor = logoTransparentBackground
+    ? "transparent"
+    : hsl(primaryColor);
+
+  const handleLogoPointerDown = useCallback(
+    (event) => {
+      if (!isLogoInteractive) return;
+      event.preventDefault();
+
+      const startX = event.clientX;
+      const startY = event.clientY;
+      const originX = normalizedLogoPosition.x;
+      const originY = normalizedLogoPosition.y;
+
+      const handlePointerMove = (moveEvent) => {
+        const deltaX = moveEvent.clientX - startX;
+        const deltaY = moveEvent.clientY - startY;
+        onLogoPositionChange({ x: originX + deltaX, y: originY + deltaY });
+      };
+
+      const handlePointerUp = () => {
+        window.removeEventListener("pointermove", handlePointerMove);
+        window.removeEventListener("pointerup", handlePointerUp);
+      };
+
+      window.addEventListener("pointermove", handlePointerMove);
+      window.addEventListener("pointerup", handlePointerUp);
+
+      const capture = badgeRef.current?.setPointerCapture;
+      if (typeof capture === "function") {
+        capture.call(badgeRef.current, event.pointerId);
+      }
+    },
+    [isLogoInteractive, normalizedLogoPosition.x, normalizedLogoPosition.y, onLogoPositionChange]
+  );
+
   const footerText = [
     `Game ${activeGameNumber}${
       safeMatch.best_of ? ` of ${safeMatch.best_of}` : ""
@@ -59,10 +112,35 @@ export default function Scoreboard({
 
       <div
         className="flex overflow-hidden rounded min-w-120"
-        style={{ backgroundColor: hsl(primaryColor), color: headerTextColor }}
+        style={{ backgroundColor: rowBackgroundColor, color: headerTextColor }}
       >
-        <div className="flex w-40 items-center justify-center text-4xl font-bold">
-          NCPA
+        <div
+          ref={badgeRef}
+          className={`relative flex w-40 items-center justify-center text-4xl font-bold ${
+            isLogoInteractive ? "cursor-grab" : ""
+          }`}
+          style={{
+            backgroundColor: badgeBackgroundColor,
+            color: headerTextColor,
+            touchAction: isLogoInteractive ? "none" : "auto",
+          }}
+          onPointerDown={handleLogoPointerDown}
+        >
+          {!logoTextHidden && "NCPA"}
+          {logoImage && (
+            <img
+              src={logoImage}
+              alt="Custom logo"
+              draggable={false}
+              className="pointer-events-none select-none max-h-32 max-w-32 object-contain"
+              style={{
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                transform: overlayTransform,
+              }}
+            />
+          )}
         </div>
 
         <div

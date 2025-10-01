@@ -17,6 +17,7 @@ import {
   hexToHsl,
 } from "./utils/colors";
 import { fetchMatchBundle } from "./utils/matchService";
+import { DEFAULT_LOGO_POSITION, normalizeLogoPosition } from "./utils/logo";
 
 const STORAGE_KEY = "pickleball-ticker-theme";
 const SYNC_STORAGE_KEY = "pickleball-ticker-sync";
@@ -82,6 +83,13 @@ export default function App() {
     if (payload.showBorder !== undefined) setShowBorder(!!payload.showBorder);
     if (payload.useFullAssociationName !== undefined)
       setUseFullAssociationName(!!payload.useFullAssociationName);
+    if (payload.logoImage !== undefined) setLogoImage(payload.logoImage ?? null);
+    if (payload.logoTransparentBackground !== undefined)
+      setLogoTransparentBackground(!!payload.logoTransparentBackground);
+    if (payload.logoTextHidden !== undefined)
+      setLogoTextHidden(!!payload.logoTextHidden);
+    if (payload.logoPosition !== undefined)
+      setLogoPosition(normalizeLogoPosition(payload.logoPosition));
     if (payload.matchError !== undefined) setMatchError(payload.matchError ?? null);
     if (payload.matchLoading !== undefined)
       setMatchLoading(!!payload.matchLoading);
@@ -164,6 +172,10 @@ export default function App() {
     }
     return manual;
   }, [storedTheme]);
+  const initialLogoPosition = useMemo(
+    () => normalizeLogoPosition(storedTheme?.logoPosition),
+    [storedTheme]
+  );
 
   const [manualTextColor, setManualTextColor] = useState(
     initialManualTextColor
@@ -173,6 +185,16 @@ export default function App() {
   );
   const [useFullAssociationName, setUseFullAssociationName] = useState(
     storedTheme?.useFullAssociationName ?? false
+  );
+  const [logoImage, setLogoImage] = useState(storedTheme?.logoImage ?? null);
+  const [logoTransparentBackground, setLogoTransparentBackground] = useState(
+    storedTheme?.logoTransparentBackground ?? false
+  );
+  const [logoTextHidden, setLogoTextHidden] = useState(
+    storedTheme?.logoTextHidden ?? false
+  );
+  const [logoPosition, setLogoPosition] = useState(
+    initialLogoPosition
   );
 
   useEffect(() => {
@@ -216,6 +238,10 @@ export default function App() {
           manualTextColor,
           showBorder,
           useFullAssociationName,
+          logoImage,
+          logoTransparentBackground,
+          logoTextHidden,
+          logoPosition,
         })
       );
     } catch (error) {
@@ -229,6 +255,10 @@ export default function App() {
     manualTextColor,
     showBorder,
     useFullAssociationName,
+    logoImage,
+    logoTransparentBackground,
+    logoTextHidden,
+    logoPosition,
   ]);
 
   const appClassName = isTickerRoute
@@ -256,6 +286,10 @@ export default function App() {
       useFullAssociationName,
       matchError,
       matchLoading,
+      logoImage,
+      logoTransparentBackground,
+      logoTextHidden,
+      logoPosition,
     };
 
     try {
@@ -349,6 +383,14 @@ export default function App() {
               setShowBorder={setShowBorder}
               useFullAssociationName={useFullAssociationName}
               setUseFullAssociationName={setUseFullAssociationName}
+              logoImage={logoImage}
+              setLogoImage={setLogoImage}
+              logoTransparentBackground={logoTransparentBackground}
+              setLogoTransparentBackground={setLogoTransparentBackground}
+              logoTextHidden={logoTextHidden}
+              setLogoTextHidden={setLogoTextHidden}
+              logoPosition={logoPosition}
+              setLogoPosition={setLogoPosition}
             />
           }
         />
@@ -363,6 +405,10 @@ export default function App() {
               manualTextColor={manualTextColorEnabled ? manualTextColor : null}
               tickerBackground={tickerBackground}
               useFullAssociationName={useFullAssociationName}
+              logoImage={logoImage}
+              logoTransparentBackground={logoTransparentBackground}
+              logoTextHidden={logoTextHidden}
+              logoPosition={logoPosition}
             />
           }
         />

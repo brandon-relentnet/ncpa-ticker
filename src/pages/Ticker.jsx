@@ -9,6 +9,10 @@ export default function TickerPage({
   manualTextColor,
   tickerBackground,
   useFullAssociationName,
+  logoImage,
+  logoTransparentBackground,
+  logoTextHidden,
+  logoPosition,
 }) {
   return (
     <div
@@ -22,6 +26,10 @@ export default function TickerPage({
         showBorder={showBorder}
         manualTextColor={manualTextColor}
         useFullAssociationName={useFullAssociationName}
+        logoImage={logoImage}
+        logoTransparentBackground={logoTransparentBackground}
+        logoTextHidden={logoTextHidden}
+        logoPosition={logoPosition}
       />
     </div>
   );
