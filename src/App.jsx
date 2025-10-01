@@ -238,45 +238,25 @@ export default function App() {
   const navLinkBaseClasses =
     "rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wide transition-colors hover:text-lime-300";
 
-  const buildSyncPayload = useCallback(
-    () => ({
-      matchInfo,
-      gamesPayload,
-      teamsPayload,
-      matchIdInput,
-      activeMatchId,
-      primaryColor,
-      secondaryColor,
-      tickerBackground,
-      manualTextColorEnabled,
-      manualTextColor,
-      showBorder,
-      useFullAssociationName,
-      matchError,
-      matchLoading,
-    }),
-    [
-      matchInfo,
-      gamesPayload,
-      teamsPayload,
-      matchIdInput,
-      activeMatchId,
-      primaryColor,
-      secondaryColor,
-      tickerBackground,
-      manualTextColorEnabled,
-      manualTextColor,
-      showBorder,
-      useFullAssociationName,
-      matchError,
-      matchLoading,
-    ]
-  );
-
-  const handleApplyTickerUpdate = useCallback(() => {
+  const handleApplyTickerUpdate = () => {
     if (typeof window === "undefined") return;
 
-    const payload = buildSyncPayload();
+    const payload = {
+      matchInfo,
+      gamesPayload,
+      teamsPayload,
+      matchIdInput,
+      activeMatchId,
+      primaryColor,
+      secondaryColor,
+      tickerBackground,
+      manualTextColorEnabled,
+      manualTextColor,
+      showBorder,
+      useFullAssociationName,
+      matchError,
+      matchLoading,
+    };
 
     try {
       window.localStorage.setItem(
@@ -290,7 +270,7 @@ export default function App() {
     } catch (error) {
       console.warn("Failed to broadcast ticker update", error);
     }
-  }, [buildSyncPayload, tabId]);
+  };
 
   return (
     <div className={appClassName}>

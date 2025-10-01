@@ -1,10 +1,9 @@
-import { memo, useMemo } from "react";
 import { HslColorPicker } from "react-colorful";
 import Scoreboard from "../components/Scoreboard";
 import { contrastTextColor, hsl } from "../utils/colors";
 import { deriveMatchState } from "../utils/matchState";
 
-const ColorControl = memo(function ColorControl({
+function ColorControl({
   label,
   color,
   onChange,
@@ -33,10 +32,9 @@ const ColorControl = memo(function ColorControl({
       </div>
     </section>
   );
-});
-ColorControl.displayName = "ColorControl";
+}
 
-const TextColorControl = memo(function TextColorControl({
+function TextColorControl({
   manualEnabled,
   manualColor,
   onToggleManual,
@@ -90,8 +88,7 @@ const TextColorControl = memo(function TextColorControl({
       </div>
     </section>
   );
-});
-TextColorControl.displayName = "TextColorControl";
+}
 
 function LabeledToggle({ label, checked, onChange }) {
   return (
@@ -133,15 +130,11 @@ export default function SettingsPage({
   useFullAssociationName,
   setUseFullAssociationName,
 }) {
-  // Cheap calculations inline; only memoize expensive work
   const autoHeaderColor = contrastTextColor(primaryColor);
   const autoBodyColor = contrastTextColor(secondaryColor);
   const resolvedTextColor = manualTextColorEnabled ? manualTextColor : null;
-
-  // Keep this memo if deriveMatchState does meaningful work
-  const matchState = useMemo(() => deriveMatchState(matchInfo), [matchInfo]);
   const { games, activeGameIndex, activeGameNumber, activeGameStatusLabel } =
-    matchState;
+    deriveMatchState(matchInfo);
 
   const tickerBg = hsl(tickerBackground);
 

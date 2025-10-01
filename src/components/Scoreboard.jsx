@@ -1,8 +1,7 @@
-import { memo, useMemo } from "react";
 import { contrastTextColor, hsl } from "../utils/colors";
 import { deriveMatchState } from "../utils/matchState";
 
-function Scoreboard({
+export default function Scoreboard({
   matchInfo,
   primaryColor,
   secondaryColor,
@@ -11,45 +10,25 @@ function Scoreboard({
   useFullAssociationName,
   className = "",
 }) {
-  const { match: safeMatch, activeGame, activeGameNumber } = useMemo(
-    () => deriveMatchState(matchInfo),
-    [matchInfo]
+  const { match: safeMatch, activeGame, activeGameNumber } = deriveMatchState(
+    matchInfo
   );
 
-  const { headerTextColor, bodyTextColor } = useMemo(() => {
-    if (manualTextColor) {
-      const manualColorValue = hsl(manualTextColor);
-      return {
-        headerTextColor: manualColorValue,
-        bodyTextColor: manualColorValue,
-      };
-    }
-
-    return {
-      headerTextColor: contrastTextColor(primaryColor),
-      bodyTextColor: contrastTextColor(secondaryColor),
-    };
-  }, [manualTextColor, primaryColor, secondaryColor]);
-
-  const associationLabel = useMemo(
-    () =>
-      useFullAssociationName
-        ? "National College Pickleball Association"
-        : "NCPA",
-    [useFullAssociationName]
-  );
-
-  const footerText = useMemo(() => {
-    const details = [
-      `Game ${activeGameNumber}${
-        safeMatch.best_of ? ` of ${safeMatch.best_of}` : ""
-      }`,
-      safeMatch.rules,
-      safeMatch.winning,
-    ];
-
-    return details.filter(Boolean).join(" / ");
-  }, [activeGameNumber, safeMatch.best_of, safeMatch.rules, safeMatch.winning]);
+  const manualColorValue = manualTextColor ? hsl(manualTextColor) : null;
+  const headerTextColor = manualColorValue ?? contrastTextColor(primaryColor);
+  const bodyTextColor = manualColorValue ?? contrastTextColor(secondaryColor);
+  const associationLabel = useFullAssociationName
+    ? "National College Pickleball Association"
+    : "NCPA";
+  const footerText = [
+    `Game ${activeGameNumber}${
+      safeMatch.best_of ? ` of ${safeMatch.best_of}` : ""
+    }`,
+    safeMatch.rules,
+    safeMatch.winning,
+  ]
+    .filter(Boolean)
+    .join(" / ");
 
   if (!activeGame) {
     return (
@@ -133,8 +112,3 @@ function Scoreboard({
     </div>
   );
 }
-
-const MemoizedScoreboard = memo(Scoreboard);
-MemoizedScoreboard.displayName = "Scoreboard";
-
-export default MemoizedScoreboard;
