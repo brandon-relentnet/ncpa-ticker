@@ -5,6 +5,7 @@ export default function TickerPage({
   matchInfo,
   primaryColor,
   secondaryColor,
+  scoreBackground,
   showBorder,
   manualTextColor,
   tickerBackground,
@@ -23,6 +24,7 @@ export default function TickerPage({
         matchInfo={matchInfo}
         primaryColor={primaryColor}
         secondaryColor={secondaryColor}
+        scoreBackground={scoreBackground}
         showBorder={showBorder}
         manualTextColor={manualTextColor}
         useFullAssociationName={useFullAssociationName}

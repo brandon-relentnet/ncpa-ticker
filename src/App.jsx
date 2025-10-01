@@ -12,6 +12,7 @@ import TickerPage from "./pages/Ticker";
 import {
   DEFAULT_PRIMARY,
   DEFAULT_SECONDARY,
+  DEFAULT_SCORE_BACKGROUND,
   DEFAULT_TICKER_BACKGROUND,
   DEFAULT_TEXT_COLOR,
   hexToHsl,
@@ -74,6 +75,8 @@ export default function App() {
       setPrimaryColor(payload.primaryColor ?? DEFAULT_PRIMARY);
     if (payload.secondaryColor !== undefined)
       setSecondaryColor(payload.secondaryColor ?? DEFAULT_SECONDARY);
+    if (payload.scoreBackground !== undefined)
+      setScoreBackground(payload.scoreBackground ?? DEFAULT_SCORE_BACKGROUND);
     if (payload.tickerBackground !== undefined)
       setTickerBackground(payload.tickerBackground ?? DEFAULT_TICKER_BACKGROUND);
     if (payload.manualTextColorEnabled !== undefined)
@@ -158,6 +161,9 @@ export default function App() {
   const [secondaryColor, setSecondaryColor] = useState(
     storedTheme?.secondaryColor ?? DEFAULT_SECONDARY
   );
+  const [scoreBackground, setScoreBackground] = useState(
+    storedTheme?.scoreBackground ?? DEFAULT_SCORE_BACKGROUND
+  );
   const [tickerBackground, setTickerBackground] = useState(
     storedTheme?.tickerBackground ?? DEFAULT_TICKER_BACKGROUND
   );
@@ -233,6 +239,7 @@ export default function App() {
         JSON.stringify({
           primaryColor,
           secondaryColor,
+          scoreBackground,
           tickerBackground,
           manualTextColorEnabled,
           manualTextColor,
@@ -250,6 +257,7 @@ export default function App() {
   }, [
     primaryColor,
     secondaryColor,
+    scoreBackground,
     tickerBackground,
     manualTextColorEnabled,
     manualTextColor,
@@ -279,6 +287,7 @@ export default function App() {
       activeMatchId,
       primaryColor,
       secondaryColor,
+      scoreBackground,
       tickerBackground,
       manualTextColorEnabled,
       manualTextColor,
@@ -371,8 +380,10 @@ export default function App() {
               onApplyTickerUpdate={handleApplyTickerUpdate}
               primaryColor={primaryColor}
               secondaryColor={secondaryColor}
+              scoreBackground={scoreBackground}
               setPrimaryColor={setPrimaryColor}
               setSecondaryColor={setSecondaryColor}
+              setScoreBackground={setScoreBackground}
               tickerBackground={tickerBackground}
               setTickerBackground={setTickerBackground}
               manualTextColor={manualTextColor}
@@ -401,6 +412,7 @@ export default function App() {
               matchInfo={matchInfo}
               primaryColor={primaryColor}
               secondaryColor={secondaryColor}
+              scoreBackground={scoreBackground}
               showBorder={showBorder}
               manualTextColor={manualTextColorEnabled ? manualTextColor : null}
               tickerBackground={tickerBackground}

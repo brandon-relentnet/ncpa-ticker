@@ -1,5 +1,6 @@
 export const DEFAULT_PRIMARY = { h: 0, s: 85, l: 60 };
 export const DEFAULT_SECONDARY = { h: 46, s: 86, l: 47 };
+export const DEFAULT_SCORE_BACKGROUND = { h: 46, s: 86, l: 47 };
 export const DEFAULT_TICKER_BACKGROUND = { h: 120, s: 100, l: 45 };
 export const DEFAULT_TEXT_COLOR = { h: 0, s: 0, l: 100 };
 

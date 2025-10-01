@@ -7,6 +7,7 @@ export default function Scoreboard({
   matchInfo,
   primaryColor,
   secondaryColor,
+  scoreBackground,
   showBorder,
   manualTextColor,
   useFullAssociationName,
@@ -26,7 +27,12 @@ export default function Scoreboard({
 
   const manualColorValue = manualTextColor ? hsl(manualTextColor) : null;
   const headerTextColor = manualColorValue ?? contrastTextColor(primaryColor);
-  const bodyTextColor = manualColorValue ?? contrastTextColor(secondaryColor);
+  const bodyBackgroundColor = secondaryColor;
+  const scoreBackgroundColor = scoreBackground ?? secondaryColor;
+  const bodyTextColor =
+    manualColorValue ?? contrastTextColor(bodyBackgroundColor);
+  const scoreTextColor =
+    manualColorValue ?? contrastTextColor(scoreBackgroundColor);
   const associationLabel = useFullAssociationName
     ? "National College Pickleball Association"
     : "NCPA";
@@ -80,15 +86,20 @@ export default function Scoreboard({
     ]
   );
 
-  const footerText = [
-    `Game ${activeGameNumber}${
-      safeMatch.best_of ? ` of ${safeMatch.best_of}` : ""
-    }`,
-    safeMatch.rules,
-    safeMatch.winning,
-  ]
-    .filter(Boolean)
-    .join(" / ");
+  const sep = "\u00A0\u00A0\u00B7\u00A0\u00A0";
+  const footerText = (
+    <span className="font-semibold">
+      {[
+        `Game ${activeGameNumber}${
+          safeMatch.best_of ? ` of ${safeMatch.best_of}` : ""
+        }`,
+        safeMatch.rules,
+        safeMatch.winning,
+      ]
+        .filter(Boolean)
+        .join(sep)}
+    </span>
+  );
 
   if (!activeGame) {
     return (
@@ -107,10 +118,10 @@ export default function Scoreboard({
 
   return (
     <div
-      className={`flex flex-col items-center justify-between ${className}`.trim()}
+      className={`flex flex-col items-end justify-between ${className}`.trim()}
     >
       <div
-        className="w-fit rounded-t px-3 py-1 text-center text-sm font-semibold tracking-wide"
+        className="w-120 rounded-t px-3 py-1 text-center text-sm font-semibold tracking-wide"
         style={{ backgroundColor: hsl(primaryColor), color: headerTextColor }}
       >
         {associationLabel}
@@ -123,7 +134,7 @@ export default function Scoreboard({
       >
         <div
           ref={badgeRef}
-          className={`relative flex w-40 items-center justify-center text-4xl font-bold ${
+          className={`relative flex w-40 rounded-l items-center justify-center text-4xl font-bold ${
             isLogoInteractive ? "cursor-grab" : ""
           }`}
           style={{
@@ -154,7 +165,10 @@ export default function Scoreboard({
           className={`flex w-full flex-col rounded ${
             showBorder ? "border" : ""
           }`}
-          style={{ backgroundColor: hsl(secondaryColor), color: bodyTextColor }}
+          style={{
+            backgroundColor: hsl(bodyBackgroundColor),
+            color: bodyTextColor,
+          }}
         >
           <div className="flex border-b">
             <div className="flex size-15 items-center justify-center">
@@ -166,7 +180,13 @@ export default function Scoreboard({
                 {activeGame.t1_players.join(" & ")}
               </div>
             </div>
-            <div className="flex size-15 items-center justify-center border-l px-4 text-3xl font-bold">
+            <div
+              className="flex size-15 items-center justify-center border-l px-4 text-3xl font-bold"
+              style={{
+                backgroundColor: hsl(scoreBackgroundColor),
+                color: scoreTextColor,
+              }}
+            >
               {activeGame.t1_score}
             </div>
           </div>
@@ -181,7 +201,13 @@ export default function Scoreboard({
                 {activeGame.t2_players.join(" & ")}
               </div>
             </div>
-            <div className="flex size-15 items-center justify-center border-l px-4 text-3xl font-bold">
+            <div
+              className="flex size-15 items-center justify-center border-l px-4 text-3xl font-bold"
+              style={{
+                backgroundColor: hsl(scoreBackgroundColor),
+                color: scoreTextColor,
+              }}
+            >
               {activeGame.t2_score}
             </div>
           </div>
@@ -189,7 +215,7 @@ export default function Scoreboard({
       </div>
 
       <div
-        className="w-fit rounded-b px-3 py-1 text-center text-sm font-medium"
+        className="w-120 rounded-b px-3 py-1 text-center text-sm font-medium"
         style={{ backgroundColor: hsl(primaryColor), color: headerTextColor }}
       >
         {footerText}
