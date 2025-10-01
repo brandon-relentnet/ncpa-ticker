@@ -18,9 +18,11 @@ export default function Scoreboard({
   onLogoPositionChange,
   className = "",
 }) {
-  const { match: safeMatch, activeGame, activeGameNumber } = deriveMatchState(
-    matchInfo
-  );
+  const {
+    match: safeMatch,
+    activeGame,
+    activeGameNumber,
+  } = deriveMatchState(matchInfo);
 
   const manualColorValue = manualTextColor ? hsl(manualTextColor) : null;
   const headerTextColor = manualColorValue ?? contrastTextColor(primaryColor);
@@ -70,7 +72,12 @@ export default function Scoreboard({
         capture.call(badgeRef.current, event.pointerId);
       }
     },
-    [isLogoInteractive, normalizedLogoPosition.x, normalizedLogoPosition.y, onLogoPositionChange]
+    [
+      isLogoInteractive,
+      normalizedLogoPosition.x,
+      normalizedLogoPosition.y,
+      onLogoPositionChange,
+    ]
   );
 
   const footerText = [
@@ -111,7 +118,7 @@ export default function Scoreboard({
       </div>
 
       <div
-        className="flex overflow-hidden rounded min-w-120"
+        className="flex rounded min-w-120"
         style={{ backgroundColor: rowBackgroundColor, color: headerTextColor }}
       >
         <div

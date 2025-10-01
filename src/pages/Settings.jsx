@@ -4,12 +4,7 @@ import { contrastTextColor, hsl } from "../utils/colors";
 import { deriveMatchState } from "../utils/matchState";
 import { DEFAULT_LOGO_POSITION } from "../utils/logo";
 
-function ColorControl({
-  label,
-  color,
-  onChange,
-  className = "",
-}) {
+function ColorControl({ label, color, onChange, className = "" }) {
   const textColor = contrastTextColor(color);
   const swatchColor = hsl(color);
 
@@ -171,9 +166,9 @@ export default function SettingsPage({
   };
 
   return (
-    <div className="min-h-[calc(100vh-64px)] bg-slate-950 py-10 mb-200 text-slate-100">
+    <div className="min-h-[calc(100vh-64px)] bg-slate-950 py-10 text-slate-100">
       <div className="mx-auto flex max-w-[1600px] flex-col gap-8 px-6 lg:flex-row">
-        <aside className="rounded-3xl border border-slate-800 bg-slate-900/70 p-6 shadow-lg">
+        <aside className="rounded-3xl border w-120 border-slate-800 bg-slate-900/70 p-6 shadow-lg">
           <h2 className="text-xl font-semibold text-white">Theme Controls</h2>
           <p className="mb-6 mt-1 text-xs text-slate-500">
             Colors apply to both preview and ticker output.
@@ -210,9 +205,7 @@ export default function SettingsPage({
 
           <section className="mb-6 space-y-4">
             <header className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-white">
-                Logo Overlay
-              </h3>
+              <h3 className="text-sm font-semibold text-white">Logo Overlay</h3>
               {logoImage && (
                 <button
                   type="button"
@@ -247,7 +240,9 @@ export default function SettingsPage({
                     className="h-12 w-12 rounded object-contain"
                   />
                   <div className="text-xs text-slate-400">
-                    <div className="font-semibold text-slate-200">Logo loaded</div>
+                    <div className="font-semibold text-slate-200">
+                      Logo loaded
+                    </div>
                     <div>Drag the image on the preview to reposition.</div>
                   </div>
                 </div>
@@ -275,7 +270,7 @@ export default function SettingsPage({
                 <div className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-xs text-slate-400">
                   <div className="font-semibold text-slate-200">Position</div>
                   <div>
-                    X offset: {logoPosition?.x ?? 0}px &middot; Y offset: {" "}
+                    X offset: {logoPosition?.x ?? 0}px &middot; Y offset:{" "}
                     {logoPosition?.y ?? 0}px
                   </div>
                 </div>
