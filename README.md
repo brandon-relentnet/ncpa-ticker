@@ -3,7 +3,7 @@
 Pickleball Ticker is a small React + Vite application for operators who need to style and broadcast a live pickleball scoreboard. The app pulls match details from the National College Pickleball Association (NCPA) API, lets you tune the color palette and overlay a custom logo, then mirrors the configured layout on a dedicated ticker route for capture cards or stream overlays.
 
 ## Highlights
-- **Live theme controls** – Adjust header, body, score column, and ticker background colors with HSL pickers while previewing accessible text contrast in real time.
+- **Live theme controls** – Adjust header, badge, body, score column, and ticker background colors with HSL pickers while previewing accessible text contrast in real time.
 - **NCPA match data** – Fetches game results, teams, and player rosters by match ID using the official API and summarizes the current series status.
 - **Layout-ready ticker view** – `/ticker` renders the Scoreboard component full screen with the latest settings, ideal for OBS or browser sources.
 - **Cross-tab sync** – Theme selections, match state, and ticker payload broadcast between browser tabs via `localStorage`, making it easy to keep the ticker window up to date.
@@ -40,8 +40,9 @@ The development server runs on <http://localhost:5173>. Navigate to `/settings` 
 ## Usage Notes
 - **Loading matches** – Enter a numeric match ID and click **Load**. The app requests `get-games` and `get-match` endpoints concurrently and normalizes them via `src/utils/officialAdapter.js`.
 - **Active game selector** – Use **Prev/Next** to select which game in the series the scoreboard highlights. The footer displays match rules and status such as `Game 2 of 3 / First to 11 (win by 2)`.
-- **Text color handling** – Automatic contrast picks black/white for header, body, and score cells. Enabling Manual mode lets you dial an HSL value that applies across the board.
+- **Text color handling** – Automatic contrast picks black/white for header, badge, body, and score cells. Enabling Manual mode lets you dial an HSL value that applies across the board.
 - **Logo adjustments** – After uploading, drag the badge in the preview (Settings view only). Position, transparency, and text toggles are stored with the theme.
+- **Badge background** – Tune the NCPA badge color independently to match your broadcast palette without affecting the header strip.
 - **Apply Update To Ticker** – Broadcasts the latest match payload and theme settings to other tabs. Automatic syncing also happens whenever state changes, unless a tab is mid-update.
 
 ## Project Structure

@@ -13,6 +13,7 @@ import {
   DEFAULT_PRIMARY,
   DEFAULT_SECONDARY,
   DEFAULT_SCORE_BACKGROUND,
+  DEFAULT_BADGE_BACKGROUND,
   DEFAULT_TICKER_BACKGROUND,
   DEFAULT_TEXT_COLOR,
   hexToHsl,
@@ -77,6 +78,8 @@ export default function App() {
       setSecondaryColor(payload.secondaryColor ?? DEFAULT_SECONDARY);
     if (payload.scoreBackground !== undefined)
       setScoreBackground(payload.scoreBackground ?? DEFAULT_SCORE_BACKGROUND);
+    if (payload.badgeBackground !== undefined)
+      setBadgeBackground(payload.badgeBackground ?? DEFAULT_BADGE_BACKGROUND);
     if (payload.tickerBackground !== undefined)
       setTickerBackground(payload.tickerBackground ?? DEFAULT_TICKER_BACKGROUND);
     if (payload.manualTextColorEnabled !== undefined)
@@ -164,6 +167,9 @@ export default function App() {
   const [scoreBackground, setScoreBackground] = useState(
     storedTheme?.scoreBackground ?? DEFAULT_SCORE_BACKGROUND
   );
+  const [badgeBackground, setBadgeBackground] = useState(
+    storedTheme?.badgeBackground ?? DEFAULT_BADGE_BACKGROUND
+  );
   const [tickerBackground, setTickerBackground] = useState(
     storedTheme?.tickerBackground ?? DEFAULT_TICKER_BACKGROUND
   );
@@ -240,6 +246,7 @@ export default function App() {
           primaryColor,
           secondaryColor,
           scoreBackground,
+          badgeBackground,
           tickerBackground,
           manualTextColorEnabled,
           manualTextColor,
@@ -258,6 +265,7 @@ export default function App() {
     primaryColor,
     secondaryColor,
     scoreBackground,
+    badgeBackground,
     tickerBackground,
     manualTextColorEnabled,
     manualTextColor,
@@ -288,6 +296,7 @@ export default function App() {
       primaryColor,
       secondaryColor,
       scoreBackground,
+      badgeBackground,
       tickerBackground,
       manualTextColorEnabled,
       manualTextColor,
@@ -381,9 +390,11 @@ export default function App() {
               primaryColor={primaryColor}
               secondaryColor={secondaryColor}
               scoreBackground={scoreBackground}
+              badgeBackground={badgeBackground}
               setPrimaryColor={setPrimaryColor}
               setSecondaryColor={setSecondaryColor}
               setScoreBackground={setScoreBackground}
+              setBadgeBackground={setBadgeBackground}
               tickerBackground={tickerBackground}
               setTickerBackground={setTickerBackground}
               manualTextColor={manualTextColor}
@@ -413,6 +424,7 @@ export default function App() {
               primaryColor={primaryColor}
               secondaryColor={secondaryColor}
               scoreBackground={scoreBackground}
+              badgeBackground={badgeBackground}
               showBorder={showBorder}
               manualTextColor={manualTextColorEnabled ? manualTextColor : null}
               tickerBackground={tickerBackground}

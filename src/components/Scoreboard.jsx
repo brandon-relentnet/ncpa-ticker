@@ -8,6 +8,7 @@ export default function Scoreboard({
   primaryColor,
   secondaryColor,
   scoreBackground,
+  badgeBackground,
   showBorder,
   manualTextColor,
   useFullAssociationName,
@@ -26,9 +27,13 @@ export default function Scoreboard({
   } = deriveMatchState(matchInfo);
 
   const manualColorValue = manualTextColor ? hsl(manualTextColor) : null;
-  const headerTextColor = manualColorValue ?? contrastTextColor(primaryColor);
   const bodyBackgroundColor = secondaryColor;
   const scoreBackgroundColor = scoreBackground ?? secondaryColor;
+  const badgeBackgroundColorValue = badgeBackground ?? primaryColor;
+  const headerTextColor = manualColorValue ?? contrastTextColor(primaryColor);
+  const badgeTextColor = logoTransparentBackground
+    ? headerTextColor
+    : manualColorValue ?? contrastTextColor(badgeBackgroundColorValue);
   const bodyTextColor =
     manualColorValue ?? contrastTextColor(bodyBackgroundColor);
   const scoreTextColor =
@@ -44,7 +49,7 @@ export default function Scoreboard({
   const overlayTransform = `translate(-50%, -50%) translate(${normalizedLogoPosition.x}px, ${normalizedLogoPosition.y}px)`;
   const badgeBackgroundColor = logoTransparentBackground
     ? "transparent"
-    : hsl(primaryColor);
+    : hsl(badgeBackgroundColorValue);
   const rowBackgroundColor = logoTransparentBackground
     ? "transparent"
     : hsl(primaryColor);
@@ -139,7 +144,7 @@ export default function Scoreboard({
           }`}
           style={{
             backgroundColor: badgeBackgroundColor,
-            color: headerTextColor,
+            color: badgeTextColor,
             touchAction: isLogoInteractive ? "none" : "auto",
           }}
           onPointerDown={handleLogoPointerDown}
@@ -162,9 +167,7 @@ export default function Scoreboard({
         </div>
 
         <div
-          className={`flex w-full flex-col rounded ${
-            showBorder ? "border" : ""
-          }`}
+          className={`flex w-full flex-col ${showBorder ? "border" : ""}`}
           style={{
             backgroundColor: hsl(bodyBackgroundColor),
             color: bodyTextColor,

@@ -35,13 +35,8 @@ function TextColorControl({
   manualColor,
   onToggleManual,
   onColorChange,
-  autoHeaderColor,
-  autoBodyColor,
-  autoScoreColor,
 }) {
-  const autoHeader = autoHeaderColor.toUpperCase();
-  const autoBody = autoBodyColor.toUpperCase();
-  const autoScore = autoScoreColor.toUpperCase();
+  const description = "Auto B/W for contrast";
   const manualSwatch = hsl(manualColor);
   const manualContrast = contrastTextColor(manualColor).toUpperCase();
 
@@ -62,9 +57,7 @@ function TextColorControl({
             />
           </label>
         </div>
-        <p className="text-[11px] text-slate-500">
-          header: {autoHeader} &middot; body: {autoBody} &middot; score: {autoScore}
-        </p>
+        <p className="text-[11px] text-slate-500">{description}</p>
       </header>
       <div className="flex overflow-hidden rounded-xl border border-slate-800 bg-slate-900">
         <HslColorPicker
@@ -116,9 +109,11 @@ export default function SettingsPage({
   primaryColor,
   secondaryColor,
   scoreBackground,
+  badgeBackground,
   setPrimaryColor,
   setSecondaryColor,
   setScoreBackground,
+  setBadgeBackground,
   tickerBackground,
   setTickerBackground,
   manualTextColor,
@@ -140,6 +135,7 @@ export default function SettingsPage({
 }) {
   const autoHeaderColor = contrastTextColor(primaryColor);
   const autoBodyColor = contrastTextColor(secondaryColor);
+  const autoBadgeColor = contrastTextColor(badgeBackground);
   const autoScoreColor = contrastTextColor(scoreBackground);
   const resolvedTextColor = manualTextColorEnabled ? manualTextColor : null;
   const { games, activeGameIndex, activeGameNumber, activeGameStatusLabel } =
@@ -193,6 +189,12 @@ export default function SettingsPage({
             />
 
             <ColorControl
+              label="Badge Background"
+              color={badgeBackground}
+              onChange={setBadgeBackground}
+            />
+
+            <ColorControl
               label="Score Column"
               color={scoreBackground}
               onChange={setScoreBackground}
@@ -204,6 +206,7 @@ export default function SettingsPage({
               onToggleManual={setManualTextColorEnabled}
               onColorChange={setManualTextColor}
               autoHeaderColor={autoHeaderColor}
+              autoBadgeColor={autoBadgeColor}
               autoBodyColor={autoBodyColor}
               autoScoreColor={autoScoreColor}
             />
@@ -398,6 +401,7 @@ export default function SettingsPage({
               primaryColor={primaryColor}
               secondaryColor={secondaryColor}
               scoreBackground={scoreBackground}
+              badgeBackground={badgeBackground}
               showBorder={showBorder}
               manualTextColor={resolvedTextColor}
               useFullAssociationName={useFullAssociationName}

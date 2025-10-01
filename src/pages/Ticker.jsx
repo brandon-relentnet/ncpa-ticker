@@ -6,6 +6,7 @@ export default function TickerPage({
   primaryColor,
   secondaryColor,
   scoreBackground,
+  badgeBackground,
   showBorder,
   manualTextColor,
   tickerBackground,
@@ -25,6 +26,7 @@ export default function TickerPage({
         primaryColor={primaryColor}
         secondaryColor={secondaryColor}
         scoreBackground={scoreBackground}
+        badgeBackground={badgeBackground}
         showBorder={showBorder}
         manualTextColor={manualTextColor}
         useFullAssociationName={useFullAssociationName}
