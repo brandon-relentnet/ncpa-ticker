@@ -13,7 +13,7 @@ export function Accordion({ children, className = "", transition }) {
     <MotionConfig
       transition={
         transition ?? {
-          duration: 0.3,
+          duration: 0.65,
           ease: [0.22, 1, 0.36, 1],
         }
       }
@@ -31,7 +31,7 @@ export function AccordionItem({ title, children, defaultOpen = false }) {
     <Motion.section
       initial={false}
       animate={isOpen ? "open" : "closed"}
-      className="group p-4"
+      className="group p-4 overflow-hidden"
     >
       <h3>
         <Motion.button
@@ -47,6 +47,7 @@ export function AccordionItem({ title, children, defaultOpen = false }) {
           </span>
           <Motion.span
             variants={{ open: { rotate: 180 }, closed: { rotate: 0 } }}
+            transition={{ duration: 0.1 }}
             className="text-slate-500 transition group-hover:text-slate-300"
           >
             <ChevronDownIcon />
@@ -93,7 +94,6 @@ function ChevronDownIcon() {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
-      variants={{ open: { rotate: 180 }, closed: { rotate: 0 } }}
     >
       <path d="m6 9 6 6 6-6" />
     </Motion.svg>
