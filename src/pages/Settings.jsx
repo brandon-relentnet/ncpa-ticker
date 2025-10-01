@@ -85,7 +85,7 @@ function LabeledToggle({ label, checked, onChange }) {
       <span className="font-medium text-slate-300">{label}</span>
       <input
         type="checkbox"
-        className="h-4 w-4"
+        className="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
       />
@@ -417,7 +417,7 @@ export default function SettingsPage({
             </AccordionItem>
           </Accordion>
         </div>
-        <div className="relative">
+        <div className="relative lg:sticky lg:top-10 lg:self-start lg:w-200">
           <div className="mb-8 ml-2">
             <h1 className="text-3xl mb-2 font-semibold text-lime-400">
               Display Preview
@@ -427,8 +427,12 @@ export default function SettingsPage({
             </p>
           </div>
           <div
-            className="rounded-lg p-12 shadow-lg mb-8"
-            style={{ backgroundColor: tickerBg }}
+            className="rounded-lg p-6 shadow-lg mb-8 flex flex-col justify-center items-center"
+            style={{
+              backgroundColor: tickerBg,
+              maxHeight: "calc(100vh - 8rem)",
+              overflow: "auto",
+            }}
           >
             <Scoreboard
               matchInfo={matchInfo}
