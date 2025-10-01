@@ -66,8 +66,10 @@ export default function App() {
 
   const applySyncPayload = useCallback((payload = {}) => {
     if (payload.matchInfo !== undefined) setMatchInfo(payload.matchInfo);
-    if (payload.gamesPayload !== undefined) setGamesPayload(payload.gamesPayload);
-    if (payload.teamsPayload !== undefined) setTeamsPayload(payload.teamsPayload);
+    if (payload.gamesPayload !== undefined)
+      setGamesPayload(payload.gamesPayload);
+    if (payload.teamsPayload !== undefined)
+      setTeamsPayload(payload.teamsPayload);
     if (payload.matchIdInput !== undefined)
       setMatchIdInput(payload.matchIdInput ?? "");
     if (payload.activeMatchId !== undefined)
@@ -81,7 +83,9 @@ export default function App() {
     if (payload.badgeBackground !== undefined)
       setBadgeBackground(payload.badgeBackground ?? DEFAULT_BADGE_BACKGROUND);
     if (payload.tickerBackground !== undefined)
-      setTickerBackground(payload.tickerBackground ?? DEFAULT_TICKER_BACKGROUND);
+      setTickerBackground(
+        payload.tickerBackground ?? DEFAULT_TICKER_BACKGROUND
+      );
     if (payload.manualTextColorEnabled !== undefined)
       setManualTextColorEnabled(!!payload.manualTextColorEnabled);
     if (payload.manualTextColor !== undefined)
@@ -89,14 +93,16 @@ export default function App() {
     if (payload.showBorder !== undefined) setShowBorder(!!payload.showBorder);
     if (payload.useFullAssociationName !== undefined)
       setUseFullAssociationName(!!payload.useFullAssociationName);
-    if (payload.logoImage !== undefined) setLogoImage(payload.logoImage ?? null);
+    if (payload.logoImage !== undefined)
+      setLogoImage(payload.logoImage ?? null);
     if (payload.logoTransparentBackground !== undefined)
       setLogoTransparentBackground(!!payload.logoTransparentBackground);
     if (payload.logoTextHidden !== undefined)
       setLogoTextHidden(!!payload.logoTextHidden);
     if (payload.logoPosition !== undefined)
       setLogoPosition(normalizeLogoPosition(payload.logoPosition));
-    if (payload.matchError !== undefined) setMatchError(payload.matchError ?? null);
+    if (payload.matchError !== undefined)
+      setMatchError(payload.matchError ?? null);
     if (payload.matchLoading !== undefined)
       setMatchLoading(!!payload.matchLoading);
   }, []);
@@ -109,28 +115,31 @@ export default function App() {
       return { ...previous, activeGameIndex: clampedIndex };
     });
 
-  const loadMatch = useCallback(async (targetMatchId) => {
-    if (!targetMatchId) {
-      setMatchError("Enter a match ID to load data");
-      return;
-    }
+  const loadMatch = useCallback(
+    async (targetMatchId) => {
+      if (!targetMatchId) {
+        setMatchError("Enter a match ID to load data");
+        return;
+      }
 
-    setMatchLoading(true);
-    setMatchError(null);
+      setMatchLoading(true);
+      setMatchError(null);
 
-    try {
-      const bundle = await fetchMatchBundle(targetMatchId);
-      applySyncPayload({
-        matchInfo: bundle.matchInfo,
-        gamesPayload: bundle.gamesPayload,
-        teamsPayload: bundle.teamsPayload,
-      });
-    } catch (error) {
-      setMatchError(error.message ?? "Failed to load match data");
-    } finally {
-      setMatchLoading(false);
-    }
-  }, [applySyncPayload]);
+      try {
+        const bundle = await fetchMatchBundle(targetMatchId);
+        applySyncPayload({
+          matchInfo: bundle.matchInfo,
+          gamesPayload: bundle.gamesPayload,
+          teamsPayload: bundle.teamsPayload,
+        });
+      } catch (error) {
+        setMatchError(error.message ?? "Failed to load match data");
+      } finally {
+        setMatchLoading(false);
+      }
+    },
+    [applySyncPayload]
+  );
 
   useEffect(() => {
     if (skipSyncRef.current) return;
@@ -205,9 +214,7 @@ export default function App() {
   const [logoTextHidden, setLogoTextHidden] = useState(
     storedTheme?.logoTextHidden ?? false
   );
-  const [logoPosition, setLogoPosition] = useState(
-    initialLogoPosition
-  );
+  const [logoPosition, setLogoPosition] = useState(initialLogoPosition);
 
   useEffect(() => {
     if (typeof window === "undefined") return undefined;
@@ -326,52 +333,6 @@ export default function App() {
 
   return (
     <div className={appClassName}>
-      {!isTickerRoute && (
-        <header className="border-b border-slate-900 bg-slate-950/90 backdrop-blur">
-          <div className="mx-auto flex max-w-6xl items-center justify-between p-4">
-            <NavLink
-              to="/settings"
-              className="text-xl font-semibold text-lime-400"
-            >
-              Pickleball Ticker
-            </NavLink>
-            <nav className="flex gap-3">
-              {NAV_LINKS.map((link) => {
-                if (link.external) {
-                  return (
-                    <a
-                      key={link.to}
-                      href={link.to}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`${navLinkBaseClasses} bg-slate-900/60 text-slate-300 hover:bg-slate-900`}
-                    >
-                      {link.label}
-                    </a>
-                  );
-                }
-
-                return (
-                  <NavLink
-                    key={link.to}
-                    to={link.to}
-                    className={({ isActive }) =>
-                      `${navLinkBaseClasses} ${
-                        isActive
-                          ? "bg-slate-900 text-lime-300"
-                          : "text-slate-400"
-                      }`
-                    }
-                  >
-                    {link.label}
-                  </NavLink>
-                );
-              })}
-            </nav>
-          </div>
-        </header>
-      )}
-
       <Routes>
         <Route
           path="/settings"
