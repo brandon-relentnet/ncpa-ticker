@@ -507,13 +507,50 @@ export default function SettingsPage({
               onLogoPositionChange={setLogoPosition}
             />
           </div>
-          <div className="mb-8 ml-2">
-            <h1 className="text-3xl mb-2 font-semibold text-lime-400">
-              Quick Info
-            </h1>
-            <p className="text-sm text-slate-400">
-              Information to help you understand the ticker app a little better.
-            </p>
+          <div className="mb-8 ml-2 space-y-4">
+            <h1 className="text-3xl font-semibold text-lime-400">Quick Info</h1>
+            <div className="space-y-3 text-sm text-slate-300">
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-wide text-lime-300">
+                  Load Data First
+                </div>
+                <p className="text-slate-400">
+                  Enter the match ID and hit <span className="font-semibold text-slate-200">Load</span>. Watch the status badge under Match Info for success or refresh if the API times out.
+                </p>
+              </div>
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-wide text-lime-300">
+                  Apply Changes
+                </div>
+                <p className="text-slate-400">
+                  Theme, logo, or active game tweaks auto-preview here. Use the floating <span className="font-semibold text-slate-200">Apply Update</span> button to push them to the ticker window.
+                </p>
+              </div>
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-wide text-lime-300">
+                  Keep Ticker Open
+                </div>
+                <p className="text-slate-400">
+                  Click <span className="font-semibold text-slate-200">Open Ticker</span> to launch a dedicated overlay tab. Capture that tab in OBS or your switcher for broadcast.
+                </p>
+              </div>
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-wide text-lime-300">
+                  Tune Branding
+                </div>
+                <p className="text-slate-400">
+                  Use the Design sliders to match your colors and scale team logos up to 1000%. Badge controls live in the Logo accordion for overlays and positioning.
+                </p>
+              </div>
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-wide text-lime-300">
+                  Cross-Tab Sync
+                </div>
+                <p className="text-slate-400">
+                  Theme and match state sync across tabs automatically. If things drift, hit Apply Update again to broadcast the latest payload.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
