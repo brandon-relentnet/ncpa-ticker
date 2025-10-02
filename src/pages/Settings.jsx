@@ -9,6 +9,7 @@ import {
   DEFAULT_TEAM_LOGO_SCALE,
 } from "../utils/logo";
 import { NavLink } from "react-router-dom";
+import { motion as Motion } from "motion/react";
 
 function ColorControl({ label, color, onChange, className = "" }) {
   const textColor = contrastTextColor(color);
@@ -186,16 +187,13 @@ export default function SettingsPage({
     );
   };
 
+  const hoverTap = {
+    whileHover: { scale: 1.05 },
+    whileTap: { scale: 0.97 },
+  };
+
   return (
     <div className="bg-slate-950 py-10 text-slate-100">
-      <NavLink
-        to="/ticker"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-xl font-semibold text-lime-400 fixed bottom-4 right-4 z-50"
-      >
-        New Ticker
-      </NavLink>
       <div className="mx-auto flex max-w-[1600px] justify-center flex-col gap-8 px-6 lg:flex-row">
         <div className="w-114 space-y-6 rounded-3xl">
           <div className="mb-8 ml-2">
@@ -434,15 +432,6 @@ export default function SettingsPage({
                   )}
                 </label>
 
-                <button
-                  type="button"
-                  className="w-full rounded-full border border-lime-400 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-lime-300 transition hover:bg-lime-400/10 disabled:opacity-40"
-                  onClick={onApplyTickerUpdate}
-                  disabled={matchLoading || !matchInfo}
-                >
-                  Apply Update To Ticker
-                </button>
-
                 <div className="flex w-full items-center justify-between rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm">
                   <div>
                     <div className="font-medium text-slate-300">
@@ -527,6 +516,34 @@ export default function SettingsPage({
             </p>
           </div>
         </div>
+      </div>
+
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+        <Motion.button
+          type="button"
+          className="flex items-center gap-2 rounded-full bg-lime-400 px-5 py-3 text-sm font-semibold uppercase tracking-wide text-slate-900 shadow-lg shadow-lime-500/30 transition hover:bg-lime-300 disabled:cursor-not-allowed disabled:opacity-60"
+          onClick={onApplyTickerUpdate}
+          disabled={matchLoading || !matchInfo}
+          {...hoverTap}
+        >
+          <span className="text-base">⟳</span>
+          <span>Apply Update</span>
+        </Motion.button>
+
+        <Motion.div
+          {...hoverTap}
+          className="rounded-full border border-lime-400 bg-slate-900/90 shadow-lg shadow-lime-500/20"
+        >
+          <NavLink
+            to="/ticker"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold uppercase tracking-wide text-lime-300 hover:text-lime-200"
+          >
+            <span className="text-base">🗔</span>
+            <span>Open Ticker</span>
+          </NavLink>
+        </Motion.div>
       </div>
     </div>
   );
