@@ -19,7 +19,12 @@ import {
   hexToHsl,
 } from "./utils/colors";
 import { fetchMatchBundle } from "./utils/matchService";
-import { DEFAULT_LOGO_POSITION, normalizeLogoPosition } from "./utils/logo";
+import {
+  DEFAULT_LOGO_POSITION,
+  DEFAULT_LOGO_SCALE,
+  DEFAULT_TEAM_LOGO_SCALE,
+  normalizeLogoPosition,
+} from "./utils/logo";
 
 const STORAGE_KEY = "pickleball-ticker-theme";
 const SYNC_STORAGE_KEY = "pickleball-ticker-sync";
@@ -34,6 +39,18 @@ const loadStoredTheme = () => {
     console.warn("Failed to read saved ticker theme", error);
     return null;
   }
+};
+
+const clampLogoScale = (value) => {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return DEFAULT_LOGO_SCALE;
+  return Math.min(Math.max(numeric, 0.5), 10);
+};
+
+const clampTeamLogoScale = (value) => {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return DEFAULT_TEAM_LOGO_SCALE;
+  return Math.min(Math.max(numeric, 0.5), 10);
 };
 
 const NAV_LINKS = [
@@ -101,6 +118,12 @@ export default function App() {
       setLogoTextHidden(!!payload.logoTextHidden);
     if (payload.logoPosition !== undefined)
       setLogoPosition(normalizeLogoPosition(payload.logoPosition));
+    if (payload.logoScale !== undefined) {
+      setLogoScale(clampLogoScale(payload.logoScale));
+    }
+    if (payload.teamLogoScale !== undefined) {
+      setTeamLogoScale(clampTeamLogoScale(payload.teamLogoScale));
+    }
     if (payload.matchError !== undefined)
       setMatchError(payload.matchError ?? null);
     if (payload.matchLoading !== undefined)
@@ -215,6 +238,12 @@ export default function App() {
     storedTheme?.logoTextHidden ?? false
   );
   const [logoPosition, setLogoPosition] = useState(initialLogoPosition);
+  const [logoScale, setLogoScale] = useState(() =>
+    clampLogoScale(storedTheme?.logoScale)
+  );
+  const [teamLogoScale, setTeamLogoScale] = useState(() =>
+    clampTeamLogoScale(storedTheme?.teamLogoScale)
+  );
 
   useEffect(() => {
     if (typeof window === "undefined") return undefined;
@@ -263,6 +292,8 @@ export default function App() {
           logoTransparentBackground,
           logoTextHidden,
           logoPosition,
+          logoScale,
+          teamLogoScale,
         })
       );
     } catch (error) {
@@ -282,14 +313,13 @@ export default function App() {
     logoTransparentBackground,
     logoTextHidden,
     logoPosition,
+    logoScale,
+    teamLogoScale,
   ]);
 
   const appClassName = isTickerRoute
     ? "min-h-screen"
     : "min-h-screen bg-slate-950 text-slate-100";
-
-  const navLinkBaseClasses =
-    "rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wide transition-colors hover:text-lime-300";
 
   const handleApplyTickerUpdate = () => {
     if (typeof window === "undefined") return;
@@ -315,6 +345,8 @@ export default function App() {
       logoTransparentBackground,
       logoTextHidden,
       logoPosition,
+      logoScale,
+      teamLogoScale,
     };
 
     try {
@@ -374,6 +406,12 @@ export default function App() {
               setLogoTextHidden={setLogoTextHidden}
               logoPosition={logoPosition}
               setLogoPosition={setLogoPosition}
+              logoScale={logoScale}
+              setLogoScale={(value) => setLogoScale(clampLogoScale(value))}
+              teamLogoScale={teamLogoScale}
+              setTeamLogoScale={(value) =>
+                setTeamLogoScale(clampTeamLogoScale(value))
+              }
             />
           }
         />
@@ -394,6 +432,8 @@ export default function App() {
               logoTransparentBackground={logoTransparentBackground}
               logoTextHidden={logoTextHidden}
               logoPosition={logoPosition}
+              logoScale={logoScale}
+              teamLogoScale={teamLogoScale}
             />
           }
         />

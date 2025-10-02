@@ -15,6 +15,8 @@ export default function TickerPage({
   logoTransparentBackground,
   logoTextHidden,
   logoPosition,
+  logoScale,
+  teamLogoScale,
 }) {
   return (
     <div
@@ -34,6 +36,8 @@ export default function TickerPage({
         logoTransparentBackground={logoTransparentBackground}
         logoTextHidden={logoTextHidden}
         logoPosition={logoPosition}
+        logoScale={logoScale}
+        teamLogoScale={teamLogoScale}
       />
     </div>
   );

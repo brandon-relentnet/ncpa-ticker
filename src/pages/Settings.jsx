@@ -3,7 +3,11 @@ import Scoreboard from "../components/Scoreboard";
 import Accordion, { AccordionItem } from "../components/Accordian";
 import { contrastTextColor, hsl } from "../utils/colors";
 import { deriveMatchState } from "../utils/matchState";
-import { DEFAULT_LOGO_POSITION } from "../utils/logo";
+import {
+  DEFAULT_LOGO_POSITION,
+  DEFAULT_LOGO_SCALE,
+  DEFAULT_TEAM_LOGO_SCALE,
+} from "../utils/logo";
 import { NavLink } from "react-router-dom";
 
 function ColorControl({ label, color, onChange, className = "" }) {
@@ -130,6 +134,10 @@ export default function SettingsPage({
   setLogoTextHidden,
   logoPosition,
   setLogoPosition,
+  logoScale,
+  setLogoScale,
+  teamLogoScale,
+  setTeamLogoScale,
 }) {
   const autoHeaderColor = contrastTextColor(primaryColor);
   const autoBodyColor = contrastTextColor(secondaryColor);
@@ -149,6 +157,7 @@ export default function SettingsPage({
       if (typeof reader.result === "string") {
         setLogoImage(reader.result);
         setLogoPosition({ ...DEFAULT_LOGO_POSITION });
+        setLogoScale(DEFAULT_LOGO_SCALE);
       }
     };
     reader.readAsDataURL(file);
@@ -158,10 +167,23 @@ export default function SettingsPage({
   const handleRemoveLogo = () => {
     setLogoImage(null);
     setLogoPosition({ ...DEFAULT_LOGO_POSITION });
+    setLogoScale(DEFAULT_LOGO_SCALE);
   };
 
   const handleResetLogoPosition = () => {
     setLogoPosition({ ...DEFAULT_LOGO_POSITION });
+  };
+
+  const handleLogoScaleChange = (value) => {
+    const clamped = Math.min(Math.max(value, 0.5), 10);
+    setLogoScale(Number.isFinite(clamped) ? clamped : DEFAULT_LOGO_SCALE);
+  };
+
+  const handleTeamLogoScaleChange = (value) => {
+    const clamped = Math.min(Math.max(value, 0.5), 10);
+    setTeamLogoScale(
+      Number.isFinite(clamped) ? clamped : DEFAULT_TEAM_LOGO_SCALE
+    );
   };
 
   return (
@@ -224,11 +246,33 @@ export default function SettingsPage({
                   onToggleManual={setManualTextColorEnabled}
                   onColorChange={setManualTextColor}
                   autoHeaderColor={autoHeaderColor}
-                  autoBadgeColor={autoBadgeColor}
-                  autoBodyColor={autoBodyColor}
-                  autoScoreColor={autoScoreColor}
+                autoBadgeColor={autoBadgeColor}
+                autoBodyColor={autoBodyColor}
+                autoScoreColor={autoScoreColor}
+              />
+
+              <div className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 sm:col-span-2">
+                <div className="flex items-center justify-between text-xs text-slate-300">
+                  <span className="font-semibold uppercase tracking-wide">
+                    Team Logos
+                  </span>
+                  <span className="text-slate-200">
+                    {Math.round((teamLogoScale ?? 1) * 100)}%
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="0.5"
+                  max="10"
+                  step="0.05"
+                  value={teamLogoScale ?? DEFAULT_TEAM_LOGO_SCALE}
+                  onChange={(event) =>
+                    handleTeamLogoScaleChange(Number(event.target.value))
+                  }
+                  className="mt-3 w-full accent-lime-400"
                 />
               </div>
+            </div>
 
               <div className="space-y-3">
                 <LabeledToggle
@@ -301,6 +345,27 @@ export default function SettingsPage({
                 )}
 
                 <div className="space-y-3">
+                  <div className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-3">
+                    <div className="flex items-center justify-between text-xs text-slate-300">
+                      <span className="font-semibold uppercase tracking-wide">
+                        Logo Scale
+                      </span>
+                      <span className="text-slate-200">
+                        {Math.round((logoScale ?? 1) * 100)}%
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0.5"
+                      max="10"
+                      step="0.05"
+                      value={logoScale ?? DEFAULT_LOGO_SCALE}
+                      onChange={(event) =>
+                        handleLogoScaleChange(Number(event.target.value))
+                      }
+                      className="mt-3 w-full accent-lime-400"
+                    />
+                  </div>
                   <LabeledToggle
                     label="Transparent badge background"
                     checked={logoTransparentBackground}
@@ -447,6 +512,8 @@ export default function SettingsPage({
               logoTransparentBackground={logoTransparentBackground}
               logoTextHidden={logoTextHidden}
               logoPosition={logoPosition}
+              logoScale={logoScale}
+              teamLogoScale={teamLogoScale}
               logoDraggable
               onLogoPositionChange={setLogoPosition}
             />

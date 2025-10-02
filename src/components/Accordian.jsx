@@ -47,7 +47,7 @@ export function AccordionItem({ title, children, defaultOpen = false }) {
           </span>
           <Motion.span
             variants={{ open: { rotate: 180 }, closed: { rotate: 0 } }}
-            transition={{ duration: 0.1 }}
+            transition={{ duration: 0.08, ease: [0.22, 1, 0.36, 1] }}
             className="text-slate-500 transition group-hover:text-slate-300"
           >
             <ChevronDownIcon />

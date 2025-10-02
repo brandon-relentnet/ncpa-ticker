@@ -41,7 +41,8 @@ The development server runs on <http://localhost:5173>. Navigate to `/settings` 
 - **Loading matches** – Enter a numeric match ID and click **Load**. The app requests `get-games` and `get-match` endpoints concurrently and normalizes them via `src/utils/officialAdapter.js`.
 - **Active game selector** – Use **Prev/Next** to select which game in the series the scoreboard highlights. The footer displays match rules and status such as `Game 2 of 3 / First to 11 (win by 2)`.
 - **Text color handling** – Automatic contrast picks black/white for header, badge, body, and score cells. Enabling Manual mode lets you dial an HSL value that applies across the board.
-- **Logo adjustments** – After uploading, drag the badge in the preview (Settings view only). Position, transparency, and text toggles are stored with the theme.
+- **Logo adjustments** – After uploading, drag the badge in the preview (Settings view only). Position, transparency, text toggles, and zoom level (up to 1000%) are stored with the theme.
+- **Team logo scale** – Use the slider in Design controls to resize team crests as much as 10× without affecting the rest of the layout.
 - **Badge background** – Tune the NCPA badge color independently to match your broadcast palette without affecting the header strip.
 - **Apply Update To Ticker** – Broadcasts the latest match payload and theme settings to other tabs. Automatic syncing also happens whenever state changes, unless a tab is mid-update.
 

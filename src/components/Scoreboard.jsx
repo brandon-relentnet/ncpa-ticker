@@ -1,7 +1,11 @@
 import { useCallback, useRef } from "react";
 import { contrastTextColor, hsl } from "../utils/colors";
 import { deriveMatchState } from "../utils/matchState";
-import { normalizeLogoPosition } from "../utils/logo";
+import {
+  DEFAULT_LOGO_SCALE,
+  DEFAULT_TEAM_LOGO_SCALE,
+  normalizeLogoPosition,
+} from "../utils/logo";
 
 export default function Scoreboard({
   matchInfo,
@@ -16,6 +20,8 @@ export default function Scoreboard({
   logoTransparentBackground = false,
   logoTextHidden = false,
   logoPosition,
+  logoScale,
+  teamLogoScale,
   logoDraggable = false,
   onLogoPositionChange,
   className = "",
@@ -30,6 +36,12 @@ export default function Scoreboard({
   const bodyBackgroundColor = secondaryColor;
   const scoreBackgroundColor = scoreBackground ?? secondaryColor;
   const badgeBackgroundColorValue = badgeBackground ?? primaryColor;
+  const normalizedLogoScale = Number.isFinite(logoScale)
+    ? Math.min(Math.max(logoScale, 0.5), 10)
+    : DEFAULT_LOGO_SCALE;
+  const normalizedTeamLogoScale = Number.isFinite(teamLogoScale)
+    ? Math.min(Math.max(teamLogoScale, 0.5), 10)
+    : DEFAULT_TEAM_LOGO_SCALE;
   const headerTextColor = manualColorValue ?? contrastTextColor(primaryColor);
   const badgeTextColor = logoTransparentBackground
     ? headerTextColor
@@ -46,7 +58,7 @@ export default function Scoreboard({
   const isLogoInteractive = Boolean(
     logoImage && logoDraggable && typeof onLogoPositionChange === "function"
   );
-  const overlayTransform = `translate(-50%, -50%) translate(${normalizedLogoPosition.x}px, ${normalizedLogoPosition.y}px)`;
+  const overlayTransform = `translate(-50%, -50%) translate(${normalizedLogoPosition.x}px, ${normalizedLogoPosition.y}px) scale(${normalizedLogoScale})`;
   const badgeBackgroundColor = logoTransparentBackground
     ? "transparent"
     : hsl(badgeBackgroundColorValue);
@@ -175,7 +187,14 @@ export default function Scoreboard({
         >
           <div className="flex border-b">
             <div className="flex size-15 items-center justify-center">
-              <img src={activeGame.t1_logo} alt="t1 logo" />
+              <img
+                src={activeGame.t1_logo}
+                alt="t1 logo"
+                style={{
+                  transform: `scale(${normalizedTeamLogoScale})`,
+                  transformOrigin: "center",
+                }}
+              />
             </div>
             <div className="flex flex-1 flex-col justify-center pl-2">
               <div className="font-semibold">{activeGame.t1_name}</div>
@@ -196,7 +215,14 @@ export default function Scoreboard({
 
           <div className="flex">
             <div className="flex aspect-square w-15 items-center justify-center">
-              <img src={activeGame.t2_logo} alt="t2 logo" />
+              <img
+                src={activeGame.t2_logo}
+                alt="t2 logo"
+                style={{
+                  transform: `scale(${normalizedTeamLogoScale})`,
+                  transformOrigin: "center",
+                }}
+              />
             </div>
             <div className="flex flex-1 flex-col justify-center pl-2">
               <div className="font-semibold">{activeGame.t2_name}</div>
