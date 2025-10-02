@@ -22,6 +22,7 @@ export default function Scoreboard({
   logoPosition,
   logoScale,
   teamLogoScale,
+  tickerOverrides,
   logoDraggable = false,
   onLogoPositionChange,
   className = "",
@@ -42,6 +43,10 @@ export default function Scoreboard({
   const normalizedTeamLogoScale = Number.isFinite(teamLogoScale)
     ? Math.min(Math.max(teamLogoScale, 0.5), 10)
     : DEFAULT_TEAM_LOGO_SCALE;
+  const overrides = tickerOverrides ?? {};
+  const hasManualContent = Object.values(overrides).some(
+    (value) => typeof value === "string" && value.trim()
+  );
   const headerTextColor = manualColorValue ?? contrastTextColor(primaryColor);
   const badgeTextColor = logoTransparentBackground
     ? headerTextColor
@@ -50,9 +55,6 @@ export default function Scoreboard({
     manualColorValue ?? contrastTextColor(bodyBackgroundColor);
   const scoreTextColor =
     manualColorValue ?? contrastTextColor(scoreBackgroundColor);
-  const associationLabel = useFullAssociationName
-    ? "National College Pickleball Association"
-    : "NCPA";
   const normalizedLogoPosition = normalizeLogoPosition(logoPosition);
   const badgeRef = useRef(null);
   const isLogoInteractive = Boolean(
@@ -103,22 +105,44 @@ export default function Scoreboard({
     ]
   );
 
-  const sep = "\u00A0\u00A0\u00B7\u00A0\u00A0";
-  const footerText = (
-    <span className="font-semibold">
-      {[
-        `Game ${activeGameNumber}${
-          safeMatch.best_of ? ` of ${safeMatch.best_of}` : ""
-        }`,
-        safeMatch.rules,
-        safeMatch.winning,
-      ]
-        .filter(Boolean)
-        .join(sep)}
-    </span>
-  );
+  const defaultHeaderTitle = overrides.headerTitle?.trim()
+    || (useFullAssociationName
+      ? "National College Pickleball Association"
+      : "NCPA");
+  const defaultHeaderSubtitle = overrides.headerSubtitle?.trim()
+    || (safeMatch.tournament_name ?? "");
 
-  if (!activeGame) {
+  const defaultFooterParts = [
+    `Game ${activeGameNumber}${
+      safeMatch.best_of ? ` of ${safeMatch.best_of}` : ""
+    }`,
+    safeMatch.rules,
+    safeMatch.winning,
+  ].filter(Boolean);
+  const defaultFooterText = overrides.footerText?.trim()
+    || defaultFooterParts.join(" / ");
+
+  const defaultTeamOneName = overrides.teamOneName?.trim()
+    || activeGame?.t1_name
+    || "";
+  const defaultTeamOnePlayers = overrides.teamOnePlayers?.trim()
+    || (Array.isArray(activeGame?.t1_players)
+      ? activeGame.t1_players.join(" & ")
+      : "");
+  const defaultTeamOneScore = overrides.teamOneScore?.trim()
+    || (activeGame?.t1_score ?? "");
+
+  const defaultTeamTwoName = overrides.teamTwoName?.trim()
+    || activeGame?.t2_name
+    || "";
+  const defaultTeamTwoPlayers = overrides.teamTwoPlayers?.trim()
+    || (Array.isArray(activeGame?.t2_players)
+      ? activeGame.t2_players.join(" & ")
+      : "");
+  const defaultTeamTwoScore = overrides.teamTwoScore?.trim()
+    || (activeGame?.t2_score ?? "");
+
+  if (!activeGame && !hasManualContent) {
     return (
       <div
         className={`flex flex-col items-center justify-between ${className}`.trim()}
@@ -141,8 +165,8 @@ export default function Scoreboard({
         className="w-120 rounded-t px-3 py-1 text-center text-sm font-semibold tracking-wide"
         style={{ backgroundColor: hsl(primaryColor), color: headerTextColor }}
       >
-        {associationLabel}
-        {safeMatch.tournament_name ? ` - ${safeMatch.tournament_name}` : ""}
+        {defaultHeaderTitle}
+        {defaultHeaderSubtitle ? ` - ${defaultHeaderSubtitle}` : ""}
       </div>
 
       <div
@@ -187,20 +211,20 @@ export default function Scoreboard({
         >
           <div className="flex border-b">
             <div className="flex size-15 items-center justify-center">
-              <img
-                src={activeGame.t1_logo}
-                alt="t1 logo"
-                style={{
-                  transform: `scale(${normalizedTeamLogoScale})`,
-                  transformOrigin: "center",
-                }}
-              />
+              {activeGame?.t1_logo ? (
+                <img
+                  src={activeGame.t1_logo}
+                  alt="t1 logo"
+                  style={{
+                    transform: `scale(${normalizedTeamLogoScale})`,
+                    transformOrigin: "center",
+                  }}
+                />
+              ) : null}
             </div>
             <div className="flex flex-1 flex-col justify-center pl-2">
-              <div className="font-semibold">{activeGame.t1_name}</div>
-              <div className="flex truncate text-sm">
-                {activeGame.t1_players.join(" & ")}
-              </div>
+              <div className="font-semibold">{defaultTeamOneName}</div>
+              <div className="flex truncate text-sm">{defaultTeamOnePlayers}</div>
             </div>
             <div
               className="flex size-15 items-center justify-center border-l px-4 text-3xl font-bold"
@@ -209,26 +233,26 @@ export default function Scoreboard({
                 color: scoreTextColor,
               }}
             >
-              {activeGame.t1_score}
+              {defaultTeamOneScore}
             </div>
           </div>
 
           <div className="flex">
             <div className="flex aspect-square w-15 items-center justify-center">
-              <img
-                src={activeGame.t2_logo}
-                alt="t2 logo"
-                style={{
-                  transform: `scale(${normalizedTeamLogoScale})`,
-                  transformOrigin: "center",
-                }}
-              />
+              {activeGame?.t2_logo ? (
+                <img
+                  src={activeGame.t2_logo}
+                  alt="t2 logo"
+                  style={{
+                    transform: `scale(${normalizedTeamLogoScale})`,
+                    transformOrigin: "center",
+                  }}
+                />
+              ) : null}
             </div>
             <div className="flex flex-1 flex-col justify-center pl-2">
-              <div className="font-semibold">{activeGame.t2_name}</div>
-              <div className="flex truncate text-sm">
-                {activeGame.t2_players.join(" & ")}
-              </div>
+              <div className="font-semibold">{defaultTeamTwoName}</div>
+              <div className="flex truncate text-sm">{defaultTeamTwoPlayers}</div>
             </div>
             <div
               className="flex size-15 items-center justify-center border-l px-4 text-3xl font-bold"
@@ -237,7 +261,7 @@ export default function Scoreboard({
                 color: scoreTextColor,
               }}
             >
-              {activeGame.t2_score}
+              {defaultTeamTwoScore}
             </div>
           </div>
         </div>
@@ -247,7 +271,7 @@ export default function Scoreboard({
         className="w-120 rounded-b px-3 py-1 text-center text-sm font-medium"
         style={{ backgroundColor: hsl(primaryColor), color: headerTextColor }}
       >
-        {footerText}
+        {defaultFooterText}
       </div>
     </div>
   );

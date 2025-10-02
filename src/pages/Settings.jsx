@@ -139,16 +139,94 @@ export default function SettingsPage({
   setLogoScale,
   teamLogoScale,
   setTeamLogoScale,
+  tickerOverrides,
+  onTickerOverrideChange,
+  onResetTickerOverrides,
 }) {
   const autoHeaderColor = contrastTextColor(primaryColor);
   const autoBodyColor = contrastTextColor(secondaryColor);
   const autoBadgeColor = contrastTextColor(badgeBackground);
   const autoScoreColor = contrastTextColor(scoreBackground);
   const resolvedTextColor = manualTextColorEnabled ? manualTextColor : null;
-  const { games, activeGameIndex, activeGameNumber, activeGameStatusLabel } =
-    deriveMatchState(matchInfo);
+  const {
+    match: safeMatch,
+    games,
+    activeGame,
+    activeGameIndex,
+    activeGameNumber,
+    activeGameStatusLabel,
+  } = deriveMatchState(matchInfo);
 
   const tickerBg = hsl(tickerBackground);
+  const overrides = tickerOverrides ?? {};
+  const defaultAssociationLabel = useFullAssociationName
+    ? "National College Pickleball Association"
+    : "NCPA";
+  const defaultTournamentName = safeMatch?.tournament_name ?? "";
+  const defaultTeamOneName = activeGame?.t1_name ?? "";
+  const defaultTeamOnePlayers = Array.isArray(activeGame?.t1_players)
+    ? activeGame.t1_players.join(" & ")
+    : "";
+  const defaultTeamOneScore =
+    activeGame?.t1_score !== undefined ? String(activeGame.t1_score) : "";
+  const defaultTeamTwoName = activeGame?.t2_name ?? "";
+  const defaultTeamTwoPlayers = Array.isArray(activeGame?.t2_players)
+    ? activeGame.t2_players.join(" & ")
+    : "";
+  const defaultTeamTwoScore =
+    activeGame?.t2_score !== undefined ? String(activeGame.t2_score) : "";
+  const defaultFooterText = [
+    `Game ${activeGameNumber}${
+      safeMatch?.best_of ? ` of ${safeMatch.best_of}` : ""
+    }`,
+    safeMatch?.rules,
+    safeMatch?.winning,
+  ]
+    .filter(Boolean)
+    .join(" / ");
+
+  const overrideFields = [
+    {
+      key: "headerTitle",
+      label: "headerTitle",
+      placeholder: defaultAssociationLabel,
+    },
+    {
+      key: "headerSubtitle",
+      label: "headerSubtitle",
+      placeholder: defaultTournamentName,
+    },
+    {
+      key: "teamOneName",
+      label: "teamOneName",
+      placeholder: defaultTeamOneName,
+    },
+    {
+      key: "teamOnePlayers",
+      label: "teamOnePlayers",
+      placeholder: defaultTeamOnePlayers,
+    },
+    {
+      key: "teamOneScore",
+      label: "teamOneScore",
+      placeholder: defaultTeamOneScore,
+    },
+    {
+      key: "teamTwoName",
+      label: "teamTwoName",
+      placeholder: defaultTeamTwoName,
+    },
+    {
+      key: "teamTwoPlayers",
+      label: "teamTwoPlayers",
+      placeholder: defaultTeamTwoPlayers,
+    },
+    {
+      key: "teamTwoScore",
+      label: "teamTwoScore",
+      placeholder: defaultTeamTwoScore,
+    },
+  ];
   const handleLogoFileChange = (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -244,33 +322,33 @@ export default function SettingsPage({
                   onToggleManual={setManualTextColorEnabled}
                   onColorChange={setManualTextColor}
                   autoHeaderColor={autoHeaderColor}
-                autoBadgeColor={autoBadgeColor}
-                autoBodyColor={autoBodyColor}
-                autoScoreColor={autoScoreColor}
-              />
-
-              <div className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 sm:col-span-2">
-                <div className="flex items-center justify-between text-xs text-slate-300">
-                  <span className="font-semibold uppercase tracking-wide">
-                    Team Logos
-                  </span>
-                  <span className="text-slate-200">
-                    {Math.round((teamLogoScale ?? 1) * 100)}%
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="0.5"
-                  max="10"
-                  step="0.05"
-                  value={teamLogoScale ?? DEFAULT_TEAM_LOGO_SCALE}
-                  onChange={(event) =>
-                    handleTeamLogoScaleChange(Number(event.target.value))
-                  }
-                  className="mt-3 w-full accent-lime-400"
+                  autoBadgeColor={autoBadgeColor}
+                  autoBodyColor={autoBodyColor}
+                  autoScoreColor={autoScoreColor}
                 />
+
+                <div className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 sm:col-span-2">
+                  <div className="flex items-center justify-between text-xs text-slate-300">
+                    <span className="font-semibold uppercase tracking-wide">
+                      Team Logos
+                    </span>
+                    <span className="text-slate-200">
+                      {Math.round((teamLogoScale ?? 1) * 100)}%
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.5"
+                    max="10"
+                    step="0.05"
+                    value={teamLogoScale ?? DEFAULT_TEAM_LOGO_SCALE}
+                    onChange={(event) =>
+                      handleTeamLogoScaleChange(Number(event.target.value))
+                    }
+                    className="mt-3 w-full accent-lime-400"
+                  />
+                </div>
               </div>
-            </div>
 
               <div className="space-y-3">
                 <LabeledToggle
@@ -284,6 +362,57 @@ export default function SettingsPage({
                   checked={useFullAssociationName}
                   onChange={setUseFullAssociationName}
                 />
+              </div>
+            </AccordionItem>
+
+            <AccordionItem title="Content Overrides">
+              <p className="text-xs text-slate-400">
+                Override individual fields on the ticker. Leave any input blank
+                to fall back to live API data.
+              </p>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                {overrideFields.map(({ key, label, placeholder }) => (
+                  <label
+                    key={key}
+                    className="flex flex-col gap-1 rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-xs"
+                  >
+                    <span className="font-semibold uppercase tracking-wide text-slate-300">
+                      {label}
+                    </span>
+                    <input
+                      type="text"
+                      className="rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-lime-400 focus:outline-none focus:ring-1 focus:ring-lime-400"
+                      value={overrides[key] ?? ""}
+                      placeholder={placeholder || "(from API)"}
+                      onChange={(event) =>
+                        onTickerOverrideChange(key, event.target.value)
+                      }
+                    />
+                  </label>
+                ))}
+                <label className="sm:col-span-2 flex flex-col gap-1 rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-xs">
+                  <span className="font-semibold uppercase tracking-wide text-slate-300">
+                    footerText
+                  </span>
+                  <textarea
+                    rows={3}
+                    className="rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-lime-400 focus:outline-none focus:ring-1 focus:ring-lime-400"
+                    value={overrides.footerText ?? ""}
+                    placeholder={defaultFooterText || "(from API)"}
+                    onChange={(event) =>
+                      onTickerOverrideChange("footerText", event.target.value)
+                    }
+                  />
+                </label>
+              </div>
+              <div className="mt-4 flex justify-end">
+                <button
+                  type="button"
+                  className="rounded-full border border-slate-700 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-200 transition hover:border-lime-400 hover:text-lime-300"
+                  onClick={onResetTickerOverrides}
+                >
+                  Clear Overrides
+                </button>
               </div>
             </AccordionItem>
 
@@ -503,19 +632,28 @@ export default function SettingsPage({
               logoPosition={logoPosition}
               logoScale={logoScale}
               teamLogoScale={teamLogoScale}
+              tickerOverrides={tickerOverrides}
               logoDraggable
               onLogoPositionChange={setLogoPosition}
             />
           </div>
           <div className="mb-8 ml-2 space-y-4">
             <h1 className="text-3xl font-semibold text-lime-400">Quick Info</h1>
+            <p className="text-sm text-slate-400">
+              A few tips for using the ticker effectively.
+            </p>
+          </div>
+          <div className="rounded-lg border border-slate-800  p-6">
             <div className="space-y-3 text-sm text-slate-300">
               <div>
                 <div className="text-xs font-semibold uppercase tracking-wide text-lime-300">
                   Load Data First
                 </div>
                 <p className="text-slate-400">
-                  Enter the match ID and hit <span className="font-semibold text-slate-200">Load</span>. Watch the status badge under Match Info for success or refresh if the API times out.
+                  Enter the match ID and hit{" "}
+                  <span className="font-semibold text-slate-200">Load</span>.
+                  Watch the status badge under Match Info for success or refresh
+                  if the API times out.
                 </p>
               </div>
               <div>
@@ -523,7 +661,12 @@ export default function SettingsPage({
                   Apply Changes
                 </div>
                 <p className="text-slate-400">
-                  Theme, logo, or active game tweaks auto-preview here. Use the floating <span className="font-semibold text-slate-200">Apply Update</span> button to push them to the ticker window.
+                  Theme, logo, or active game tweaks auto-preview here. Use the
+                  floating{" "}
+                  <span className="font-semibold text-slate-200">
+                    Apply Update
+                  </span>{" "}
+                  button to push them to the ticker window.
                 </p>
               </div>
               <div>
@@ -531,7 +674,12 @@ export default function SettingsPage({
                   Keep Ticker Open
                 </div>
                 <p className="text-slate-400">
-                  Click <span className="font-semibold text-slate-200">Open Ticker</span> to launch a dedicated overlay tab. Capture that tab in OBS or your switcher for broadcast.
+                  Click{" "}
+                  <span className="font-semibold text-slate-200">
+                    Open Ticker
+                  </span>{" "}
+                  to launch a dedicated overlay tab. Capture that tab in OBS or
+                  your switcher for broadcast.
                 </p>
               </div>
               <div>
@@ -539,7 +687,19 @@ export default function SettingsPage({
                   Tune Branding
                 </div>
                 <p className="text-slate-400">
-                  Use the Design sliders to match your colors and scale team logos up to 1000%. Badge controls live in the Logo accordion for overlays and positioning.
+                  Use the Design sliders to match your colors and scale team
+                  logos up to 1000%. Badge controls live in the Logo accordion
+                  for overlays and positioning.
+                </p>
+              </div>
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-wide text-lime-300">
+                  Manual Overrides
+                </div>
+                <p className="text-slate-400">
+                  The Content Overrides accordion lets you rewrite any label
+                  or score. Leave fields blank or hit Clear Overrides to return
+                  to API values.
                 </p>
               </div>
               <div>
@@ -547,7 +707,9 @@ export default function SettingsPage({
                   Cross-Tab Sync
                 </div>
                 <p className="text-slate-400">
-                  Theme and match state sync across tabs automatically. If things drift, hit Apply Update again to broadcast the latest payload.
+                  Theme and match state sync across tabs automatically. If
+                  things drift, hit Apply Update again to broadcast the latest
+                  payload.
                 </p>
               </div>
             </div>

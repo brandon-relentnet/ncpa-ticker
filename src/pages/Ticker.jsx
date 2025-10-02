@@ -17,6 +17,7 @@ export default function TickerPage({
   logoPosition,
   logoScale,
   teamLogoScale,
+  tickerOverrides,
 }) {
   return (
     <div
@@ -38,6 +39,7 @@ export default function TickerPage({
         logoPosition={logoPosition}
         logoScale={logoScale}
         teamLogoScale={teamLogoScale}
+        tickerOverrides={tickerOverrides}
       />
     </div>
   );

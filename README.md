@@ -44,6 +44,7 @@ The development server runs on <http://localhost:5173>. Navigate to `/settings` 
 - **Logo adjustments** – After uploading, drag the badge in the preview (Settings view only). Position, transparency, text toggles, and zoom level (up to 1000%) are stored with the theme.
 - **Team logo scale** – Use the slider in Design controls to resize team crests as much as 10× without affecting the rest of the layout.
 - **Badge background** – Tune the NCPA badge color independently to match your broadcast palette without affecting the header strip.
+- **Content overrides** – Use the Content Overrides accordion to replace any header, player name, score, or footer while the rest of the ticker continues to sync from the API.
 - **Apply Update To Ticker** – Broadcasts the latest match payload and theme settings to other tabs. Automatic syncing also happens whenever state changes, unless a tab is mid-update.
 
 ## Project Structure

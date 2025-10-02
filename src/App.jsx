@@ -53,6 +53,31 @@ const clampTeamLogoScale = (value) => {
   return Math.min(Math.max(numeric, 0.5), 10);
 };
 
+const DEFAULT_TICKER_OVERRIDES = {
+  headerTitle: "",
+  headerSubtitle: "",
+  teamOneName: "",
+  teamOnePlayers: "",
+  teamOneScore: "",
+  teamTwoName: "",
+  teamTwoPlayers: "",
+  teamTwoScore: "",
+  footerText: "",
+};
+
+const normalizeOverrides = (value) => {
+  if (!value || typeof value !== "object") {
+    return { ...DEFAULT_TICKER_OVERRIDES };
+  }
+
+  const normalized = { ...DEFAULT_TICKER_OVERRIDES };
+  Object.keys(normalized).forEach((key) => {
+    const raw = value[key];
+    normalized[key] = typeof raw === "string" ? raw : "";
+  });
+  return normalized;
+};
+
 const NAV_LINKS = [
   { to: "/settings", label: "Settings", external: false },
   { to: "/ticker", label: "Ticker", external: true },
@@ -123,6 +148,9 @@ export default function App() {
     }
     if (payload.teamLogoScale !== undefined) {
       setTeamLogoScale(clampTeamLogoScale(payload.teamLogoScale));
+    }
+    if (payload.tickerOverrides !== undefined) {
+      setTickerOverrides(normalizeOverrides(payload.tickerOverrides));
     }
     if (payload.matchError !== undefined)
       setMatchError(payload.matchError ?? null);
@@ -244,6 +272,9 @@ export default function App() {
   const [teamLogoScale, setTeamLogoScale] = useState(() =>
     clampTeamLogoScale(storedTheme?.teamLogoScale)
   );
+  const [tickerOverrides, setTickerOverrides] = useState(() =>
+    normalizeOverrides(storedTheme?.tickerOverrides)
+  );
 
   useEffect(() => {
     if (typeof window === "undefined") return undefined;
@@ -294,6 +325,7 @@ export default function App() {
           logoPosition,
           logoScale,
           teamLogoScale,
+          tickerOverrides,
         })
       );
     } catch (error) {
@@ -315,6 +347,7 @@ export default function App() {
     logoPosition,
     logoScale,
     teamLogoScale,
+    tickerOverrides,
   ]);
 
   const appClassName = isTickerRoute
@@ -347,6 +380,7 @@ export default function App() {
       logoPosition,
       logoScale,
       teamLogoScale,
+      tickerOverrides,
     };
 
     try {
@@ -412,6 +446,16 @@ export default function App() {
               setTeamLogoScale={(value) =>
                 setTeamLogoScale(clampTeamLogoScale(value))
               }
+              tickerOverrides={tickerOverrides}
+              onTickerOverrideChange={(key, value) =>
+                setTickerOverrides((previous) => ({
+                  ...previous,
+                  [key]: value,
+                }))
+              }
+              onResetTickerOverrides={() =>
+                setTickerOverrides({ ...DEFAULT_TICKER_OVERRIDES })
+              }
             />
           }
         />
@@ -434,6 +478,7 @@ export default function App() {
               logoPosition={logoPosition}
               logoScale={logoScale}
               teamLogoScale={teamLogoScale}
+              tickerOverrides={tickerOverrides}
             />
           }
         />
