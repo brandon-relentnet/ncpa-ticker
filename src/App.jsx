@@ -554,6 +554,13 @@ export default function App() {
         try {
           remoteSyncStateRef.current.lastUpdate = result.updatedAt ?? "";
           applySyncPayload(result.payload ?? {});
+          const nextMatchId =
+            result.payload?.activeMatchId ??
+            result.payload?.matchIdInput ??
+            activeMatchId;
+          if (nextMatchId) {
+            loadMatch(nextMatchId);
+          }
         } finally {
           releaseSyncSkip();
         }
@@ -561,7 +568,13 @@ export default function App() {
       .catch((error) => {
         console.warn("Failed to load remote ticker state", error);
       });
-  }, [shareToken, applySyncPayload, releaseSyncSkip]);
+  }, [
+    shareToken,
+    activeMatchId,
+    applySyncPayload,
+    loadMatch,
+    releaseSyncSkip,
+  ]);
 
   const remoteSyncStateRef = useRef({ lastUpdate: "" });
   useEffect(() => {
