@@ -26,7 +26,8 @@ export function createMatchSocket({
 
   const socket = io(socketUrl, {
     forceNew: true,
-    transports: ["websocket"],
+    transports: ["websocket", "polling"],
+    timeout: 10000,
   });
 
   const handleConnect = () => {
