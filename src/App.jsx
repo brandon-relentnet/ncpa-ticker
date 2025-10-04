@@ -547,18 +547,19 @@ export default function App() {
   useEffect(() => {
     if (!shareToken) return;
 
-    skipSyncRef.current = true;
     fetchSyncState(shareToken)
       .then((result) => {
         if (!result?.payload) return;
-        remoteSyncStateRef.current.lastUpdate = result.updatedAt ?? "";
-        applySyncPayload(result.payload ?? {});
+        skipSyncRef.current = true;
+        try {
+          remoteSyncStateRef.current.lastUpdate = result.updatedAt ?? "";
+          applySyncPayload(result.payload ?? {});
+        } finally {
+          releaseSyncSkip();
+        }
       })
       .catch((error) => {
         console.warn("Failed to load remote ticker state", error);
-      })
-      .finally(() => {
-        releaseSyncSkip();
       });
   }, [shareToken, applySyncPayload, releaseSyncSkip]);
 
