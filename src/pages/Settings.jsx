@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { HslColorPicker } from "react-colorful";
 import Scoreboard from "../components/Scoreboard";
 import Accordion, { AccordionItem } from "../components/Accordian";
@@ -143,6 +144,8 @@ export default function SettingsPage({
   tickerOverrides,
   onTickerOverrideChange,
   onResetTickerOverrides,
+  tickerShareSearch,
+  tickerShareUrl,
 }) {
   const autoHeaderColor = contrastTextColor(primaryColor);
   const autoBodyColor = contrastTextColor(secondaryColor);
@@ -228,6 +231,41 @@ export default function SettingsPage({
       placeholder: defaultTeamTwoScore,
     },
   ];
+
+  const [copyStatus, setCopyStatus] = useState("idle");
+
+  useEffect(() => {
+    if (copyStatus !== "copied") return;
+    const timeout = setTimeout(() => setCopyStatus("idle"), 2000);
+    return () => clearTimeout(timeout);
+  }, [copyStatus]);
+
+  const handleCopyTickerUrl = async () => {
+    if (!tickerShareUrl) return;
+
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(tickerShareUrl);
+      } else {
+        const helper = document.createElement("textarea");
+        helper.value = tickerShareUrl;
+        helper.setAttribute("readonly", "");
+        helper.style.position = "absolute";
+        helper.style.left = "-9999px";
+        document.body.appendChild(helper);
+        helper.select();
+        document.execCommand("copy");
+        document.body.removeChild(helper);
+      }
+      setCopyStatus("copied");
+    } catch (error) {
+      console.warn("Failed to copy ticker URL", error);
+      setCopyStatus("error");
+    }
+  };
+
+  const copyButtonLabel =
+    copyStatus === "copied" ? "Link Copied" : "Copy Ticker URL";
   const handleLogoFileChange = (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -713,13 +751,18 @@ export default function SettingsPage({
               </div>
               <div>
                 <div className="text-xs font-semibold uppercase tracking-wide text-lime-300">
-                  Cross-Tab Sync
+                  Cross-Browser Sync
                 </div>
                 <p className="text-slate-400">
-                  Theme and match state sync across tabs automatically. If
-                  things drift, hit Apply Update again to broadcast the latest
-                  payload.
+                  Load the ticker url below once in vMix (or any browser) and
+                  keep this Settings page open. Every time you hit Apply Update
+                  the overlay refreshes automatically in that remote view.
                 </p>
+                {tickerShareUrl ? (
+                  <p className="mt-2 break-all text-[11px] text-slate-500">
+                    {tickerShareUrl}
+                  </p>
+                ) : null}
               </div>
             </div>
           </div>
@@ -738,12 +781,29 @@ export default function SettingsPage({
           <span>Apply Update</span>
         </Motion.button>
 
+        <Motion.button
+          type="button"
+          className="flex items-center gap-2 rounded-full border border-lime-400 bg-slate-900/90 px-5 py-3 text-sm font-semibold uppercase tracking-wide text-lime-300 shadow-lg shadow-lime-500/20 transition hover:text-lime-200 disabled:cursor-not-allowed disabled:opacity-60"
+          onClick={handleCopyTickerUrl}
+          disabled={!tickerShareUrl}
+          {...hoverTap}
+        >
+          <span className="text-base">🔗</span>
+          <span>{copyButtonLabel}</span>
+        </Motion.button>
+
+        {copyStatus === "error" ? (
+          <div className="text-right text-xs font-medium text-rose-300">
+            Copy failed. Manually copy the link above.
+          </div>
+        ) : null}
+
         <Motion.div
           {...hoverTap}
           className="rounded-full border border-lime-400 bg-slate-900/90 shadow-lg shadow-lime-500/20"
         >
           <NavLink
-            to="/ticker"
+            to={`/ticker${tickerShareSearch ?? ""}`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold uppercase tracking-wide text-lime-300 hover:text-lime-200"

@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  NavLink,
   Navigate,
   Route,
   Routes,
   useLocation,
+  useNavigate,
 } from "react-router-dom";
 import "./App.css";
 import SettingsPage from "./pages/Settings";
@@ -26,6 +26,15 @@ import {
   normalizeLogoPosition,
 } from "./utils/logo";
 import { createMatchSocket } from "./utils/matchSocket";
+import {
+  decodeLegacySyncToken,
+  extractSyncTokenFromSearch,
+  generateSyncId,
+  loadShareIdFromStorage,
+  persistShareId,
+  SYNC_QUERY_PARAM,
+} from "./utils/syncCodec";
+import { fetchSyncState, pushSyncState } from "./utils/syncService";
 
 const STORAGE_KEY = "pickleball-ticker-theme";
 const SYNC_STORAGE_KEY = "pickleball-ticker-sync";
@@ -80,16 +89,36 @@ const normalizeOverrides = (value) => {
   return normalized;
 };
 
-const NAV_LINKS = [
-  { to: "/settings", label: "Settings", external: false },
-  { to: "/ticker", label: "Ticker", external: true },
-];
-
 export default function App() {
   const location = useLocation();
+  const navigate = useNavigate();
   const isTickerRoute = location.pathname.startsWith("/ticker");
 
+  const initialSyncTokenRef = useRef(null);
+  if (initialSyncTokenRef.current === null) {
+    initialSyncTokenRef.current = extractSyncTokenFromSearch(location.search);
+  }
+
+  const initialSharedPayloadRef = useRef(null);
+  if (initialSharedPayloadRef.current === null) {
+    initialSharedPayloadRef.current = decodeLegacySyncToken(
+      initialSyncTokenRef.current
+    );
+  }
+
+  const initialSharedState = initialSharedPayloadRef.current;
+
   const storedTheme = useMemo(loadStoredTheme, []);
+
+  const pickShared = (key, fallback) => {
+    if (
+      initialSharedState &&
+      Object.prototype.hasOwnProperty.call(initialSharedState, key)
+    ) {
+      return initialSharedState[key];
+    }
+    return fallback;
+  };
 
   const defaultMatchId = import.meta.env.VITE_DEFAULT_MATCH_ID ?? "5092";
   const tabId = useMemo(() => {
@@ -99,8 +128,12 @@ export default function App() {
     return `tab-${Math.random().toString(36).slice(2)}`;
   }, []);
 
-  const [matchIdInput, setMatchIdInput] = useState(defaultMatchId);
-  const [activeMatchId, setActiveMatchId] = useState(defaultMatchId);
+  const [matchIdInput, setMatchIdInput] = useState(() =>
+    pickShared("matchIdInput", defaultMatchId)
+  );
+  const [activeMatchId, setActiveMatchId] = useState(() =>
+    pickShared("activeMatchId", defaultMatchId)
+  );
   const [matchInfo, setMatchInfo] = useState(null);
   const [gamesPayload, setGamesPayload] = useState(null);
   const [teamsPayload, setTeamsPayload] = useState(null);
@@ -108,6 +141,21 @@ export default function App() {
   const [matchError, setMatchError] = useState(null);
   const [matchLoading, setMatchLoading] = useState(false);
   const skipSyncRef = useRef(false);
+  const releaseSyncSkip = useCallback(() => {
+    if (typeof window === "undefined") {
+      skipSyncRef.current = false;
+      return;
+    }
+
+    const scheduler =
+      typeof window.requestAnimationFrame === "function"
+        ? window.requestAnimationFrame
+        : (callback) => window.setTimeout(callback, 0);
+
+    scheduler(() => {
+      skipSyncRef.current = false;
+    });
+  }, []);
   const matchSocketRef = useRef(null);
   const teamsMetaRef = useRef(null);
   const teamsPayloadRef = useRef(null);
@@ -333,63 +381,228 @@ export default function App() {
     }
   }, [teamsPayload, activeMatchId]);
 
-  const [primaryColor, setPrimaryColor] = useState(
-    storedTheme?.primaryColor ?? DEFAULT_PRIMARY
+  const [primaryColor, setPrimaryColor] = useState(() =>
+    pickShared("primaryColor", storedTheme?.primaryColor ?? DEFAULT_PRIMARY)
   );
-  const [secondaryColor, setSecondaryColor] = useState(
-    storedTheme?.secondaryColor ?? DEFAULT_SECONDARY
+  const [secondaryColor, setSecondaryColor] = useState(() =>
+    pickShared("secondaryColor", storedTheme?.secondaryColor ?? DEFAULT_SECONDARY)
   );
-  const [scoreBackground, setScoreBackground] = useState(
-    storedTheme?.scoreBackground ?? DEFAULT_SCORE_BACKGROUND
+  const [scoreBackground, setScoreBackground] = useState(() =>
+    pickShared(
+      "scoreBackground",
+      storedTheme?.scoreBackground ?? DEFAULT_SCORE_BACKGROUND
+    )
   );
-  const [badgeBackground, setBadgeBackground] = useState(
-    storedTheme?.badgeBackground ?? DEFAULT_BADGE_BACKGROUND
+  const [badgeBackground, setBadgeBackground] = useState(() =>
+    pickShared(
+      "badgeBackground",
+      storedTheme?.badgeBackground ?? DEFAULT_BADGE_BACKGROUND
+    )
   );
-  const [tickerBackground, setTickerBackground] = useState(
-    storedTheme?.tickerBackground ?? DEFAULT_TICKER_BACKGROUND
+  const [tickerBackground, setTickerBackground] = useState(() =>
+    pickShared(
+      "tickerBackground",
+      storedTheme?.tickerBackground ?? DEFAULT_TICKER_BACKGROUND
+    )
   );
-  const [manualTextColorEnabled, setManualTextColorEnabled] = useState(
-    storedTheme?.manualTextColorEnabled ?? false
+  const [manualTextColorEnabled, setManualTextColorEnabled] = useState(() =>
+    !!pickShared(
+      "manualTextColorEnabled",
+      storedTheme?.manualTextColorEnabled ?? false
+    )
   );
-  const initialManualTextColor = useMemo(() => {
+  const [manualTextColor, setManualTextColor] = useState(() => {
+    if (
+      initialSharedState &&
+      Object.prototype.hasOwnProperty.call(
+        initialSharedState,
+        "manualTextColor"
+      )
+    ) {
+      return initialSharedState.manualTextColor ?? DEFAULT_TEXT_COLOR;
+    }
     const manual = storedTheme?.manualTextColor;
     if (!manual) return DEFAULT_TEXT_COLOR;
     if (typeof manual === "string") {
       return hexToHsl(manual) ?? DEFAULT_TEXT_COLOR;
     }
     return manual;
-  }, [storedTheme]);
-  const initialLogoPosition = useMemo(
-    () => normalizeLogoPosition(storedTheme?.logoPosition),
-    [storedTheme]
+  });
+  const [showBorder, setShowBorder] = useState(() =>
+    !!pickShared("showBorder", storedTheme?.showBorder ?? false)
   );
-
-  const [manualTextColor, setManualTextColor] = useState(
-    initialManualTextColor
+  const [useFullAssociationName, setUseFullAssociationName] = useState(() =>
+    !!pickShared(
+      "useFullAssociationName",
+      storedTheme?.useFullAssociationName ?? false
+    )
   );
-  const [showBorder, setShowBorder] = useState(
-    storedTheme?.showBorder ?? false
+  const [logoImage, setLogoImage] = useState(() =>
+    pickShared("logoImage", storedTheme?.logoImage ?? null)
   );
-  const [useFullAssociationName, setUseFullAssociationName] = useState(
-    storedTheme?.useFullAssociationName ?? false
-  );
-  const [logoImage, setLogoImage] = useState(storedTheme?.logoImage ?? null);
   const [logoTransparentBackground, setLogoTransparentBackground] = useState(
-    storedTheme?.logoTransparentBackground ?? false
+    () =>
+      !!pickShared(
+        "logoTransparentBackground",
+        storedTheme?.logoTransparentBackground ?? false
+      )
   );
-  const [logoTextHidden, setLogoTextHidden] = useState(
-    storedTheme?.logoTextHidden ?? false
+  const [logoTextHidden, setLogoTextHidden] = useState(() =>
+    !!pickShared("logoTextHidden", storedTheme?.logoTextHidden ?? false)
   );
-  const [logoPosition, setLogoPosition] = useState(initialLogoPosition);
+  const [logoPosition, setLogoPosition] = useState(() =>
+    normalizeLogoPosition(pickShared("logoPosition", storedTheme?.logoPosition))
+  );
   const [logoScale, setLogoScale] = useState(() =>
-    clampLogoScale(storedTheme?.logoScale)
+    clampLogoScale(
+      pickShared("logoScale", storedTheme?.logoScale ?? DEFAULT_LOGO_SCALE)
+    )
   );
   const [teamLogoScale, setTeamLogoScale] = useState(() =>
-    clampTeamLogoScale(storedTheme?.teamLogoScale)
+    clampTeamLogoScale(
+      pickShared(
+        "teamLogoScale",
+        storedTheme?.teamLogoScale ?? DEFAULT_TEAM_LOGO_SCALE
+      )
+    )
   );
   const [tickerOverrides, setTickerOverrides] = useState(() =>
-    normalizeOverrides(storedTheme?.tickerOverrides)
+    normalizeOverrides(
+      pickShared("tickerOverrides", storedTheme?.tickerOverrides)
+    )
   );
+
+  const storedShareIdRef = useRef(null);
+  if (storedShareIdRef.current === null) {
+    storedShareIdRef.current = loadShareIdFromStorage();
+  }
+
+  const [shareToken, setShareToken] = useState(() => {
+    const tokenFromUrl = initialSyncTokenRef.current;
+    const legacyPayload = initialSharedState;
+    const storedShareId = storedShareIdRef.current;
+
+    if (tokenFromUrl && !legacyPayload) {
+      return tokenFromUrl;
+    }
+
+    if (legacyPayload?.syncId) {
+      return legacyPayload.syncId;
+    }
+
+    if (storedShareId) {
+      return storedShareId;
+    }
+
+    return generateSyncId();
+  });
+
+  const syncTokenFromUrl = useMemo(
+    () => extractSyncTokenFromSearch(location.search),
+    [location.search]
+  );
+
+  const updateSyncParam = useCallback(
+    (token) => {
+      const params = new URLSearchParams(location.search);
+      if (token) {
+        params.set(SYNC_QUERY_PARAM, token);
+      } else {
+        params.delete(SYNC_QUERY_PARAM);
+      }
+      const nextSearch = params.toString();
+      navigate(
+        {
+          pathname: location.pathname,
+          search: nextSearch ? `?${nextSearch}` : "",
+        },
+        { replace: true }
+      );
+    },
+    [location.pathname, location.search, navigate]
+  );
+
+  useEffect(() => {
+    if (!shareToken) return;
+    persistShareId(shareToken);
+    if (syncTokenFromUrl !== shareToken) {
+      updateSyncParam(shareToken);
+    }
+  }, [shareToken, syncTokenFromUrl, updateSyncParam]);
+
+  useEffect(() => {
+    if (!syncTokenFromUrl || syncTokenFromUrl === shareToken) return;
+    setShareToken(syncTokenFromUrl);
+  }, [syncTokenFromUrl, shareToken]);
+
+  const initialPayloadAppliedRef = useRef(false);
+  useEffect(() => {
+    if (initialPayloadAppliedRef.current || !initialSharedState) return;
+    initialPayloadAppliedRef.current = true;
+    skipSyncRef.current = true;
+    applySyncPayload(initialSharedState);
+    releaseSyncSkip();
+  }, [initialSharedState, applySyncPayload, releaseSyncSkip]);
+
+  useEffect(() => {
+    if (!shareToken) return;
+
+    skipSyncRef.current = true;
+    fetchSyncState(shareToken)
+      .then((result) => {
+        if (!result?.payload) return;
+        remoteSyncStateRef.current.lastUpdate = result.updatedAt ?? "";
+        applySyncPayload(result.payload ?? {});
+      })
+      .catch((error) => {
+        console.warn("Failed to load remote ticker state", error);
+      })
+      .finally(() => {
+        releaseSyncSkip();
+      });
+  }, [shareToken, applySyncPayload, releaseSyncSkip]);
+
+  const remoteSyncStateRef = useRef({ lastUpdate: "" });
+  useEffect(() => {
+    if (!shareToken || typeof window === "undefined") return undefined;
+
+    remoteSyncStateRef.current.lastUpdate = "";
+
+    let cancelled = false;
+    let timeoutId = 0;
+
+    const poll = async () => {
+      if (cancelled) return;
+
+      try {
+        const result = await fetchSyncState(shareToken);
+
+        if (result && result.updatedAt) {
+          if (result.updatedAt !== remoteSyncStateRef.current.lastUpdate) {
+            remoteSyncStateRef.current.lastUpdate = result.updatedAt;
+            skipSyncRef.current = true;
+            applySyncPayload(result.payload ?? {});
+            releaseSyncSkip();
+          }
+        }
+      } catch (error) {
+        console.warn("Failed to poll ticker sync state", error);
+      } finally {
+        if (!cancelled) {
+          timeoutId = window.setTimeout(poll, 1500);
+        }
+      }
+    };
+
+    poll();
+
+    return () => {
+      cancelled = true;
+      if (timeoutId) {
+        window.clearTimeout(timeoutId);
+      }
+    };
+  }, [shareToken, applySyncPayload, releaseSyncSkip]);
 
   useEffect(() => {
     if (typeof window === "undefined") return undefined;
@@ -403,10 +616,7 @@ export default function App() {
 
         skipSyncRef.current = true;
         applySyncPayload(message.payload ?? {});
-
-        requestAnimationFrame(() => {
-          skipSyncRef.current = false;
-        });
+        releaseSyncSkip();
       } catch (error) {
         console.warn("Failed to apply shared ticker state", error);
       }
@@ -416,7 +626,7 @@ export default function App() {
     return () => {
       window.removeEventListener("storage", handleStorage);
     };
-  }, [applySyncPayload, tabId]);
+  }, [applySyncPayload, releaseSyncSkip, tabId]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -465,6 +675,21 @@ export default function App() {
     tickerOverrides,
   ]);
 
+  const tickerShareSearch = shareToken
+    ? `?${SYNC_QUERY_PARAM}=${encodeURIComponent(shareToken)}`
+    : "";
+  const tickerShareUrl = useMemo(() => {
+    const path = `/ticker${tickerShareSearch}`;
+    if (typeof window === "undefined") return path;
+    try {
+      const url = new URL(path, window.location.origin);
+      return url.toString();
+    } catch (error) {
+      console.warn("Failed to build ticker share URL", error);
+      return path;
+    }
+  }, [tickerShareSearch]);
+
   const appClassName = isTickerRoute
     ? "min-h-screen"
     : "min-h-screen bg-slate-950 text-slate-100";
@@ -499,6 +724,25 @@ export default function App() {
       tickerOverrides,
     };
 
+    let currentShareToken = shareToken;
+    if (!currentShareToken) {
+      currentShareToken = generateSyncId();
+      setShareToken(currentShareToken);
+    }
+
+    pushSyncState({
+      syncId: currentShareToken,
+      payload,
+    })
+      .then((result) => {
+        if (result?.updatedAt) {
+          remoteSyncStateRef.current.lastUpdate = result.updatedAt;
+        }
+      })
+      .catch((error) => {
+        console.warn("Failed to push remote ticker sync update", error);
+      });
+
     try {
       window.localStorage.setItem(
         SYNC_STORAGE_KEY,
@@ -531,6 +775,8 @@ export default function App() {
               matchError={matchError}
               liveUpdatesConnected={liveUpdatesConnected}
               onApplyTickerUpdate={handleApplyTickerUpdate}
+              tickerShareSearch={tickerShareSearch}
+              tickerShareUrl={tickerShareUrl}
               primaryColor={primaryColor}
               secondaryColor={secondaryColor}
               scoreBackground={scoreBackground}

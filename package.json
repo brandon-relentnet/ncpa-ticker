@@ -7,11 +7,14 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview --port 5173"
+    "preview": "vite preview --port 5173",
+    "sync-server": "node server/tickerSyncServer.js"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.13",
+    "dotenv": "^16.4.5",
     "motion": "^12.23.22",
+    "pg": "^8.13.1",
     "react": "^19.1.1",
     "react-colorful": "^5.6.1",
     "react-dom": "^19.1.1",
