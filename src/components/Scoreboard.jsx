@@ -27,10 +27,7 @@ export default function Scoreboard({
   onLogoPositionChange,
   className = "",
 }) {
-  const {
-    match: safeMatch,
-    activeGame,
-  } = deriveMatchState(matchInfo);
+  const { match: safeMatch, activeGame } = deriveMatchState(matchInfo);
 
   const manualColorValue = manualTextColor ? hsl(manualTextColor) : null;
   const bodyBackgroundColor = secondaryColor;
@@ -157,7 +154,7 @@ export default function Scoreboard({
       className={`flex flex-col items-end justify-between ${className}`.trim()}
     >
       <div
-        className="w-130 rounded-t px-8 py-1 text-right text-sm font-semibold tracking-wide"
+        className="w-full rounded-t px-4 py-1 text-right text-sm font-semibold tracking-wide"
         style={{ backgroundColor: hsl(primaryColor), color: headerTextColor }}
       >
         {defaultHeaderTitle}
@@ -279,7 +276,7 @@ export default function Scoreboard({
       </div>
 
       <div
-        className="w-130 rounded-b px-8 py-1 text-right text-sm font-medium"
+        className="w-full rounded-b px-4 py-1 text-right text-sm font-medium"
         style={{ backgroundColor: hsl(primaryColor), color: headerTextColor }}
       >
         {defaultFooterText}
