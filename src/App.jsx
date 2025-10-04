@@ -18,16 +18,18 @@ import {
   DEFAULT_TEXT_COLOR,
   hexToHsl,
 } from "./utils/colors";
-import { fetchMatchBundle } from "./utils/matchService";
+import { buildMatchInfo, fetchMatchBundle } from "./utils/matchService";
 import {
   DEFAULT_LOGO_POSITION,
   DEFAULT_LOGO_SCALE,
   DEFAULT_TEAM_LOGO_SCALE,
   normalizeLogoPosition,
 } from "./utils/logo";
+import { createMatchSocket } from "./utils/matchSocket";
 
 const STORAGE_KEY = "pickleball-ticker-theme";
 const SYNC_STORAGE_KEY = "pickleball-ticker-sync";
+const LIVE_UPDATES_ERROR = "Live updates unavailable. Retrying…";
 
 const loadStoredTheme = () => {
   if (typeof window === "undefined") return null;
@@ -102,9 +104,14 @@ export default function App() {
   const [matchInfo, setMatchInfo] = useState(null);
   const [gamesPayload, setGamesPayload] = useState(null);
   const [teamsPayload, setTeamsPayload] = useState(null);
+  const [teamsMeta, setTeamsMeta] = useState(null);
   const [matchError, setMatchError] = useState(null);
   const [matchLoading, setMatchLoading] = useState(false);
   const skipSyncRef = useRef(false);
+  const matchSocketRef = useRef(null);
+  const teamsMetaRef = useRef(null);
+  const teamsPayloadRef = useRef(null);
+  const [liveUpdatesConnected, setLiveUpdatesConnected] = useState(false);
 
   const applySyncPayload = useCallback((payload = {}) => {
     if (payload.matchInfo !== undefined) setMatchInfo(payload.matchInfo);
@@ -112,6 +119,8 @@ export default function App() {
       setGamesPayload(payload.gamesPayload);
     if (payload.teamsPayload !== undefined)
       setTeamsPayload(payload.teamsPayload);
+    if (payload.teamsMeta !== undefined)
+      setTeamsMeta(payload.teamsMeta ?? null);
     if (payload.matchIdInput !== undefined)
       setMatchIdInput(payload.matchIdInput ?? "");
     if (payload.activeMatchId !== undefined)
@@ -182,6 +191,7 @@ export default function App() {
           matchInfo: bundle.matchInfo,
           gamesPayload: bundle.gamesPayload,
           teamsPayload: bundle.teamsPayload,
+          teamsMeta: bundle.teamsMeta,
         });
       } catch (error) {
         setMatchError(error.message ?? "Failed to load match data");
@@ -196,6 +206,92 @@ export default function App() {
     if (skipSyncRef.current) return;
     loadMatch(activeMatchId);
   }, [activeMatchId, loadMatch]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+    if (!activeMatchId) {
+      setLiveUpdatesConnected(false);
+      return undefined;
+    }
+
+    if (matchSocketRef.current) {
+      matchSocketRef.current.dispose();
+      matchSocketRef.current = null;
+    }
+
+    let disposed = false;
+    setLiveUpdatesConnected(false);
+
+    try {
+      const handle = createMatchSocket({
+        matchId: activeMatchId,
+        onConnect: () => {
+          if (disposed) return;
+          setLiveUpdatesConnected(true);
+          setMatchError((previous) =>
+            previous === LIVE_UPDATES_ERROR ? null : previous
+          );
+        },
+        onDisconnect: () => {
+          if (disposed) return;
+          setLiveUpdatesConnected(false);
+        },
+        onError: (error) => {
+          if (disposed) return;
+          console.warn("Match socket error", error);
+          setLiveUpdatesConnected(false);
+          setMatchError((previous) => {
+            if (previous && previous !== LIVE_UPDATES_ERROR) return previous;
+            return LIVE_UPDATES_ERROR;
+          });
+        },
+        onGamesUpdate: (payload) => {
+          if (disposed || !payload) return;
+          setGamesPayload(payload);
+          try {
+            const teamsMetaForMatch =
+              teamsMetaRef.current?.matchId === activeMatchId
+                ? teamsMetaRef.current
+                : null;
+            const teamsPayloadForMatch =
+              teamsPayloadRef.current?.matchId === activeMatchId
+                ? teamsPayloadRef.current.data
+                : null;
+            const { matchInfo: nextMatchInfo, teamsMeta: nextTeamsMeta } =
+              buildMatchInfo({
+                matchId: activeMatchId,
+                gamesPayload: payload,
+                teamsMeta: teamsMetaForMatch,
+                teamsPayload: teamsPayloadForMatch,
+              });
+            setMatchInfo(nextMatchInfo);
+            if (nextTeamsMeta && nextTeamsMeta !== teamsMetaRef.current) {
+              setTeamsMeta(nextTeamsMeta);
+            }
+          } catch (error) {
+            console.warn("Failed to apply live game update", error);
+          }
+        },
+      });
+
+      matchSocketRef.current = handle;
+    } catch (error) {
+      console.warn("Failed to initialize live updates", error);
+      setMatchError((previous) => {
+        if (previous && previous !== LIVE_UPDATES_ERROR) return previous;
+        return LIVE_UPDATES_ERROR;
+      });
+    }
+
+    return () => {
+      disposed = true;
+      setLiveUpdatesConnected(false);
+      if (matchSocketRef.current) {
+        matchSocketRef.current.dispose();
+        matchSocketRef.current = null;
+      }
+    };
+  }, [activeMatchId]);
 
   const handleMatchIdInputChange = (value) => {
     setMatchIdInput(value);
@@ -217,6 +313,25 @@ export default function App() {
   const handleReloadMatch = () => {
     loadMatch(activeMatchId);
   };
+
+  useEffect(() => {
+    if (teamsMeta?.matchId && teamsMeta.matchId !== activeMatchId) {
+      teamsMetaRef.current = null;
+      return;
+    }
+    teamsMetaRef.current = teamsMeta;
+  }, [teamsMeta, activeMatchId]);
+
+  useEffect(() => {
+    if (teamsPayload) {
+      teamsPayloadRef.current = {
+        matchId: activeMatchId,
+        data: teamsPayload,
+      };
+    } else {
+      teamsPayloadRef.current = null;
+    }
+  }, [teamsPayload, activeMatchId]);
 
   const [primaryColor, setPrimaryColor] = useState(
     storedTheme?.primaryColor ?? DEFAULT_PRIMARY
@@ -361,6 +476,7 @@ export default function App() {
       matchInfo,
       gamesPayload,
       teamsPayload,
+      teamsMeta,
       matchIdInput,
       activeMatchId,
       primaryColor,
@@ -413,6 +529,7 @@ export default function App() {
               onActiveGameIndexChange={handleActiveGameIndexChange}
               matchLoading={matchLoading}
               matchError={matchError}
+              liveUpdatesConnected={liveUpdatesConnected}
               onApplyTickerUpdate={handleApplyTickerUpdate}
               primaryColor={primaryColor}
               secondaryColor={secondaryColor}

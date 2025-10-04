@@ -5,6 +5,7 @@ Pickleball Ticker is a small React + Vite application for operators who need to 
 ## Highlights
 - **Live theme controls** – Adjust header, badge, body, score column, and ticker background colors with HSL pickers while previewing accessible text contrast in real time.
 - **NCPA match data** – Fetches game results, teams, and player rosters by match ID using the official API and summarizes the current series status.
+- **Live scoring push** – Subscribes to the NCPA websocket feed per match ID and applies `updateGames` events as soon as referees post them.
 - **Layout-ready ticker view** – `/ticker` renders the Scoreboard component full screen with the latest settings, ideal for OBS or browser sources.
 - **Cross-tab sync** – Theme selections, match state, and ticker payload broadcast between browser tabs via `localStorage`, making it easy to keep the ticker window up to date.
 - **Logo overlay tools** – Upload a badge, toggle transparency, hide the built-in NCPA text, and drag to reposition the image directly in the preview.
@@ -25,6 +26,7 @@ Create a `.env.local` file in the project root with your NCPA credentials:
 VITE_NCPA_API_KEY=your-api-key
 # Optional overrides
 VITE_NCPA_API_BASE=https://tournaments.ncpaofficial.com/api
+VITE_NCPA_SOCKET_URL=https://tournaments.ncpaofficial.com
 VITE_DEFAULT_MATCH_ID=5092
 ```
 The API key is required for match lookups. The default match ID seeds the Settings view on first load.
@@ -38,7 +40,7 @@ npm run dev
 The development server runs on <http://localhost:5173>. Navigate to `/settings` to control the display. Opening `/ticker` in a separate tab or browser source will reflect the latest synced configuration.
 
 ## Usage Notes
-- **Loading matches** – Enter a numeric match ID and click **Load**. The app requests `get-games` and `get-match` endpoints concurrently and normalizes them via `src/utils/officialAdapter.js`.
+- **Loading matches** – Enter a numeric match ID and click **Load**. The app snapshots `get-games`/`get-match` once for context, then joins the `match-<id>` websocket room and listens for `updateGames` pushes from the live scoring table.
 - **Active game selector** – Use **Prev/Next** to select which game in the series the scoreboard highlights. The footer displays match rules and status such as `Game 2 of 3 / First to 11 (win by 2)`.
 - **Text color handling** – Automatic contrast picks black/white for header, badge, body, and score cells. Enabling Manual mode lets you dial an HSL value that applies across the board.
 - **Logo adjustments** – After uploading, drag the badge in the preview (Settings view only). Position, transparency, text toggles, and zoom level (up to 1000%) are stored with the theme.
@@ -77,6 +79,7 @@ Before committing, run linting and, once tests exist, ensure the Vitest suite pa
 
 ## Data & Persistence Details
 - **API endpoints** – Managed in `src/utils/matchService.js`; change `VITE_NCPA_API_BASE` to point at staging environments.
+- **Websocket feed** – Configured via `VITE_NCPA_SOCKET_URL` (defaults to the production host). Each ticker tab maintains its own connection and rejoins on match switches.
 - **Theme persistence** – Saved to `localStorage` under `pickleball-ticker-theme` so color choices and logo settings survive reloads.
 - **Cross-tab sync** – Broadcasts via `pickleball-ticker-sync`. When a message comes from another tab, the receiving tab temporarily suppresses responding to avoid loops.
 - **Fallback content** – If a match has no active game, the scoreboard displays a neutral “No game data available” message.

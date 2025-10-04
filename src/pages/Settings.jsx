@@ -108,6 +108,7 @@ export default function SettingsPage({
   onActiveGameIndexChange,
   matchLoading,
   matchError,
+  liveUpdatesConnected = false,
   onApplyTickerUpdate,
   primaryColor,
   secondaryColor,
@@ -499,7 +500,7 @@ export default function SettingsPage({
                     onChange={setLogoTransparentBackground}
                   />
                   <LabeledToggle
-                    label="Hide NCPA text"
+                    label="Hide default NCPA logo"
                     checked={logoTextHidden}
                     onChange={setLogoTextHidden}
                   />
@@ -553,6 +554,14 @@ export default function SettingsPage({
                       Refresh
                     </button>
                   </div>
+                  <p
+                    className={`text-[11px] ${
+                      liveUpdatesConnected ? "text-lime-300" : "text-slate-500"
+                    }`}
+                  >
+                    Live updates:{" "}
+                    {liveUpdatesConnected ? "Connected" : "Reconnecting…"}
+                  </p>
                   {matchLoading && (
                     <p className="text-[11px] text-lime-300">Loading match…</p>
                   )}

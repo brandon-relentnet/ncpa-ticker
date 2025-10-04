@@ -48,9 +48,6 @@ export default function Scoreboard({
     (value) => typeof value === "string" && value.trim()
   );
   const headerTextColor = manualColorValue ?? contrastTextColor(primaryColor);
-  const badgeTextColor = logoTransparentBackground
-    ? headerTextColor
-    : manualColorValue ?? contrastTextColor(badgeBackgroundColorValue);
   const bodyTextColor =
     manualColorValue ?? contrastTextColor(bodyBackgroundColor);
   const scoreTextColor =
@@ -105,12 +102,13 @@ export default function Scoreboard({
     ]
   );
 
-  const defaultHeaderTitle = overrides.headerTitle?.trim()
-    || (useFullAssociationName
+  const defaultHeaderTitle =
+    overrides.headerTitle?.trim() ||
+    (useFullAssociationName
       ? "National College Pickleball Association"
       : "NCPA");
-  const defaultHeaderSubtitle = overrides.headerSubtitle?.trim()
-    || (safeMatch.tournament_name ?? "");
+  const defaultHeaderSubtitle =
+    overrides.headerSubtitle?.trim() || (safeMatch.tournament_name ?? "");
 
   const defaultFooterParts = [
     `Game ${activeGameNumber}${
@@ -119,28 +117,28 @@ export default function Scoreboard({
     safeMatch.rules,
     safeMatch.winning,
   ].filter(Boolean);
-  const defaultFooterText = overrides.footerText?.trim()
-    || defaultFooterParts.join(" / ");
+  const defaultFooterText =
+    overrides.footerText?.trim() || defaultFooterParts.join(" / ");
 
-  const defaultTeamOneName = overrides.teamOneName?.trim()
-    || activeGame?.t1_name
-    || "";
-  const defaultTeamOnePlayers = overrides.teamOnePlayers?.trim()
-    || (Array.isArray(activeGame?.t1_players)
+  const defaultTeamOneName =
+    overrides.teamOneName?.trim() || activeGame?.t1_name || "";
+  const defaultTeamOnePlayers =
+    overrides.teamOnePlayers?.trim() ||
+    (Array.isArray(activeGame?.t1_players)
       ? activeGame.t1_players.join(" & ")
       : "");
-  const defaultTeamOneScore = overrides.teamOneScore?.trim()
-    || (activeGame?.t1_score ?? "");
+  const defaultTeamOneScore =
+    overrides.teamOneScore?.trim() || (activeGame?.t1_score ?? "");
 
-  const defaultTeamTwoName = overrides.teamTwoName?.trim()
-    || activeGame?.t2_name
-    || "";
-  const defaultTeamTwoPlayers = overrides.teamTwoPlayers?.trim()
-    || (Array.isArray(activeGame?.t2_players)
+  const defaultTeamTwoName =
+    overrides.teamTwoName?.trim() || activeGame?.t2_name || "";
+  const defaultTeamTwoPlayers =
+    overrides.teamTwoPlayers?.trim() ||
+    (Array.isArray(activeGame?.t2_players)
       ? activeGame.t2_players.join(" & ")
       : "");
-  const defaultTeamTwoScore = overrides.teamTwoScore?.trim()
-    || (activeGame?.t2_score ?? "");
+  const defaultTeamTwoScore =
+    overrides.teamTwoScore?.trim() || (activeGame?.t2_score ?? "");
 
   if (!activeGame && !hasManualContent) {
     return (
@@ -175,17 +173,29 @@ export default function Scoreboard({
       >
         <div
           ref={badgeRef}
-          className={`relative flex w-40 rounded-l items-center justify-center text-4xl font-bold ${
+          className={`relative flex w-40 rounded-l items-center justify-center ${
             isLogoInteractive ? "cursor-grab" : ""
           }`}
           style={{
             backgroundColor: badgeBackgroundColor,
-            color: badgeTextColor,
             touchAction: isLogoInteractive ? "none" : "auto",
           }}
           onPointerDown={handleLogoPointerDown}
         >
-          {!logoTextHidden && "NCPA"}
+          {!logoTextHidden && (
+            <img
+              src="/NCPA-Logo.jpg"
+              alt="NCPA badge"
+              draggable={true}
+              className="pointer-events-none select-none max-h-32 max-w-32 object-contain"
+              style={{
+                position: "absolute",
+                top: "75%",
+                left: "10%",
+                transform: overlayTransform,
+              }}
+            />
+          )}
           {logoImage && (
             <img
               src={logoImage}
@@ -210,7 +220,7 @@ export default function Scoreboard({
           }}
         >
           <div className="flex border-b">
-            <div className="flex size-15 items-center justify-center">
+            <div className="flex size-13 items-center justify-center">
               {activeGame?.t1_logo ? (
                 <img
                   src={activeGame.t1_logo}
@@ -224,10 +234,12 @@ export default function Scoreboard({
             </div>
             <div className="flex flex-1 flex-col justify-center pl-2">
               <div className="font-semibold">{defaultTeamOneName}</div>
-              <div className="flex truncate text-sm">{defaultTeamOnePlayers}</div>
+              <div className="flex truncate text-sm">
+                {defaultTeamOnePlayers}
+              </div>
             </div>
             <div
-              className="flex size-15 items-center justify-center border-l px-4 text-3xl font-bold"
+              className="flex size-13 items-center justify-center border-l px-4 text-3xl font-bold"
               style={{
                 backgroundColor: hsl(scoreBackgroundColor),
                 color: scoreTextColor,
@@ -238,7 +250,7 @@ export default function Scoreboard({
           </div>
 
           <div className="flex">
-            <div className="flex aspect-square w-15 items-center justify-center">
+            <div className="flex aspect-square w-13 items-center justify-center">
               {activeGame?.t2_logo ? (
                 <img
                   src={activeGame.t2_logo}
@@ -252,10 +264,12 @@ export default function Scoreboard({
             </div>
             <div className="flex flex-1 flex-col justify-center pl-2">
               <div className="font-semibold">{defaultTeamTwoName}</div>
-              <div className="flex truncate text-sm">{defaultTeamTwoPlayers}</div>
+              <div className="flex truncate text-sm">
+                {defaultTeamTwoPlayers}
+              </div>
             </div>
             <div
-              className="flex size-15 items-center justify-center border-l px-4 text-3xl font-bold"
+              className="flex size-13 items-center justify-center border-l px-4 text-3xl font-bold"
               style={{
                 backgroundColor: hsl(scoreBackgroundColor),
                 color: scoreTextColor,

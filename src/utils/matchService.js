@@ -27,6 +27,45 @@ const fetchJson = async (url) => {
   return response.json();
 };
 
+export function buildMatchInfo({
+  matchId,
+  gamesPayload,
+  teamsPayload,
+  teamsMeta,
+}) {
+  if (!matchId) throw new Error("matchId is required to build match info");
+
+  if (!gamesPayload?.success) {
+    throw new Error("Failed to load games data");
+  }
+
+  let resolvedTeamsMeta = teamsMeta ?? null;
+
+  if (!resolvedTeamsMeta && teamsPayload) {
+    const extracted = extractTeamsFromMatchPayload(teamsPayload);
+    if (extracted) {
+      resolvedTeamsMeta = { ...extracted, matchId };
+    }
+  } else if (
+    resolvedTeamsMeta &&
+    resolvedTeamsMeta.matchId !== matchId
+  ) {
+    resolvedTeamsMeta = { ...resolvedTeamsMeta, matchId };
+  }
+
+  const matchInfo = normalizeOfficialMatch(gamesPayload, {
+    matchId,
+    tournamentName: resolvedTeamsMeta?.tournamentName,
+    teamOne: resolvedTeamsMeta?.teamOne,
+    teamTwo: resolvedTeamsMeta?.teamTwo,
+  });
+
+  return {
+    matchInfo,
+    teamsMeta: resolvedTeamsMeta,
+  };
+}
+
 export async function fetchMatchBundle(matchId) {
   if (!matchId) throw new Error("matchId is required");
   const key = getApiKey();
@@ -47,19 +86,17 @@ export async function fetchMatchBundle(matchId) {
     throw new Error("Failed to load match data");
   }
 
-  const teamsMeta = extractTeamsFromMatchPayload(teamsPayload);
-
-  const matchInfo = normalizeOfficialMatch(gamesPayload, {
+  const { matchInfo, teamsMeta } = buildMatchInfo({
     matchId,
-    tournamentName: teamsMeta.tournamentName,
-    teamOne: teamsMeta.teamOne,
-    teamTwo: teamsMeta.teamTwo,
+    gamesPayload,
+    teamsPayload,
   });
 
   return {
     matchInfo,
     gamesPayload,
     teamsPayload,
+    teamsMeta,
   };
 }
 
