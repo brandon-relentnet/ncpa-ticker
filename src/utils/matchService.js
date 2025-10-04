@@ -58,6 +58,7 @@ export function buildMatchInfo({
     tournamentName: resolvedTeamsMeta?.tournamentName,
     teamOne: resolvedTeamsMeta?.teamOne,
     teamTwo: resolvedTeamsMeta?.teamTwo,
+    roundOf: resolvedTeamsMeta?.numTeams,
   });
 
   return {

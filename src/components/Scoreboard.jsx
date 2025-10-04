@@ -30,7 +30,6 @@ export default function Scoreboard({
   const {
     match: safeMatch,
     activeGame,
-    activeGameNumber,
   } = deriveMatchState(matchInfo);
 
   const manualColorValue = manualTextColor ? hsl(manualTextColor) : null;
@@ -111,9 +110,7 @@ export default function Scoreboard({
     overrides.headerSubtitle?.trim() || (safeMatch.tournament_name ?? "");
 
   const defaultFooterParts = [
-    `Game ${activeGameNumber}${
-      safeMatch.best_of ? ` of ${safeMatch.best_of}` : ""
-    }`,
+    safeMatch?.roundOf ? `Round of ${safeMatch.roundOf}` : null,
     safeMatch.rules,
     safeMatch.winning,
   ].filter(Boolean);
@@ -160,7 +157,7 @@ export default function Scoreboard({
       className={`flex flex-col items-end justify-between ${className}`.trim()}
     >
       <div
-        className="w-120 rounded-t px-3 py-1 text-center text-sm font-semibold tracking-wide"
+        className="w-130 rounded-t px-8 py-1 text-right text-sm font-semibold tracking-wide"
         style={{ backgroundColor: hsl(primaryColor), color: headerTextColor }}
       >
         {defaultHeaderTitle}
@@ -191,7 +188,7 @@ export default function Scoreboard({
               style={{
                 position: "absolute",
                 top: "75%",
-                left: "10%",
+                left: "1%",
                 transform: overlayTransform,
               }}
             />
@@ -282,7 +279,7 @@ export default function Scoreboard({
       </div>
 
       <div
-        className="w-120 rounded-b px-3 py-1 text-center text-sm font-medium"
+        className="w-130 rounded-b px-8 py-1 text-right text-sm font-medium"
         style={{ backgroundColor: hsl(primaryColor), color: headerTextColor }}
       >
         {defaultFooterText}

@@ -125,6 +125,10 @@ export function normalizeOfficialMatch(officialPayload, options = {}) {
 
   const info = officialPayload.info ?? {};
   const rawGames = Array.isArray(info.games) ? info.games : [];
+  const rawRoundOf =
+    typeof info.round_of === "number" && info.round_of > 0
+      ? info.round_of
+      : undefined;
 
   const teamOne = normalizeTeamOption(DEFAULT_TEAM_ONE, options.teamOne);
   const teamTwo = normalizeTeamOption(DEFAULT_TEAM_TWO, options.teamTwo);
@@ -155,6 +159,15 @@ export function normalizeOfficialMatch(officialPayload, options = {}) {
     return derivedGames.length > 0 ? derivedGames.length : info.total_games ?? derivedGames.length;
   })();
 
+  const roundOfValue = (() => {
+    if (typeof options.roundOf === "number" && options.roundOf > 0) {
+      return options.roundOf;
+    }
+    const parsed = Number(options.roundOf);
+    if (Number.isFinite(parsed) && parsed > 0) return parsed;
+    return rawRoundOf;
+  })();
+
   return {
     match_id: options.matchId ?? "unknown-match",
     tournament_name: options.tournamentName ?? "Unknown Tournament",
@@ -169,6 +182,7 @@ export function normalizeOfficialMatch(officialPayload, options = {}) {
         : null,
     games: derivedGames,
     activeGameIndex,
+    roundOf: roundOfValue,
   };
 }
 
@@ -182,6 +196,10 @@ export function extractTeamsFromMatchPayload(matchPayload) {
   const tournamentName = trimString(info.tournament) || undefined;
   const eventType = trimString(info.event_type) || undefined;
   const bracketName = trimString(info.bracket_name) || undefined;
+  const numTeams =
+    typeof info.num_teams === "number" && info.num_teams > 0
+      ? info.num_teams
+      : undefined;
 
   return {
     teamOne,
@@ -189,6 +207,7 @@ export function extractTeamsFromMatchPayload(matchPayload) {
     tournamentName,
     eventType,
     bracketName,
+    numTeams,
   };
 }
 
