@@ -201,8 +201,30 @@ export function normalizeOfficialMatch(officialPayload, options = {}) {
   const teamOne = normalizeTeamOption(DEFAULT_TEAM_ONE, options.teamOne);
   const teamTwo = normalizeTeamOption(DEFAULT_TEAM_TWO, options.teamTwo);
 
+  const resolvedRules = (() => {
+    const target = Number(info?.target_score);
+    const margin = Number(info?.win_margin);
+    const ruleFromNumbers = (() => {
+      if (Number.isFinite(target) && target > 0) {
+        if (Number.isFinite(margin) && margin > 1) {
+          return `First to ${target} (win by ${margin})`;
+        }
+        return `First to ${target}`;
+      }
+      return null;
+    })();
+
+    const ruleCandidates = [ruleFromNumbers, options.rules, info?.rules];
+    for (const candidate of ruleCandidates) {
+      if (typeof candidate === "string" && candidate.trim()) {
+        return candidate.trim();
+      }
+    }
+    return DEFAULT_RULES;
+  })();
+
   const derivedGames = rawGames.map((game, index) => {
-    const status = deriveStatus(game, info, options.rules ?? info?.rules);
+    const status = deriveStatus(game, info, resolvedRules);
     return {
       number: index + 1,
       status,
@@ -240,7 +262,7 @@ export function normalizeOfficialMatch(officialPayload, options = {}) {
     match_id: options.matchId ?? "unknown-match",
     tournament_name: options.tournamentName ?? "Unknown Tournament",
     best_of: bestOfValue,
-    rules: options.rules ?? DEFAULT_RULES,
+    rules: resolvedRules,
     winning: options.winning ?? summarizeMatch(info, { one: teamOne, two: teamTwo }),
     winner_team_id:
       info.winner === 0
