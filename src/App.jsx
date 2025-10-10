@@ -172,6 +172,7 @@ export default function App() {
   const [liveUpdatesConnected, setLiveUpdatesConnected] = useState(false);
   const latestSyncPayloadRef = useRef(null);
   const remoteSyncStateRef = useRef({ lastUpdate: "" });
+  const pendingSyncBroadcastRef = useRef(null);
   const syncTimestampsRef = useRef({
     localUpdatedAt: 0,
     lastRemoteAppliedAt: 0,
@@ -294,6 +295,11 @@ export default function App() {
           teamsPayload: bundle.teamsPayload,
           teamsMeta: bundle.teamsMeta,
         });
+        if (markUpdate) {
+          pendingSyncBroadcastRef.current = {
+            options: undefined,
+          };
+        }
       } catch (error) {
         setMatchError(error.message ?? "Failed to load match data");
       } finally {
@@ -577,6 +583,25 @@ export default function App() {
     ]
   );
 
+  const handleApplyTickerUpdate = useCallback(
+    (overrides = {}, options) => {
+      if (typeof window === "undefined") return;
+      const basePayload = buildCurrentPayload();
+      const payload = { ...basePayload, ...overrides };
+      latestSyncPayloadRef.current = payload;
+      sendSyncPayload(payload, options);
+    },
+    [buildCurrentPayload, sendSyncPayload]
+  );
+
+  useEffect(() => {
+    if (!pendingSyncBroadcastRef.current) return;
+    const { options } = pendingSyncBroadcastRef.current;
+    pendingSyncBroadcastRef.current = null;
+    // Trigger after state commits so payload reflects latest data
+    handleApplyTickerUpdate({}, options);
+  }, [matchInfo, gamesPayload, handleApplyTickerUpdate]);
+
   useEffect(() => {
     if (typeof window === "undefined") return undefined;
     if (!activeMatchId) {
@@ -650,7 +675,10 @@ export default function App() {
             if (teamsPayloadForMatch) {
               payloadForSync.teamsPayload = teamsPayloadForMatch;
             }
-            sendSyncPayload(payloadForSync, { skipLocalMark: true });
+            latestSyncPayloadRef.current = payloadForSync;
+            pendingSyncBroadcastRef.current = {
+              options: { skipLocalMark: true },
+            };
           } catch (error) {
             console.warn("Failed to apply live game update", error);
           }
@@ -900,16 +928,6 @@ export default function App() {
   const appClassName = isTickerRoute
     ? "min-h-screen"
     : "min-h-screen bg-slate-950 text-slate-100";
-
-  const handleApplyTickerUpdate = useCallback(
-    (overrides = {}, options) => {
-      if (typeof window === "undefined") return;
-      const basePayload = buildCurrentPayload();
-      const payload = { ...basePayload, ...overrides };
-      sendSyncPayload(payload, options);
-    },
-    [buildCurrentPayload, sendSyncPayload]
-  );
 
   return (
     <div className={appClassName}>
