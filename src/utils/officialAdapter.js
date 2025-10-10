@@ -13,6 +13,10 @@ const DEFAULT_TEAM_TWO = {
 };
 
 const DEFAULT_RULES = "First to 11 (win by 2)";
+const DEBUG_RULES =
+  typeof import.meta !== "undefined" &&
+  import.meta.env &&
+  import.meta.env.VITE_DEBUG_ACTIVE_GAME === "true";
 
 const trimString = (value) =>
   typeof value === "string" ? value.trim() : value ?? "";
@@ -80,6 +84,21 @@ const deriveStatus = (game, info, rules) => {
   const t2 = Number(game.t2score ?? 0);
   const leadingScore = winner === 0 ? t1 : t2;
   const trailingScore = winner === 0 ? t2 : t1;
+
+  if (DEBUG_RULES && typeof console !== "undefined") {
+    console.debug("[deriveStatus]", {
+      number: game?.number ?? null,
+      scores: { t1, t2 },
+      winner,
+      resolvedTarget,
+      resolvedMargin,
+      leadingScore,
+      trailingScore,
+      infoTarget: targetScore,
+      infoMargin: winMargin,
+      parsedRule,
+    });
+  }
 
   if (resolvedTarget) {
     if (leadingScore < resolvedTarget) return "in_progress";

@@ -140,6 +140,7 @@ export function buildMatchInfo({
     teamOne: resolvedTeamsMeta?.teamOne,
     teamTwo: resolvedTeamsMeta?.teamTwo,
     roundOf: resolvedTeamsMeta?.numTeams,
+    rules: gamesPayload?.info?.rules,
   });
 
   return {
