@@ -33,10 +33,30 @@ const formatPlayers = (players) => {
   return players.map((player) => formatName(player)).filter(Boolean);
 };
 
-const deriveStatus = (game) => {
+const deriveStatus = (game, info) => {
   const hasScores = game.t1score != null || game.t2score != null;
   if (!hasScores) return "scheduled";
-  if (game.winner == null) return "in_progress";
+  const winner = game.winner;
+  if (winner == null) return "in_progress";
+
+  const targetScoreRaw = info?.target_score;
+  const winMarginRaw = info?.win_margin;
+  const targetScore = Number(targetScoreRaw);
+  const winMargin =
+    Number.isFinite(Number(winMarginRaw)) && Number(winMarginRaw) > 0
+      ? Number(winMarginRaw)
+      : 1;
+
+  const t1 = Number(game.t1score ?? 0);
+  const t2 = Number(game.t2score ?? 0);
+  const leadingScore = winner === 0 ? t1 : t2;
+  const trailingScore = winner === 0 ? t2 : t1;
+
+  if (Number.isFinite(targetScore) && targetScore > 0) {
+    if (leadingScore < targetScore) return "in_progress";
+    if (leadingScore - trailingScore < winMargin) return "in_progress";
+  }
+
   return "final";
 };
 
@@ -49,6 +69,9 @@ const deriveActiveGameIndex = (info, games) => {
   const totalGames = games.length;
   if (totalGames === 0) return 0;
 
+  const inProgressIndex = games.findIndex((game) => game.status === "in_progress");
+  if (inProgressIndex >= 0) return inProgressIndex;
+
   if (info && typeof info.current_game === "number" && info.current_game >= 0) {
     const possibleOneBased = info.current_game > 0 && info.current_game <= totalGames;
     const normalizedIndex = possibleOneBased
@@ -56,9 +79,6 @@ const deriveActiveGameIndex = (info, games) => {
       : info.current_game;
     return clampIndex(normalizedIndex, totalGames);
   }
-
-  const inProgressIndex = games.findIndex((game) => game.status === "in_progress");
-  if (inProgressIndex >= 0) return inProgressIndex;
 
   let lastFinalIndex = -1;
   games.forEach((game, index) => {
@@ -134,7 +154,7 @@ export function normalizeOfficialMatch(officialPayload, options = {}) {
   const teamTwo = normalizeTeamOption(DEFAULT_TEAM_TWO, options.teamTwo);
 
   const derivedGames = rawGames.map((game, index) => {
-    const status = deriveStatus(game);
+    const status = deriveStatus(game, info);
     return {
       number: index + 1,
       status,
