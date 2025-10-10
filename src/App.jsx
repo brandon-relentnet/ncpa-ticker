@@ -170,6 +170,8 @@ export default function App() {
   const teamsMetaRef = useRef(null);
   const teamsPayloadRef = useRef(null);
   const [liveUpdatesConnected, setLiveUpdatesConnected] = useState(false);
+  const latestSyncPayloadRef = useRef(null);
+  const remoteSyncStateRef = useRef({ lastUpdate: "" });
   const syncTimestampsRef = useRef({
     localUpdatedAt: 0,
     lastRemoteAppliedAt: 0,
@@ -367,6 +369,19 @@ export default function App() {
             if (nextTeamsMeta && nextTeamsMeta !== teamsMetaRef.current) {
               setTeamsMeta(nextTeamsMeta);
             }
+            const basePayload = latestSyncPayloadRef.current ?? {};
+            const payloadForSync = {
+              ...basePayload,
+              matchInfo: nextMatchInfo,
+              gamesPayload: payload,
+            };
+            if (nextTeamsMeta) {
+              payloadForSync.teamsMeta = nextTeamsMeta;
+            }
+            if (teamsPayloadForMatch) {
+              payloadForSync.teamsPayload = teamsPayloadForMatch;
+            }
+            sendSyncPayload(payloadForSync);
           } catch (error) {
             console.warn("Failed to apply live game update", error);
           }
@@ -390,7 +405,7 @@ export default function App() {
         matchSocketRef.current = null;
       }
     };
-  }, [activeMatchId]);
+  }, [activeMatchId, sendSyncPayload]);
 
   const handleMatchIdInputChange = (value) => {
     setMatchIdInput(value);
@@ -523,6 +538,65 @@ export default function App() {
     )
   );
 
+  const buildCurrentPayload = useCallback(
+    () => ({
+      matchInfo,
+      gamesPayload,
+      teamsPayload,
+      teamsMeta,
+      matchIdInput,
+      activeMatchId,
+      primaryColor,
+      secondaryColor,
+      scoreBackground,
+      badgeBackground,
+      tickerBackground,
+      manualTextColorEnabled,
+      manualTextColor,
+      showBorder,
+      useFullAssociationName,
+      matchError,
+      matchLoading,
+      logoImage,
+      logoTransparentBackground,
+      logoTextHidden,
+      logoPosition,
+      logoScale,
+      teamLogoScale,
+      tickerOverrides,
+    }),
+    [
+      matchInfo,
+      gamesPayload,
+      teamsPayload,
+      teamsMeta,
+      matchIdInput,
+      activeMatchId,
+      primaryColor,
+      secondaryColor,
+      scoreBackground,
+      badgeBackground,
+      tickerBackground,
+      manualTextColorEnabled,
+      manualTextColor,
+      showBorder,
+      useFullAssociationName,
+      matchError,
+      matchLoading,
+      logoImage,
+      logoTransparentBackground,
+      logoTextHidden,
+      logoPosition,
+      logoScale,
+      teamLogoScale,
+      tickerOverrides,
+    ]
+  );
+
+  useEffect(() => {
+    latestSyncPayloadRef.current = buildCurrentPayload();
+  }, [buildCurrentPayload]);
+
   const storedShareIdRef = useRef(null);
   if (storedShareIdRef.current === null) {
     storedShareIdRef.current = loadShareIdFromStorage();
@@ -547,6 +621,59 @@ export default function App() {
 
     return generateSyncId();
   });
+
+  const sendSyncPayload = useCallback(
+    (payload, { skipLocalMark = false } = {}) => {
+      if (typeof window === "undefined") return;
+      if (!payload || typeof payload !== "object") return;
+
+      if (!skipLocalMark) {
+        markLocalUpdate();
+      }
+
+      latestSyncPayloadRef.current = payload;
+
+      let currentShareToken = shareToken;
+      if (!currentShareToken) {
+        currentShareToken = generateSyncId();
+        setShareToken(currentShareToken);
+      }
+
+      pushSyncState({
+        syncId: currentShareToken,
+        payload,
+      })
+        .then((result) => {
+          if (result?.updatedAt) {
+            remoteSyncStateRef.current.lastUpdate = result.updatedAt;
+            noteRemoteApplied(result.updatedAt);
+          }
+        })
+        .catch((error) => {
+          console.warn("Failed to push remote ticker sync update", error);
+        });
+
+      try {
+        window.localStorage.setItem(
+          SYNC_STORAGE_KEY,
+          JSON.stringify({
+            sourceId: tabId,
+            timestamp: Date.now(),
+            payload,
+          })
+        );
+      } catch (error) {
+        console.warn("Failed to broadcast ticker update", error);
+      }
+    },
+    [
+      shareToken,
+      setShareToken,
+      markLocalUpdate,
+      noteRemoteApplied,
+      tabId,
+    ]
+  );
 
   const syncTokenFromUrl = useMemo(
     () => extractSyncTokenFromSearch(location.search),
@@ -631,7 +758,6 @@ export default function App() {
     noteRemoteApplied,
   ]);
 
-  const remoteSyncStateRef = useRef({ lastUpdate: "" });
   useEffect(() => {
     if (!shareToken || typeof window === "undefined") return undefined;
 
@@ -774,71 +900,15 @@ export default function App() {
     ? "min-h-screen"
     : "min-h-screen bg-slate-950 text-slate-100";
 
-  const handleApplyTickerUpdate = () => {
-    if (typeof window === "undefined") return;
-
-    markLocalUpdate();
-
-    const payload = {
-      matchInfo,
-      gamesPayload,
-      teamsPayload,
-      teamsMeta,
-      matchIdInput,
-      activeMatchId,
-      primaryColor,
-      secondaryColor,
-      scoreBackground,
-      badgeBackground,
-      tickerBackground,
-      manualTextColorEnabled,
-      manualTextColor,
-      showBorder,
-      useFullAssociationName,
-      matchError,
-      matchLoading,
-      logoImage,
-      logoTransparentBackground,
-      logoTextHidden,
-      logoPosition,
-      logoScale,
-      teamLogoScale,
-      tickerOverrides,
-    };
-
-    let currentShareToken = shareToken;
-    if (!currentShareToken) {
-      currentShareToken = generateSyncId();
-      setShareToken(currentShareToken);
-    }
-
-    pushSyncState({
-      syncId: currentShareToken,
-      payload,
-    })
-      .then((result) => {
-        if (result?.updatedAt) {
-          remoteSyncStateRef.current.lastUpdate = result.updatedAt;
-          noteRemoteApplied(result.updatedAt);
-        }
-      })
-      .catch((error) => {
-        console.warn("Failed to push remote ticker sync update", error);
-      });
-
-    try {
-      window.localStorage.setItem(
-        SYNC_STORAGE_KEY,
-        JSON.stringify({
-          sourceId: tabId,
-          timestamp: Date.now(),
-          payload,
-        })
-      );
-    } catch (error) {
-      console.warn("Failed to broadcast ticker update", error);
-    }
-  };
+  const handleApplyTickerUpdate = useCallback(
+    (overrides = {}, options) => {
+      if (typeof window === "undefined") return;
+      const basePayload = buildCurrentPayload();
+      const payload = { ...basePayload, ...overrides };
+      sendSyncPayload(payload, options);
+    },
+    [buildCurrentPayload, sendSyncPayload]
+  );
 
   return (
     <div className={appClassName}>
