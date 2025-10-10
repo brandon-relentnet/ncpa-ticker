@@ -308,105 +308,6 @@ export default function App() {
     loadMatch(activeMatchId);
   }, [activeMatchId, loadMatch]);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return undefined;
-    if (!activeMatchId) {
-      setLiveUpdatesConnected(false);
-      return undefined;
-    }
-
-    if (matchSocketRef.current) {
-      matchSocketRef.current.dispose();
-      matchSocketRef.current = null;
-    }
-
-    let disposed = false;
-    setLiveUpdatesConnected(false);
-
-    try {
-      const handle = createMatchSocket({
-        matchId: activeMatchId,
-        onConnect: () => {
-          if (disposed) return;
-          setLiveUpdatesConnected(true);
-          setMatchError((previous) =>
-            previous === LIVE_UPDATES_ERROR ? null : previous
-          );
-        },
-        onDisconnect: () => {
-          if (disposed) return;
-          setLiveUpdatesConnected(false);
-        },
-        onError: (error) => {
-          if (disposed) return;
-          console.warn("Match socket error", error);
-          setLiveUpdatesConnected(false);
-          setMatchError((previous) => {
-            if (previous && previous !== LIVE_UPDATES_ERROR) return previous;
-            return LIVE_UPDATES_ERROR;
-          });
-        },
-        onGamesUpdate: (payload) => {
-          if (disposed || !payload) return;
-          setGamesPayload(payload);
-          try {
-            const teamsMetaForMatch =
-              teamsMetaRef.current?.matchId === activeMatchId
-                ? teamsMetaRef.current
-                : null;
-            const teamsPayloadForMatch =
-              teamsPayloadRef.current?.matchId === activeMatchId
-                ? teamsPayloadRef.current.data
-                : null;
-            const { matchInfo: nextMatchInfo, teamsMeta: nextTeamsMeta } =
-              buildMatchInfo({
-                matchId: activeMatchId,
-                gamesPayload: payload,
-                teamsMeta: teamsMetaForMatch,
-                teamsPayload: teamsPayloadForMatch,
-              });
-            setMatchInfo(nextMatchInfo);
-            if (nextTeamsMeta && nextTeamsMeta !== teamsMetaRef.current) {
-              setTeamsMeta(nextTeamsMeta);
-            }
-            const basePayload = latestSyncPayloadRef.current ?? {};
-            const payloadForSync = {
-              ...basePayload,
-              matchInfo: nextMatchInfo,
-              gamesPayload: payload,
-            };
-            if (nextTeamsMeta) {
-              payloadForSync.teamsMeta = nextTeamsMeta;
-            }
-            if (teamsPayloadForMatch) {
-              payloadForSync.teamsPayload = teamsPayloadForMatch;
-            }
-            sendSyncPayload(payloadForSync);
-          } catch (error) {
-            console.warn("Failed to apply live game update", error);
-          }
-        },
-      });
-
-      matchSocketRef.current = handle;
-    } catch (error) {
-      console.warn("Failed to initialize live updates", error);
-      setMatchError((previous) => {
-        if (previous && previous !== LIVE_UPDATES_ERROR) return previous;
-        return LIVE_UPDATES_ERROR;
-      });
-    }
-
-    return () => {
-      disposed = true;
-      setLiveUpdatesConnected(false);
-      if (matchSocketRef.current) {
-        matchSocketRef.current.dispose();
-        matchSocketRef.current = null;
-      }
-    };
-  }, [activeMatchId, sendSyncPayload]);
-
   const handleMatchIdInputChange = (value) => {
     setMatchIdInput(value);
   };
@@ -674,6 +575,105 @@ export default function App() {
       tabId,
     ]
   );
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+    if (!activeMatchId) {
+      setLiveUpdatesConnected(false);
+      return undefined;
+    }
+
+    if (matchSocketRef.current) {
+      matchSocketRef.current.dispose();
+      matchSocketRef.current = null;
+    }
+
+    let disposed = false;
+    setLiveUpdatesConnected(false);
+
+    try {
+      const handle = createMatchSocket({
+        matchId: activeMatchId,
+        onConnect: () => {
+          if (disposed) return;
+          setLiveUpdatesConnected(true);
+          setMatchError((previous) =>
+            previous === LIVE_UPDATES_ERROR ? null : previous
+          );
+        },
+        onDisconnect: () => {
+          if (disposed) return;
+          setLiveUpdatesConnected(false);
+        },
+        onError: (error) => {
+          if (disposed) return;
+          console.warn("Match socket error", error);
+          setLiveUpdatesConnected(false);
+          setMatchError((previous) => {
+            if (previous && previous !== LIVE_UPDATES_ERROR) return previous;
+            return LIVE_UPDATES_ERROR;
+          });
+        },
+        onGamesUpdate: (payload) => {
+          if (disposed || !payload) return;
+          setGamesPayload(payload);
+          try {
+            const teamsMetaForMatch =
+              teamsMetaRef.current?.matchId === activeMatchId
+                ? teamsMetaRef.current
+                : null;
+            const teamsPayloadForMatch =
+              teamsPayloadRef.current?.matchId === activeMatchId
+                ? teamsPayloadRef.current.data
+                : null;
+            const { matchInfo: nextMatchInfo, teamsMeta: nextTeamsMeta } =
+              buildMatchInfo({
+                matchId: activeMatchId,
+                gamesPayload: payload,
+                teamsMeta: teamsMetaForMatch,
+                teamsPayload: teamsPayloadForMatch,
+              });
+            setMatchInfo(nextMatchInfo);
+            if (nextTeamsMeta && nextTeamsMeta !== teamsMetaRef.current) {
+              setTeamsMeta(nextTeamsMeta);
+            }
+            const basePayload = latestSyncPayloadRef.current ?? {};
+            const payloadForSync = {
+              ...basePayload,
+              matchInfo: nextMatchInfo,
+              gamesPayload: payload,
+            };
+            if (nextTeamsMeta) {
+              payloadForSync.teamsMeta = nextTeamsMeta;
+            }
+            if (teamsPayloadForMatch) {
+              payloadForSync.teamsPayload = teamsPayloadForMatch;
+            }
+            sendSyncPayload(payloadForSync, { skipLocalMark: true });
+          } catch (error) {
+            console.warn("Failed to apply live game update", error);
+          }
+        },
+      });
+
+      matchSocketRef.current = handle;
+    } catch (error) {
+      console.warn("Failed to initialize live updates", error);
+      setMatchError((previous) => {
+        if (previous && previous !== LIVE_UPDATES_ERROR) return previous;
+        return LIVE_UPDATES_ERROR;
+      });
+    }
+
+    return () => {
+      disposed = true;
+      setLiveUpdatesConnected(false);
+      if (matchSocketRef.current) {
+        matchSocketRef.current.dispose();
+        matchSocketRef.current = null;
+      }
+    };
+  }, [activeMatchId, sendSyncPayload]);
 
   const syncTokenFromUrl = useMemo(
     () => extractSyncTokenFromSearch(location.search),
