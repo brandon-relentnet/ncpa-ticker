@@ -642,7 +642,19 @@ export default function App() {
         },
         onGamesUpdate: (payload) => {
           if (disposed || !payload) return;
-          setGamesPayload(payload);
+
+          const normalizedGamesPayload =
+            payload && typeof payload === "object"
+              ? {
+                  success: true,
+                  info:
+                    payload.info && typeof payload.info === "object"
+                      ? payload.info
+                      : payload,
+                }
+              : { success: false };
+
+          setGamesPayload(normalizedGamesPayload);
           try {
             const teamsMetaForMatch =
               teamsMetaRef.current?.matchId === activeMatchId
@@ -655,7 +667,7 @@ export default function App() {
             const { matchInfo: nextMatchInfo, teamsMeta: nextTeamsMeta } =
               buildMatchInfo({
                 matchId: activeMatchId,
-                gamesPayload: payload,
+                gamesPayload: normalizedGamesPayload,
                 teamsMeta: teamsMetaForMatch,
                 teamsPayload: teamsPayloadForMatch,
               });
@@ -667,7 +679,7 @@ export default function App() {
             const payloadForSync = {
               ...basePayload,
               matchInfo: nextMatchInfo,
-              gamesPayload: payload,
+              gamesPayload: normalizedGamesPayload,
             };
             if (nextTeamsMeta) {
               payloadForSync.teamsMeta = nextTeamsMeta;
