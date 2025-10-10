@@ -89,6 +89,16 @@ const normalizeOverrides = (value) => {
   return normalized;
 };
 
+const parseTimestamp = (value) => {
+  if (value == null) return 0;
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+  if (typeof value !== "string" || !value.trim()) return 0;
+  const parsed = Date.parse(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
 export default function App() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -160,6 +170,43 @@ export default function App() {
   const teamsMetaRef = useRef(null);
   const teamsPayloadRef = useRef(null);
   const [liveUpdatesConnected, setLiveUpdatesConnected] = useState(false);
+  const syncTimestampsRef = useRef({
+    localUpdatedAt: 0,
+    lastRemoteAppliedAt: 0,
+  });
+
+  const markLocalUpdate = useCallback(() => {
+    syncTimestampsRef.current.localUpdatedAt = Date.now();
+  }, []);
+
+  const shouldApplyRemoteState = useCallback((remoteUpdatedAt) => {
+    const remoteTimestamp = parseTimestamp(remoteUpdatedAt);
+    const { localUpdatedAt, lastRemoteAppliedAt } = syncTimestampsRef.current;
+
+    if (!remoteTimestamp) {
+      return localUpdatedAt === 0;
+    }
+
+    if (lastRemoteAppliedAt && remoteTimestamp <= lastRemoteAppliedAt) {
+      return false;
+    }
+
+    if (localUpdatedAt && remoteTimestamp <= localUpdatedAt) {
+      return false;
+    }
+
+    return true;
+  }, []);
+
+  const noteRemoteApplied = useCallback((remoteUpdatedAt) => {
+    const remoteTimestamp = parseTimestamp(remoteUpdatedAt);
+    const effectiveTimestamp = remoteTimestamp || Date.now();
+    syncTimestampsRef.current.lastRemoteAppliedAt = effectiveTimestamp;
+    syncTimestampsRef.current.localUpdatedAt = Math.max(
+      syncTimestampsRef.current.localUpdatedAt,
+      effectiveTimestamp
+    );
+  }, []);
 
   const applySyncPayload = useCallback((payload = {}) => {
     if (payload.matchInfo !== undefined) setMatchInfo(payload.matchInfo);
@@ -224,10 +271,14 @@ export default function App() {
     });
 
   const loadMatch = useCallback(
-    async (targetMatchId) => {
+    async (targetMatchId, { trackLocalUpdate = true } = {}) => {
       if (!targetMatchId) {
         setMatchError("Enter a match ID to load data");
         return;
+      }
+
+      if (trackLocalUpdate) {
+        markLocalUpdate();
       }
 
       setMatchLoading(true);
@@ -247,7 +298,7 @@ export default function App() {
         setMatchLoading(false);
       }
     },
-    [applySyncPayload]
+    [applySyncPayload, markLocalUpdate]
   );
 
   useEffect(() => {
@@ -550,16 +601,18 @@ export default function App() {
     fetchSyncState(shareToken)
       .then((result) => {
         if (!result?.payload) return;
+        if (!shouldApplyRemoteState(result.updatedAt)) return;
         skipSyncRef.current = true;
         try {
           remoteSyncStateRef.current.lastUpdate = result.updatedAt ?? "";
+          noteRemoteApplied(result.updatedAt);
           applySyncPayload(result.payload ?? {});
           const nextMatchId =
             result.payload?.activeMatchId ??
             result.payload?.matchIdInput ??
             activeMatchId;
           if (nextMatchId) {
-            loadMatch(nextMatchId);
+            loadMatch(nextMatchId, { trackLocalUpdate: false });
           }
         } finally {
           releaseSyncSkip();
@@ -574,6 +627,8 @@ export default function App() {
     applySyncPayload,
     loadMatch,
     releaseSyncSkip,
+    shouldApplyRemoteState,
+    noteRemoteApplied,
   ]);
 
   const remoteSyncStateRef = useRef({ lastUpdate: "" });
@@ -593,10 +648,15 @@ export default function App() {
 
         if (result && result.updatedAt) {
           if (result.updatedAt !== remoteSyncStateRef.current.lastUpdate) {
-            remoteSyncStateRef.current.lastUpdate = result.updatedAt;
-            skipSyncRef.current = true;
-            applySyncPayload(result.payload ?? {});
-            releaseSyncSkip();
+            if (!shouldApplyRemoteState(result.updatedAt)) {
+              remoteSyncStateRef.current.lastUpdate = result.updatedAt;
+            } else {
+              remoteSyncStateRef.current.lastUpdate = result.updatedAt;
+              skipSyncRef.current = true;
+              noteRemoteApplied(result.updatedAt);
+              applySyncPayload(result.payload ?? {});
+              releaseSyncSkip();
+            }
           }
         }
       } catch (error) {
@@ -616,7 +676,13 @@ export default function App() {
         window.clearTimeout(timeoutId);
       }
     };
-  }, [shareToken, applySyncPayload, releaseSyncSkip]);
+  }, [
+    shareToken,
+    applySyncPayload,
+    releaseSyncSkip,
+    shouldApplyRemoteState,
+    noteRemoteApplied,
+  ]);
 
   useEffect(() => {
     if (typeof window === "undefined") return undefined;
@@ -711,6 +777,8 @@ export default function App() {
   const handleApplyTickerUpdate = () => {
     if (typeof window === "undefined") return;
 
+    markLocalUpdate();
+
     const payload = {
       matchInfo,
       gamesPayload,
@@ -751,6 +819,7 @@ export default function App() {
       .then((result) => {
         if (result?.updatedAt) {
           remoteSyncStateRef.current.lastUpdate = result.updatedAt;
+          noteRemoteApplied(result.updatedAt);
         }
       })
       .catch((error) => {

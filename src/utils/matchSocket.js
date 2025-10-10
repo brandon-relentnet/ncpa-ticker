@@ -12,6 +12,14 @@ const buildRoomName = (matchId) => {
   return matchId.startsWith("match-") ? matchId : `match-${matchId}`;
 };
 
+const getSocketApiKey = () => {
+  const key = import.meta.env.VITE_NCPA_API_KEY;
+  if (!key) {
+    throw new Error("Missing VITE_NCPA_API_KEY environment variable");
+  }
+  return key;
+};
+
 export function createMatchSocket({
   matchId,
   onGamesUpdate,
@@ -23,12 +31,15 @@ export function createMatchSocket({
 
   const socketUrl = buildSocketUrl();
   const room = buildRoomName(matchId);
+  const apiKey = getSocketApiKey();
 
   const socket = io(socketUrl, {
     forceNew: true,
     transports: ["polling", "websocket"],
     timeout: 10000,
     reconnectionAttempts: Infinity,
+    auth: { key: apiKey },
+    query: { key: apiKey },
   });
 
   const handleConnect = () => {
