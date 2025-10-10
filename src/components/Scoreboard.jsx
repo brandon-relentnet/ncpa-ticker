@@ -51,7 +51,7 @@ export default function Scoreboard({
   const normalizedLogoPosition = normalizeLogoPosition(logoPosition);
   const badgeRef = useRef(null);
   const isLogoInteractive = Boolean(
-    logoImage && logoDraggable && typeof onLogoPositionChange === "function"
+    logoDraggable && typeof onLogoPositionChange === "function"
   );
   const overlayTransform = `translate(-50%, -50%) translate(${normalizedLogoPosition.x}px, ${normalizedLogoPosition.y}px) scale(${normalizedLogoScale})`;
   const badgeBackgroundColor = logoTransparentBackground
