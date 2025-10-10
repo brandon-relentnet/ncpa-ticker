@@ -120,6 +120,28 @@ const cloneGamesInfo = (value) => {
 const toPlainSyncPayload = (value) => {
   if (!value || typeof value !== "object") return value;
 
+  const seen = new WeakSet();
+  const replacer = (key, item) => {
+    if (!item) return item;
+
+    if (typeof item === "object") {
+      if (seen.has(item)) return undefined;
+      seen.add(item);
+
+      if (item instanceof Event || item instanceof PointerEvent) {
+        return undefined;
+      }
+
+      if (typeof item.tagName === "string" && typeof item.cloneNode === "function") {
+        return undefined;
+      }
+    }
+
+    if (typeof item === "function") return undefined;
+
+    return item;
+  };
+
   if (typeof structuredClone === "function") {
     try {
       return structuredClone(value);
@@ -128,15 +150,8 @@ const toPlainSyncPayload = (value) => {
     }
   }
 
-  const seen = new WeakSet();
   try {
-    const serialized = JSON.stringify(value, (key, item) => {
-      if (item && typeof item === "object") {
-        if (seen.has(item)) return undefined;
-        seen.add(item);
-      }
-      return item;
-    });
+    const serialized = JSON.stringify(value, replacer);
     return JSON.parse(serialized);
   } catch (error) {
     console.warn("Failed to serialize sync payload", error);
