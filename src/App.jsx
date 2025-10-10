@@ -273,13 +273,13 @@ export default function App() {
     });
 
   const loadMatch = useCallback(
-    async (targetMatchId, { trackLocalUpdate = true } = {}) => {
+    async (targetMatchId, { markUpdate = false } = {}) => {
       if (!targetMatchId) {
         setMatchError("Enter a match ID to load data");
         return;
       }
 
-      if (trackLocalUpdate) {
+      if (markUpdate) {
         markLocalUpdate();
       }
 
@@ -319,14 +319,15 @@ export default function App() {
       return;
     }
     if (trimmed === activeMatchId) {
-      loadMatch(trimmed);
+      loadMatch(trimmed, { markUpdate: true });
     } else {
+      markLocalUpdate();
       setActiveMatchId(trimmed);
     }
   };
 
   const handleReloadMatch = () => {
-    loadMatch(activeMatchId);
+    loadMatch(activeMatchId, { markUpdate: true });
   };
 
   useEffect(() => {
@@ -739,7 +740,7 @@ export default function App() {
             result.payload?.matchIdInput ??
             activeMatchId;
           if (nextMatchId) {
-            loadMatch(nextMatchId, { trackLocalUpdate: false });
+            loadMatch(nextMatchId);
           }
         } finally {
           releaseSyncSkip();
