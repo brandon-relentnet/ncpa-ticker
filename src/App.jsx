@@ -128,12 +128,13 @@ const toPlainSyncPayload = (value) => {
       if (seen.has(item)) return undefined;
       seen.add(item);
 
-      if (item instanceof Event || item instanceof PointerEvent) {
-        return undefined;
-      }
-
-      if (typeof item.tagName === "string" && typeof item.cloneNode === "function") {
-        return undefined;
+      if (typeof window !== "undefined") {
+        if (item instanceof Event || item instanceof PointerEvent) {
+          return undefined;
+        }
+        if (typeof item.tagName === "string" && typeof item.cloneNode === "function") {
+          return undefined;
+        }
       }
     }
 
@@ -141,14 +142,6 @@ const toPlainSyncPayload = (value) => {
 
     return item;
   };
-
-  if (typeof structuredClone === "function") {
-    try {
-      return structuredClone(value);
-    } catch (error) {
-      console.warn("Failed to clone sync payload with structuredClone", error);
-    }
-  }
 
   try {
     const serialized = JSON.stringify(value, replacer);
