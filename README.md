@@ -25,11 +25,11 @@ Create a `.env.local` file in the project root with your NCPA credentials:
 ```bash
 VITE_NCPA_API_KEY=your-api-key
 # Optional overrides
-VITE_NCPA_API_BASE=https://tournaments.ncpaofficial.com/api
+VITE_NCPA_API_BASE=https://tournaments.ncpaofficial.com
 VITE_NCPA_SOCKET_URL=https://tournaments.ncpaofficial.com
 VITE_DEFAULT_MATCH_ID=5092
 ```
-The API key is required for match lookups. The default match ID seeds the Settings view on first load.
+The API key is required for match lookups; provide the host root for `VITE_NCPA_API_BASE` and the app will append `/api` automatically. The default match ID seeds the Settings view on first load.
 
 Mirror required variables in `.env.example` if you plan to share setup expectations with collaborators; never commit real secrets.
 
@@ -78,7 +78,7 @@ Common npm scripts:
 Before committing, run linting and, once tests exist, ensure the Vitest suite passes. Keep feature-specific utilities close to their consumers and co-locate future tests as `*.test.jsx` files.
 
 ## Data & Persistence Details
-- **API endpoints** – Managed in `src/utils/matchService.js`; change `VITE_NCPA_API_BASE` to point at staging environments.
+- **API endpoints** – Managed in `src/utils/matchService.js`; change `VITE_NCPA_API_BASE` to point at staging environments (supply the host root and the client adds `/api` automatically).
 - **Websocket feed** – Configured via `VITE_NCPA_SOCKET_URL` (defaults to the production host). Each ticker tab maintains its own connection and rejoins on match switches.
 - **Theme persistence** – Saved to `localStorage` under `pickleball-ticker-theme` so color choices and logo settings survive reloads.
 - **Cross-tab sync** – Broadcasts via `pickleball-ticker-sync`. When a message comes from another tab, the receiving tab temporarily suppresses responding to avoid loops.
