@@ -49,6 +49,9 @@ const deriveActiveGameIndex = (info, games) => {
   const totalGames = games.length;
   if (totalGames === 0) return 0;
 
+  const inProgressIndex = games.findIndex((game) => game.status === "in_progress");
+  if (inProgressIndex >= 0) return inProgressIndex;
+
   if (info && typeof info.current_game === "number" && info.current_game >= 0) {
     const possibleOneBased = info.current_game > 0 && info.current_game <= totalGames;
     const normalizedIndex = possibleOneBased
@@ -56,9 +59,6 @@ const deriveActiveGameIndex = (info, games) => {
       : info.current_game;
     return clampIndex(normalizedIndex, totalGames);
   }
-
-  const inProgressIndex = games.findIndex((game) => game.status === "in_progress");
-  if (inProgressIndex >= 0) return inProgressIndex;
 
   let lastFinalIndex = -1;
   games.forEach((game, index) => {
