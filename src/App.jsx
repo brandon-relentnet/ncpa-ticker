@@ -99,6 +99,24 @@ const parseTimestamp = (value) => {
   return Number.isFinite(parsed) ? parsed : 0;
 };
 
+const cloneGamesInfo = (value) => {
+  if (!value || typeof value !== "object") return {};
+  if (typeof structuredClone === "function") {
+    try {
+      return structuredClone(value);
+    } catch (error) {
+      console.warn("Failed to clone games payload with structuredClone", error);
+    }
+  }
+
+  try {
+    return JSON.parse(JSON.stringify(value));
+  } catch (error) {
+    console.warn("Failed to clone games payload", error);
+    return {};
+  }
+};
+
 export default function App() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -627,9 +645,11 @@ export default function App() {
             previous === LIVE_UPDATES_ERROR ? null : previous
           );
         },
-        onDisconnect: () => {
+        onDisconnect: ({ reason }) => {
           if (disposed) return;
-          setLiveUpdatesConnected(false);
+          if (reason !== "transport error") {
+            setLiveUpdatesConnected(false);
+          }
         },
         onError: (error) => {
           if (disposed) return;
@@ -643,16 +663,19 @@ export default function App() {
         onGamesUpdate: (payload) => {
           if (disposed || !payload) return;
 
-          const normalizedGamesPayload =
-            payload && typeof payload === "object"
-              ? {
-                  success: true,
-                  info:
-                    payload.info && typeof payload.info === "object"
-                      ? payload.info
-                      : payload,
-                }
-              : { success: false };
+          const normalizedGamesPayload = (() => {
+            if (!payload || typeof payload !== "object") {
+              return { success: false };
+            }
+            const rawInfo =
+              payload.info && typeof payload.info === "object"
+                ? payload.info
+                : payload;
+            return {
+              success: true,
+              info: cloneGamesInfo(rawInfo),
+            };
+          })();
 
           setGamesPayload(normalizedGamesPayload);
           try {

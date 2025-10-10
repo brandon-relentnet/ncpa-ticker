@@ -46,6 +46,7 @@ export function createMatchSocket({
     forceNew: true,
     path: "/socket.io",
     transports: ["polling", "websocket"],
+    upgrade: false,
     timeout: 10000,
     reconnectionAttempts: Infinity,
     query: { key: apiKey },
