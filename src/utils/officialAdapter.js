@@ -33,7 +33,7 @@ const formatPlayers = (players) => {
   return players.map((player) => formatName(player)).filter(Boolean);
 };
 
-const deriveStatus = (game, info) => {
+const deriveStatus = (game, info, rules) => {
   const hasScores = game.t1score != null || game.t2score != null;
   if (!hasScores) return "scheduled";
   const winner = game.winner;
@@ -47,14 +47,43 @@ const deriveStatus = (game, info) => {
       ? Number(winMarginRaw)
       : 1;
 
+  const parsedRule = (() => {
+    if (rules && typeof rules === "string") {
+      const raceMatch = /(?:first|race)\s+to\s+(\d+)/i.exec(rules);
+      const winByMatch = /win\s+by\s+(\d+)/i.exec(rules);
+      return {
+        target:
+          raceMatch && Number.isFinite(Number(raceMatch[1]))
+            ? Number(raceMatch[1])
+            : undefined,
+        margin:
+          winByMatch && Number.isFinite(Number(winByMatch[1]))
+            ? Number(winByMatch[1])
+            : undefined,
+      };
+    }
+    return {};
+  })();
+  const mergeTarget =
+    Number.isFinite(parsedRule.target) && parsedRule.target > 0
+      ? parsedRule.target
+      : targetScore;
+  const mergeMargin =
+    Number.isFinite(parsedRule.margin) && parsedRule.margin > 0
+      ? parsedRule.margin
+      : winMargin;
+  const resolvedTarget = Number.isFinite(mergeTarget) ? mergeTarget : undefined;
+  const resolvedMargin =
+    Number.isFinite(mergeMargin) && mergeMargin > 0 ? mergeMargin : 1;
+
   const t1 = Number(game.t1score ?? 0);
   const t2 = Number(game.t2score ?? 0);
   const leadingScore = winner === 0 ? t1 : t2;
   const trailingScore = winner === 0 ? t2 : t1;
 
-  if (Number.isFinite(targetScore) && targetScore > 0) {
-    if (leadingScore < targetScore) return "in_progress";
-    if (leadingScore - trailingScore < winMargin) return "in_progress";
+  if (resolvedTarget) {
+    if (leadingScore < resolvedTarget) return "in_progress";
+    if (leadingScore - trailingScore < resolvedMargin) return "in_progress";
   }
 
   return "final";
@@ -154,7 +183,7 @@ export function normalizeOfficialMatch(officialPayload, options = {}) {
   const teamTwo = normalizeTeamOption(DEFAULT_TEAM_TWO, options.teamTwo);
 
   const derivedGames = rawGames.map((game, index) => {
-    const status = deriveStatus(game, info);
+    const status = deriveStatus(game, info, options.rules ?? info?.rules);
     return {
       number: index + 1,
       status,
