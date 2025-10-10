@@ -117,6 +117,33 @@ const cloneGamesInfo = (value) => {
   }
 };
 
+const toPlainSyncPayload = (value) => {
+  if (!value || typeof value !== "object") return value;
+
+  if (typeof structuredClone === "function") {
+    try {
+      return structuredClone(value);
+    } catch (error) {
+      console.warn("Failed to clone sync payload with structuredClone", error);
+    }
+  }
+
+  const seen = new WeakSet();
+  try {
+    const serialized = JSON.stringify(value, (key, item) => {
+      if (item && typeof item === "object") {
+        if (seen.has(item)) return undefined;
+        seen.add(item);
+      }
+      return item;
+    });
+    return JSON.parse(serialized);
+  } catch (error) {
+    console.warn("Failed to serialize sync payload", error);
+    return {};
+  }
+};
+
 export default function App() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -557,7 +584,8 @@ export default function App() {
         markLocalUpdate();
       }
 
-      latestSyncPayloadRef.current = payload;
+      const plainPayload = toPlainSyncPayload(payload);
+      latestSyncPayloadRef.current = plainPayload;
 
       let currentShareToken = shareToken;
       if (!currentShareToken) {
@@ -567,7 +595,7 @@ export default function App() {
 
       pushSyncState({
         syncId: currentShareToken,
-        payload,
+        payload: plainPayload,
       })
         .then((result) => {
           if (result?.updatedAt) {
@@ -585,7 +613,7 @@ export default function App() {
           JSON.stringify({
             sourceId: tabId,
             timestamp: Date.now(),
-            payload,
+            payload: plainPayload,
           })
         );
       } catch (error) {
@@ -606,7 +634,6 @@ export default function App() {
       if (typeof window === "undefined") return;
       const basePayload = buildCurrentPayload();
       const payload = { ...basePayload, ...overrides };
-      latestSyncPayloadRef.current = payload;
       sendSyncPayload(payload, options);
     },
     [buildCurrentPayload, sendSyncPayload]
