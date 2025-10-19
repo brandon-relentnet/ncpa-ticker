@@ -142,35 +142,6 @@ const deriveStatus = (game, info, rules) => {
   return "final";
 };
 
-const clampIndex = (index, total) => {
-  if (total <= 0) return 0;
-  return Math.max(0, Math.min(total - 1, index));
-};
-
-const deriveActiveGameIndex = (info, games) => {
-  const totalGames = games.length;
-  if (totalGames === 0) return 0;
-
-  const inProgressIndex = games.findIndex((game) => game.status === "in_progress");
-  if (inProgressIndex >= 0) return inProgressIndex;
-
-  if (info && typeof info.current_game === "number" && info.current_game >= 0) {
-    const possibleOneBased = info.current_game > 0 && info.current_game <= totalGames;
-    const normalizedIndex = possibleOneBased
-      ? info.current_game - 1
-      : info.current_game;
-    return clampIndex(normalizedIndex, totalGames);
-  }
-
-  let lastFinalIndex = -1;
-  games.forEach((game, index) => {
-    if (game.status === "final") lastFinalIndex = index;
-  });
-  if (lastFinalIndex >= 0) return lastFinalIndex;
-
-  return clampIndex(totalGames - 1, totalGames);
-};
-
 const summarizeMatch = (info, teams) => {
   if (!info) return "";
   const { t1_wins, t2_wins, winner } = info;
@@ -274,7 +245,6 @@ export function normalizeOfficialMatch(officialPayload, options = {}) {
     };
   });
 
-  const activeGameIndex = deriveActiveGameIndex(info, derivedGames);
   const bestOfValue = (() => {
     if (typeof options.bestOf === "number" && options.bestOf > 0) {
       return options.bestOf;
@@ -306,7 +276,6 @@ export function normalizeOfficialMatch(officialPayload, options = {}) {
         ? teamTwo.teamId ?? teamTwo.shortName
         : null,
     games: derivedGames,
-    activeGameIndex,
     roundOf: roundOfValue,
   };
 }

@@ -265,7 +265,18 @@ export default function App() {
   }, []);
 
   const applySyncPayload = useCallback((payload = {}) => {
-    if (payload.matchInfo !== undefined) setMatchInfo(payload.matchInfo);
+    if (payload.matchInfo !== undefined) {
+      setMatchInfo((previous) => {
+        const incoming = payload.matchInfo ?? null;
+        if (!incoming) return null;
+        if (typeof incoming.activeGameIndex === "number") return incoming;
+        const preservedIndex =
+          typeof previous?.activeGameIndex === "number"
+            ? previous.activeGameIndex
+            : 0;
+        return { ...incoming, activeGameIndex: preservedIndex };
+      });
+    }
     if (payload.gamesPayload !== undefined)
       setGamesPayload(payload.gamesPayload);
     if (payload.teamsPayload !== undefined)
@@ -729,14 +740,31 @@ export default function App() {
                 teamsMeta: teamsMetaForMatch,
                 teamsPayload: teamsPayloadForMatch,
               });
-            setMatchInfo(nextMatchInfo);
+            let resolvedMatchInfo = null;
+            setMatchInfo((previous) => {
+              if (!nextMatchInfo) {
+                resolvedMatchInfo = null;
+                return null;
+              }
+              if (typeof nextMatchInfo.activeGameIndex === "number") {
+                resolvedMatchInfo = nextMatchInfo;
+                return nextMatchInfo;
+              }
+              const preservedIndex =
+                typeof previous?.activeGameIndex === "number"
+                  ? previous.activeGameIndex
+                  : 0;
+              const merged = { ...nextMatchInfo, activeGameIndex: preservedIndex };
+              resolvedMatchInfo = merged;
+              return merged;
+            });
             if (nextTeamsMeta && nextTeamsMeta !== teamsMetaRef.current) {
               setTeamsMeta(nextTeamsMeta);
             }
             const basePayload = latestSyncPayloadRef.current ?? {};
             const payloadForSync = {
               ...basePayload,
-              matchInfo: nextMatchInfo,
+              matchInfo: resolvedMatchInfo ?? nextMatchInfo,
               gamesPayload: normalizedGamesPayload,
             };
             if (nextTeamsMeta) {

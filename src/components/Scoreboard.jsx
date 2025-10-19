@@ -64,30 +64,28 @@ export default function Scoreboard({
   const handleLogoPointerDown = useCallback(
     (event) => {
       if (!isLogoInteractive) return;
-      event.preventDefault();
-
-      const startX = event.clientX;
-      const startY = event.clientY;
+      let startX = event.clientX;
+      let startY = event.clientY;
       const originX = normalizedLogoPosition.x;
       const originY = normalizedLogoPosition.y;
 
-      const handlePointerMove = (moveEvent) => {
+      const pointerMove = (moveEvent) => {
         const deltaX = moveEvent.clientX - startX;
         const deltaY = moveEvent.clientY - startY;
         onLogoPositionChange({ x: originX + deltaX, y: originY + deltaY });
       };
 
-      const handlePointerUp = () => {
-        window.removeEventListener("pointermove", handlePointerMove);
-        window.removeEventListener("pointerup", handlePointerUp);
+      const pointerUp = () => {
+        window.removeEventListener("pointermove", pointerMove);
+        window.removeEventListener("pointerup", pointerUp);
       };
 
-      window.addEventListener("pointermove", handlePointerMove);
-      window.addEventListener("pointerup", handlePointerUp);
+      window.addEventListener("pointermove", pointerMove, { passive: true });
+      window.addEventListener("pointerup", pointerUp, { passive: true });
 
-      const capture = badgeRef.current?.setPointerCapture;
+      const capture = event.target?.setPointerCapture;
       if (typeof capture === "function") {
-        capture.call(badgeRef.current, event.pointerId);
+        capture.call(event.target, event.pointerId);
       }
     },
     [
@@ -140,7 +138,7 @@ export default function Scoreboard({
         className={`flex flex-col items-center justify-between ${className}`.trim()}
       >
         <div
-          className="w-fit rounded px-4 py-2 text-center text-sm font-semibold"
+          className="w-fit rounded px-4 py-2 text-center text-base font-semibold"
           style={{ backgroundColor: hsl(primaryColor), color: headerTextColor }}
         >
           No game data available
@@ -154,7 +152,7 @@ export default function Scoreboard({
       className={`flex flex-col items-end justify-between ${className}`.trim()}
     >
       <div
-        className="w-full rounded-t px-4 py-1 text-right text-sm font-semibold tracking-wide"
+        className="w-full rounded-t px-4 py-1 text-right text-base font-semibold tracking-wide"
         style={{ backgroundColor: hsl(primaryColor), color: headerTextColor }}
       >
         {defaultHeaderTitle}
@@ -227,13 +225,13 @@ export default function Scoreboard({
               ) : null}
             </div>
             <div className="flex flex-1 flex-col justify-center pl-2">
-              <div className="font-semibold">{defaultTeamOneName}</div>
-              <div className="flex truncate text-sm">
+              <div className="text-lg font-semibold">{defaultTeamOneName}</div>
+              <div className="flex truncate text-base">
                 {defaultTeamOnePlayers}
               </div>
             </div>
             <div
-              className="flex size-13 items-center justify-center border-l px-4 text-3xl font-bold"
+              className="flex size-13 items-center justify-center border-l px-4 text-4xl font-bold"
               style={{
                 backgroundColor: hsl(scoreBackgroundColor),
                 color: scoreTextColor,
@@ -257,13 +255,13 @@ export default function Scoreboard({
               ) : null}
             </div>
             <div className="flex flex-1 flex-col justify-center pl-2">
-              <div className="font-semibold">{defaultTeamTwoName}</div>
-              <div className="flex truncate text-sm">
+              <div className="text-lg font-semibold">{defaultTeamTwoName}</div>
+              <div className="flex truncate text-base">
                 {defaultTeamTwoPlayers}
               </div>
             </div>
             <div
-              className="flex size-13 items-center justify-center border-l px-4 text-3xl font-bold"
+              className="flex size-13 items-center justify-center border-l px-4 text-4xl font-bold"
               style={{
                 backgroundColor: hsl(scoreBackgroundColor),
                 color: scoreTextColor,
@@ -276,7 +274,7 @@ export default function Scoreboard({
       </div>
 
       <div
-        className="w-full rounded-b px-4 py-1 text-right text-sm font-medium"
+        className="w-full rounded-b px-4 py-1 text-right text-base font-medium"
         style={{ backgroundColor: hsl(primaryColor), color: headerTextColor }}
       >
         {defaultFooterText}

@@ -14,7 +14,7 @@ export function deriveMatchState(matchInfo) {
   const activeGameIndex =
     typeof match.activeGameIndex === "number"
       ? Math.min(Math.max(match.activeGameIndex, 0), latestIndex)
-      : latestIndex;
+      : 0;
   const activeGame = games[activeGameIndex];
   const activeGameNumber = activeGame?.number ?? activeGameIndex + 1;
   const activeGameStatus = activeGame?.status ?? "scheduled";
