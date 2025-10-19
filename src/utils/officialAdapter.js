@@ -12,7 +12,8 @@ const DEFAULT_TEAM_TWO = {
   teamId: "team_two",
 };
 
-const DEFAULT_RULES = "First to 11 (win by 2)";
+const MIN_WIN_MARGIN = 2;
+const DEFAULT_RULES = `First to 11 (win by ${MIN_WIN_MARGIN})`;
 const DEBUG_RULES =
   typeof import.meta !== "undefined" &&
   import.meta.env &&
@@ -37,6 +38,34 @@ const formatPlayers = (players) => {
   return players.map((player) => formatName(player)).filter(Boolean);
 };
 
+const enforceWinByTwo = (rules) => {
+  if (typeof rules !== "string") return `Win by ${MIN_WIN_MARGIN}`;
+  const trimmed = rules.trim();
+  if (!trimmed) return `Win by ${MIN_WIN_MARGIN}`;
+
+  const winByRegex = /win\s+by\s+(\d+)/i;
+  const match = winByRegex.exec(trimmed);
+  if (match) {
+    return Number(match[1]) === MIN_WIN_MARGIN
+      ? trimmed
+      : trimmed.replace(winByRegex, `win by ${MIN_WIN_MARGIN}`);
+  }
+
+  if (trimmed.endsWith(")")) {
+    const lastParenIndex = trimmed.lastIndexOf("(");
+    if (lastParenIndex >= 0 && lastParenIndex < trimmed.length - 1) {
+      const before = trimmed.slice(0, lastParenIndex);
+      const inside = trimmed.slice(lastParenIndex + 1, -1).trim();
+      const updatedInside = inside
+        ? `${inside}, win by ${MIN_WIN_MARGIN}`
+        : `win by ${MIN_WIN_MARGIN}`;
+      return `${before}(${updatedInside})`;
+    }
+  }
+
+  return `${trimmed} (win by ${MIN_WIN_MARGIN})`;
+};
+
 const deriveStatus = (game, info, rules) => {
   const hasScores = game.t1score != null || game.t2score != null;
   if (!hasScores) return "scheduled";
@@ -46,10 +75,11 @@ const deriveStatus = (game, info, rules) => {
   const targetScoreRaw = info?.target_score;
   const winMarginRaw = info?.win_margin;
   const targetScore = Number(targetScoreRaw);
+  const winMarginValue = Number(winMarginRaw);
   const winMargin =
-    Number.isFinite(Number(winMarginRaw)) && Number(winMarginRaw) > 0
-      ? Number(winMarginRaw)
-      : 1;
+    Number.isFinite(winMarginValue) && winMarginValue > 0
+      ? Math.max(MIN_WIN_MARGIN, winMarginValue)
+      : MIN_WIN_MARGIN;
 
   const parsedRule = (() => {
     if (rules && typeof rules === "string") {
@@ -77,8 +107,12 @@ const deriveStatus = (game, info, rules) => {
       ? parsedRule.margin
       : winMargin;
   const resolvedTarget = Number.isFinite(mergeTarget) ? mergeTarget : undefined;
+  const resolvedMarginRaw =
+    Number.isFinite(mergeMargin) && mergeMargin > 0 ? mergeMargin : winMargin;
   const resolvedMargin =
-    Number.isFinite(mergeMargin) && mergeMargin > 0 ? mergeMargin : 1;
+    Number.isFinite(resolvedMarginRaw) && resolvedMarginRaw > 0
+      ? Math.max(MIN_WIN_MARGIN, resolvedMarginRaw)
+      : MIN_WIN_MARGIN;
 
   const t1 = Number(game.t1score ?? 0);
   const t2 = Number(game.t2score ?? 0);
@@ -206,10 +240,11 @@ export function normalizeOfficialMatch(officialPayload, options = {}) {
     const margin = Number(info?.win_margin);
     const ruleFromNumbers = (() => {
       if (Number.isFinite(target) && target > 0) {
-        if (Number.isFinite(margin) && margin > 1) {
-          return `First to ${target} (win by ${margin})`;
-        }
-        return `First to ${target}`;
+        const normalizedMargin =
+          Number.isFinite(margin) && margin > 0
+            ? Math.max(MIN_WIN_MARGIN, margin)
+            : MIN_WIN_MARGIN;
+        return `First to ${target} (win by ${normalizedMargin})`;
       }
       return null;
     })();
@@ -217,10 +252,10 @@ export function normalizeOfficialMatch(officialPayload, options = {}) {
     const ruleCandidates = [ruleFromNumbers, options.rules, info?.rules];
     for (const candidate of ruleCandidates) {
       if (typeof candidate === "string" && candidate.trim()) {
-        return candidate.trim();
+        return enforceWinByTwo(candidate);
       }
     }
-    return DEFAULT_RULES;
+    return enforceWinByTwo(DEFAULT_RULES);
   })();
 
   const derivedGames = rawGames.map((game, index) => {
