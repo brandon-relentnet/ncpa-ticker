@@ -231,7 +231,7 @@ export default function Scoreboard({
               </div>
             </div>
             <div
-              className="flex size-13 items-center justify-center border-l px-4 text-4xl font-bold"
+              className="flex w-13 items-center justify-center border-l px-4 text-4xl font-bold"
               style={{
                 backgroundColor: hsl(scoreBackgroundColor),
                 color: scoreTextColor,
@@ -261,7 +261,7 @@ export default function Scoreboard({
               </div>
             </div>
             <div
-              className="flex size-13 items-center justify-center border-l px-4 text-4xl font-bold"
+              className="flex w-13 items-center justify-center border-l px-4 text-4xl font-bold"
               style={{
                 backgroundColor: hsl(scoreBackgroundColor),
                 color: scoreTextColor,
