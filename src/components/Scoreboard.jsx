@@ -152,7 +152,7 @@ export default function Scoreboard({
       className={`flex flex-col items-end justify-between ${className}`.trim()}
     >
       <div
-        className="w-full rounded-t px-4 py-1 text-right text-base font-semibold tracking-wide"
+        className="w-full rounded-t px-4 py-1 text-right text-base font-semibold tracking-wide scoreboard-header"
         style={{ backgroundColor: hsl(primaryColor), color: headerTextColor }}
       >
         {defaultHeaderTitle}
@@ -225,8 +225,8 @@ export default function Scoreboard({
               ) : null}
             </div>
             <div className="flex flex-1 flex-col justify-center pl-2">
-              <div className="text-lg font-semibold">{defaultTeamOneName}</div>
-              <div className="flex truncate text-base">
+              <div className="text-xl font-semibold">{defaultTeamOneName}</div>
+              <div className="flex truncate text-xl">
                 {defaultTeamOnePlayers}
               </div>
             </div>
@@ -255,8 +255,8 @@ export default function Scoreboard({
               ) : null}
             </div>
             <div className="flex flex-1 flex-col justify-center pl-2">
-              <div className="text-lg font-semibold">{defaultTeamTwoName}</div>
-              <div className="flex truncate text-base">
+              <div className="text-xl font-semibold">{defaultTeamTwoName}</div>
+              <div className="flex truncate text-xl">
                 {defaultTeamTwoPlayers}
               </div>
             </div>
@@ -274,7 +274,7 @@ export default function Scoreboard({
       </div>
 
       <div
-        className="w-full rounded-b px-4 py-1 text-right text-base font-medium"
+        className="w-full rounded-b px-4 py-1 text-right text-base font-medium scoreboard-header"
         style={{ backgroundColor: hsl(primaryColor), color: headerTextColor }}
       >
         {defaultFooterText}
