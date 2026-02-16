@@ -157,6 +157,8 @@ export default function App() {
   const location = useLocation();
   const navigate = useNavigate();
   const isTickerRoute = location.pathname.startsWith("/ticker");
+  const isOnSyncPage =
+    location.pathname === "/settings" || location.pathname === "/ticker";
 
   const initialSyncTokenRef = useRef(null);
   if (initialSyncTokenRef.current === null) {
@@ -831,14 +833,14 @@ export default function App() {
   useEffect(() => {
     if (!shareToken) return;
     persistShareId(shareToken);
-    // Only inject ?sync= param when we are on /settings or /ticker
-    // (not on homepage) to avoid a navigation race on first visit
-    const onSyncPage =
-      location.pathname === "/settings" || location.pathname === "/ticker";
-    if (onSyncPage && syncTokenFromUrl !== shareToken) {
+    // Only inject ?sync= when on a sync page AND the URL has no token yet.
+    // Never overwrite an existing URL token — the URL is the source of truth
+    // when present. This prevents an infinite navigate loop between this
+    // effect (state→URL) and the effect below (URL→state).
+    if (isOnSyncPage && !syncTokenFromUrl) {
       updateSyncParam(shareToken);
     }
-  }, [shareToken, syncTokenFromUrl, updateSyncParam, location.pathname]);
+  }, [shareToken, syncTokenFromUrl, updateSyncParam, isOnSyncPage]);
 
   useEffect(() => {
     if (!syncTokenFromUrl || syncTokenFromUrl === shareToken) return;
@@ -855,7 +857,7 @@ export default function App() {
   }, [initialSharedState, applySyncPayload, releaseSyncSkip]);
 
   useEffect(() => {
-    if (!shareToken) return;
+    if (!shareToken || !isOnSyncPage) return;
 
     fetchSyncState(shareToken)
       .then((result) => {
@@ -882,6 +884,7 @@ export default function App() {
       });
   }, [
     shareToken,
+    isOnSyncPage,
     activeMatchId,
     applySyncPayload,
     loadMatch,
@@ -891,7 +894,8 @@ export default function App() {
   ]);
 
   useEffect(() => {
-    if (!shareToken || typeof window === "undefined") return undefined;
+    if (!shareToken || !isOnSyncPage || typeof window === "undefined")
+      return undefined;
 
     remoteSyncStateRef.current.lastUpdate = "";
 
@@ -936,6 +940,7 @@ export default function App() {
     };
   }, [
     shareToken,
+    isOnSyncPage,
     applySyncPayload,
     releaseSyncSkip,
     shouldApplyRemoteState,
