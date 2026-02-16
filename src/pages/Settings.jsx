@@ -12,6 +12,38 @@ import {
 import { NavLink } from "react-router-dom";
 import { motion as Motion } from "motion/react";
 import Breadcrumb from "../components/Breadcrumb";
+import {
+  SlidersHorizontal,
+  Monitor,
+  Lightbulb,
+  Palette,
+  PenLine,
+  Image,
+  Trophy,
+  RotateCw,
+  Link,
+  ExternalLink,
+  Play,
+  RefreshCw,
+  ChevronLeft,
+  ChevronRight,
+  Eraser,
+  Trash2,
+  LocateFixed,
+  Loader2,
+  AlertCircle,
+  Download,
+  MonitorPlay,
+  Globe,
+} from "lucide-react";
+
+const EASE_OUT_EXPO = [0.16, 1, 0.3, 1];
+
+const fadeUp = (delay = 0) => ({
+  initial: { opacity: 0, y: 16 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.5, delay, ease: EASE_OUT_EXPO },
+});
 
 function ColorControl({ label, color, onChange, className = "" }) {
   const textColor = contrastTextColor(color);
@@ -115,6 +147,60 @@ function LabeledToggle({ label, checked, onChange }) {
     </label>
   );
 }
+
+const TIP_ITEMS = [
+  {
+    icon: <Download size={14} />,
+    title: "Load Data First",
+    body: (
+      <>
+        Enter the match ID and hit{" "}
+        <span className="font-semibold" style={{ color: "var(--text-primary)" }}>Load</span>.
+        Watch the status badge under Match Info for success or refresh
+        if the API times out.
+      </>
+    ),
+  },
+  {
+    icon: <RefreshCw size={14} />,
+    title: "Apply Changes",
+    body: (
+      <>
+        Theme, logo, or active game tweaks auto-preview here. Use the
+        floating{" "}
+        <span className="font-semibold" style={{ color: "var(--text-primary)" }}>Apply Update</span>{" "}
+        button to push them to the ticker window.
+      </>
+    ),
+  },
+  {
+    icon: <MonitorPlay size={14} />,
+    title: "Keep Ticker Open",
+    body: (
+      <>
+        Click{" "}
+        <span className="font-semibold" style={{ color: "var(--text-primary)" }}>Open Ticker</span>{" "}
+        to launch a dedicated overlay tab. Capture that tab in OBS or
+        your switcher for broadcast.
+      </>
+    ),
+  },
+  {
+    icon: <Palette size={14} />,
+    title: "Tune Branding",
+    body: "Use the Design sliders to match your colors and scale team logos up to 1000%. Badge controls live in the Logo accordion for overlays and positioning.",
+  },
+  {
+    icon: <PenLine size={14} />,
+    title: "Manual Overrides",
+    body: "The Content Overrides accordion lets you rewrite any label or score. Leave fields blank or hit Clear Overrides to return to API values.",
+  },
+  {
+    icon: <Globe size={14} />,
+    title: "Cross-Browser Sync",
+    body: null, // rendered inline below because it has dynamic content
+  },
+];
 
 export default function SettingsPage({
   matchInfo,
@@ -296,211 +382,72 @@ export default function SettingsPage({
 
   return (
     <div className="page-shell py-10">
-      <div className="mx-auto max-w-[1600px] px-6">
+      <Motion.div className="mx-auto max-w-[1600px] px-6" {...fadeUp(0)}>
         <Breadcrumb current="Settings" />
-      </div>
+      </Motion.div>
       <div className="mx-auto flex max-w-[1600px] flex-col justify-center gap-8 px-6 lg:flex-row">
-        <div className="w-114 space-y-6 rounded-3xl">
+        {/* ── Left column: Controls ────────────────────────────────────── */}
+        <Motion.div className="w-114 space-y-6 rounded-3xl" {...fadeUp(0.05)}>
           <div className="mb-8 ml-2">
-            <h1 className="section-heading mb-2 text-3xl">Ticker Controls</h1>
+            <h1 className="flex items-center gap-2.5 section-heading mb-2 text-3xl">
+              <SlidersHorizontal size={22} style={{ color: "var(--accent)" }} />
+              Ticker Controls
+            </h1>
             <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
               Adjust settings and see the preview update instantly.
             </p>
           </div>
 
-          <Accordion>
-            <AccordionItem title="Design">
-              <div className="grid gap-6 sm:grid-cols-2">
-                <ColorControl
-                  label="Header & Footer"
-                  color={primaryColor}
-                  onChange={setPrimaryColor}
-                />
-
-                <ColorControl
-                  label="Body"
-                  color={secondaryColor}
-                  onChange={setSecondaryColor}
-                />
-
-                <ColorControl
-                  label="Badge Background"
-                  color={badgeBackground}
-                  onChange={setBadgeBackground}
-                />
-
-                <ColorControl
-                  label="Score Column"
-                  color={scoreBackground}
-                  onChange={setScoreBackground}
-                />
-
-                <ColorControl
-                  label="Ticker Background"
-                  color={tickerBackground}
-                  onChange={setTickerBackground}
-                />
-
-                <TextColorControl
-                  manualEnabled={manualTextColorEnabled}
-                  manualColor={manualTextColor}
-                  onToggleManual={setManualTextColorEnabled}
-                  onColorChange={setManualTextColor}
-                  autoHeaderColor={autoHeaderColor}
-                  autoBadgeColor={autoBadgeColor}
-                  autoBodyColor={autoBodyColor}
-                  autoScoreColor={autoScoreColor}
-                />
-
-                <div className="surface-card px-4 py-3 sm:col-span-2">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="label-accent">Team Logos</span>
-                    <span style={{ color: "var(--text-primary)" }}>
-                      {Math.round((teamLogoScale ?? 1) * 100)}%
-                    </span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0.5"
-                    max="10"
-                    step="0.05"
-                    value={teamLogoScale ?? DEFAULT_TEAM_LOGO_SCALE}
-                    onChange={(event) =>
-                      handleTeamLogoScaleChange(Number(event.target.value))
-                    }
-                    className="mt-3 w-full"
-                    style={{ accentColor: "var(--accent)" }}
+          <Motion.div {...fadeUp(0.1)}>
+            <Accordion>
+              <AccordionItem title="Design" icon={<Palette size={16} />}>
+                <div className="grid gap-6 sm:grid-cols-2">
+                  <ColorControl
+                    label="Header & Footer"
+                    color={primaryColor}
+                    onChange={setPrimaryColor}
                   />
-                </div>
-              </div>
 
-              <div className="space-y-3">
-                <LabeledToggle
-                  label="Show inner border"
-                  checked={showBorder}
-                  onChange={setShowBorder}
-                />
-
-                <LabeledToggle
-                  label="Use full association name"
-                  checked={useFullAssociationName}
-                  onChange={setUseFullAssociationName}
-                />
-              </div>
-            </AccordionItem>
-
-            <AccordionItem title="Content Overrides">
-              <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-                Override individual fields on the ticker. Leave any input blank
-                to fall back to live API data.
-              </p>
-              <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                {overrideFields.map(({ key, label, placeholder }) => (
-                  <label key={key} className="surface-card flex flex-col gap-1 px-4 py-3 text-xs">
-                    <span className="label-accent">{label}</span>
-                    <input
-                      type="text"
-                      className="input-field text-sm"
-                      value={overrides[key] ?? ""}
-                      placeholder={placeholder || "(from API)"}
-                      onChange={(event) =>
-                        onTickerOverrideChange(key, event.target.value)
-                      }
-                    />
-                  </label>
-                ))}
-                <label className="surface-card flex flex-col gap-1 px-4 py-3 text-xs sm:col-span-2">
-                  <span className="label-accent">footerText</span>
-                  <textarea
-                    rows={3}
-                    className="input-field text-sm"
-                    value={overrides.footerText ?? ""}
-                    placeholder={defaultFooterText || "(from API)"}
-                    onChange={(event) =>
-                      onTickerOverrideChange("footerText", event.target.value)
-                    }
+                  <ColorControl
+                    label="Body"
+                    color={secondaryColor}
+                    onChange={setSecondaryColor}
                   />
-                </label>
-              </div>
-              <div className="mt-4 flex justify-end">
-                <button
-                  type="button"
-                  className="btn-pill"
-                  onClick={onResetTickerOverrides}
-                >
-                  Clear Overrides
-                </button>
-              </div>
-            </AccordionItem>
 
-            <AccordionItem title="Logo">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-                    Upload an image to replace the NCPA badge. Drag it in the
-                    preview to adjust placement.
-                  </p>
-                  {logoImage && (
-                    <button
-                      type="button"
-                      className="text-xs font-semibold uppercase tracking-wide"
-                      style={{ color: "var(--danger)" }}
-                      onClick={handleRemoveLogo}
-                    >
-                      Remove
-                    </button>
-                  )}
-                </div>
-
-                <label
-                  className="flex flex-col gap-2 rounded-xl px-4 py-3 text-xs"
-                  style={{
-                    background: "var(--bg-surface)",
-                    border: "1px dashed var(--border-default)",
-                    color: "var(--text-secondary)",
-                  }}
-                >
-                  <span className="label-accent">Upload logo image</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleLogoFileChange}
-                    className="file-input-styled"
-                    style={{ color: "var(--text-muted)" }}
+                  <ColorControl
+                    label="Badge Background"
+                    color={badgeBackground}
+                    onChange={setBadgeBackground}
                   />
-                </label>
 
-                {logoImage && (
-                  <div className="surface-card flex items-center justify-between px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={logoImage}
-                        alt="Custom logo preview"
-                        className="h-12 w-12 rounded object-contain"
-                      />
-                      <div className="text-xs" style={{ color: "var(--text-muted)" }}>
-                        <div className="font-semibold" style={{ color: "var(--text-primary)" }}>
-                          Logo loaded
-                        </div>
-                        <div>Drag the image on the preview to reposition.</div>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      className="btn-pill"
-                      onClick={handleResetLogoPosition}
-                    >
-                      Reset position
-                    </button>
-                  </div>
-                )}
+                  <ColorControl
+                    label="Score Column"
+                    color={scoreBackground}
+                    onChange={setScoreBackground}
+                  />
 
-                <div className="space-y-3">
-                  <div className="surface-card px-4 py-3">
+                  <ColorControl
+                    label="Ticker Background"
+                    color={tickerBackground}
+                    onChange={setTickerBackground}
+                  />
+
+                  <TextColorControl
+                    manualEnabled={manualTextColorEnabled}
+                    manualColor={manualTextColor}
+                    onToggleManual={setManualTextColorEnabled}
+                    onColorChange={setManualTextColor}
+                    autoHeaderColor={autoHeaderColor}
+                    autoBadgeColor={autoBadgeColor}
+                    autoBodyColor={autoBodyColor}
+                    autoScoreColor={autoScoreColor}
+                  />
+
+                  <div className="surface-card px-4 py-3 sm:col-span-2">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="label-accent">Logo Scale</span>
+                      <span className="label-accent">Team Logos</span>
                       <span style={{ color: "var(--text-primary)" }}>
-                        {Math.round((logoScale ?? 1) * 100)}%
+                        {Math.round((teamLogoScale ?? 1) * 100)}%
                       </span>
                     </div>
                     <input
@@ -508,163 +455,321 @@ export default function SettingsPage({
                       min="0.5"
                       max="10"
                       step="0.05"
-                      value={logoScale ?? DEFAULT_LOGO_SCALE}
+                      value={teamLogoScale ?? DEFAULT_TEAM_LOGO_SCALE}
                       onChange={(event) =>
-                        handleLogoScaleChange(Number(event.target.value))
+                        handleTeamLogoScaleChange(Number(event.target.value))
                       }
                       className="mt-3 w-full"
                       style={{ accentColor: "var(--accent)" }}
                     />
                   </div>
+                </div>
+
+                <div className="space-y-3">
                   <LabeledToggle
-                    label="Transparent badge background"
-                    checked={logoTransparentBackground}
-                    onChange={setLogoTransparentBackground}
+                    label="Show inner border"
+                    checked={showBorder}
+                    onChange={setShowBorder}
                   />
+
                   <LabeledToggle
-                    label="Hide default NCPA logo"
-                    checked={logoTextHidden}
-                    onChange={setLogoTextHidden}
+                    label="Use full association name"
+                    checked={useFullAssociationName}
+                    onChange={setUseFullAssociationName}
                   />
+                </div>
+              </AccordionItem>
+
+              <AccordionItem title="Content Overrides" icon={<PenLine size={16} />}>
+                <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+                  Override individual fields on the ticker. Leave any input blank
+                  to fall back to live API data.
+                </p>
+                <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                  {overrideFields.map(({ key, label, placeholder }) => (
+                    <label key={key} className="surface-card flex flex-col gap-1 px-4 py-3 text-xs">
+                      <span className="label-accent">{label}</span>
+                      <input
+                        type="text"
+                        className="input-field text-sm"
+                        value={overrides[key] ?? ""}
+                        placeholder={placeholder || "(from API)"}
+                        onChange={(event) =>
+                          onTickerOverrideChange(key, event.target.value)
+                        }
+                      />
+                    </label>
+                  ))}
+                  <label className="surface-card flex flex-col gap-1 px-4 py-3 text-xs sm:col-span-2">
+                    <span className="label-accent">footerText</span>
+                    <textarea
+                      rows={3}
+                      className="input-field text-sm"
+                      value={overrides.footerText ?? ""}
+                      placeholder={defaultFooterText || "(from API)"}
+                      onChange={(event) =>
+                        onTickerOverrideChange("footerText", event.target.value)
+                      }
+                    />
+                  </label>
+                </div>
+                <div className="mt-4 flex justify-end">
+                  <button
+                    type="button"
+                    className="btn-pill flex items-center gap-1.5"
+                    onClick={onResetTickerOverrides}
+                  >
+                    <Eraser size={14} />
+                    Clear Overrides
+                  </button>
+                </div>
+              </AccordionItem>
+
+              <AccordionItem title="Logo" icon={<Image size={16} />}>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+                      Upload an image to replace the NCPA badge. Drag it in the
+                      preview to adjust placement.
+                    </p>
+                    {logoImage && (
+                      <button
+                        type="button"
+                        className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide"
+                        style={{ color: "var(--danger)" }}
+                        onClick={handleRemoveLogo}
+                      >
+                        <Trash2 size={12} />
+                        Remove
+                      </button>
+                    )}
+                  </div>
+
+                  <label
+                    className="flex flex-col gap-2 rounded-xl px-4 py-3 text-xs"
+                    style={{
+                      background: "var(--bg-surface)",
+                      border: "1px dashed var(--border-default)",
+                      color: "var(--text-secondary)",
+                    }}
+                  >
+                    <span className="label-accent">Upload logo image</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleLogoFileChange}
+                      className="file-input-styled"
+                      style={{ color: "var(--text-muted)" }}
+                    />
+                  </label>
+
                   {logoImage && (
-                    <div className="surface-card px-4 py-3 text-xs" style={{ color: "var(--text-muted)" }}>
-                      <div className="font-semibold" style={{ color: "var(--text-primary)" }}>
-                        Position
+                    <div className="surface-card flex items-center justify-between px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={logoImage}
+                          alt="Custom logo preview"
+                          className="h-12 w-12 rounded object-contain"
+                        />
+                        <div className="text-xs" style={{ color: "var(--text-muted)" }}>
+                          <div className="font-semibold" style={{ color: "var(--text-primary)" }}>
+                            Logo loaded
+                          </div>
+                          <div>Drag the image on the preview to reposition.</div>
+                        </div>
                       </div>
-                      <div>
-                        X offset: {logoPosition?.x ?? 0}px &middot; Y offset:{" "}
-                        {logoPosition?.y ?? 0}px
-                      </div>
+                      <button
+                        type="button"
+                        className="btn-pill flex items-center gap-1.5"
+                        onClick={handleResetLogoPosition}
+                      >
+                        <LocateFixed size={14} />
+                        Reset position
+                      </button>
                     </div>
                   )}
+
+                  <div className="space-y-3">
+                    <div className="surface-card px-4 py-3">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="label-accent">Logo Scale</span>
+                        <span style={{ color: "var(--text-primary)" }}>
+                          {Math.round((logoScale ?? 1) * 100)}%
+                        </span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0.5"
+                        max="10"
+                        step="0.05"
+                        value={logoScale ?? DEFAULT_LOGO_SCALE}
+                        onChange={(event) =>
+                          handleLogoScaleChange(Number(event.target.value))
+                        }
+                        className="mt-3 w-full"
+                        style={{ accentColor: "var(--accent)" }}
+                      />
+                    </div>
+                    <LabeledToggle
+                      label="Transparent badge background"
+                      checked={logoTransparentBackground}
+                      onChange={setLogoTransparentBackground}
+                    />
+                    <LabeledToggle
+                      label="Hide default NCPA logo"
+                      checked={logoTextHidden}
+                      onChange={setLogoTextHidden}
+                    />
+                    {logoImage && (
+                      <div className="surface-card px-4 py-3 text-xs" style={{ color: "var(--text-muted)" }}>
+                        <div className="font-semibold" style={{ color: "var(--text-primary)" }}>
+                          Position
+                        </div>
+                        <div>
+                          X offset: {logoPosition?.x ?? 0}px &middot; Y offset:{" "}
+                          {logoPosition?.y ?? 0}px
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </AccordionItem>
+              </AccordionItem>
 
-            <AccordionItem title="Match Info">
-              <div className="space-y-4">
-                <label className="surface-card flex w-full flex-col gap-2 px-4 py-3 text-sm">
-                  <span className="font-medium" style={{ color: "var(--text-secondary)" }}>
-                    Match ID
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      className="input-field flex-1"
-                      value={matchIdInput}
-                      onChange={(event) =>
-                        onMatchIdInputChange(event.target.value)
-                      }
-                      placeholder="Enter match ID"
-                    />
-                    <button
-                      type="button"
-                      className="btn-pill"
-                      onClick={onApplyMatchId}
-                      disabled={matchLoading}
-                      aria-label="Load match by ID"
-                    >
-                      Load
-                    </button>
-                  </div>
-                  <div
-                    className="flex items-center justify-between text-[11px] uppercase tracking-wide"
-                    style={{ color: "var(--text-muted)" }}
-                  >
-                    <span>Active: {activeMatchId || "\u2014"}</span>
-                    <button
-                      type="button"
-                      className="btn-pill"
-                      onClick={onReloadMatch}
-                      disabled={matchLoading || !activeMatchId}
-                    >
-                      Refresh
-                    </button>
-                  </div>
-                  <p className="flex items-center gap-1.5 text-[11px]">
-                    <span
-                      className={
-                        liveUpdatesConnected ? "status-dot status-dot-live" : "status-dot status-dot-offline"
-                      }
-                    />
-                    <span style={{ color: liveUpdatesConnected ? "var(--accent)" : "var(--text-muted)" }}>
-                      Live updates:{" "}
-                      {liveUpdatesConnected ? "Connected" : "Reconnecting\u2026"}
+              <AccordionItem title="Match Info" icon={<Trophy size={16} />}>
+                <div className="space-y-4">
+                  <label className="surface-card flex w-full flex-col gap-2 px-4 py-3 text-sm">
+                    <span className="font-medium" style={{ color: "var(--text-secondary)" }}>
+                      Match ID
                     </span>
-                  </p>
-                  {matchLoading && (
-                    <p className="text-[11px]" style={{ color: "var(--accent)" }}>
-                      Loading match\u2026
-                    </p>
-                  )}
-                  {matchError && (
-                    <p className="text-[11px]" style={{ color: "var(--danger)" }}>
-                      {matchError}
-                    </p>
-                  )}
-                </label>
-
-                <div className="surface-card flex w-full items-center justify-between px-4 py-3 text-sm">
-                  <div>
-                    <div className="font-medium" style={{ color: "var(--text-secondary)" }}>
-                      Active Game
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        className="input-field flex-1"
+                        value={matchIdInput}
+                        onChange={(event) =>
+                          onMatchIdInputChange(event.target.value)
+                        }
+                        placeholder="Enter match ID"
+                      />
+                      <button
+                        type="button"
+                        className="btn-pill flex items-center gap-1.5"
+                        onClick={onApplyMatchId}
+                        disabled={matchLoading}
+                        aria-label="Load match by ID"
+                      >
+                        <Play size={14} />
+                        Load
+                      </button>
                     </div>
                     <div
-                      className="text-[11px] uppercase tracking-wide"
+                      className="flex items-center justify-between text-[11px] uppercase tracking-wide"
                       style={{ color: "var(--text-muted)" }}
                     >
-                      {games.length} total &middot; {activeGameStatusLabel}
+                      <span>Active: {activeMatchId || "\u2014"}</span>
+                      <button
+                        type="button"
+                        className="btn-pill flex items-center gap-1.5"
+                        onClick={onReloadMatch}
+                        disabled={matchLoading || !activeMatchId}
+                      >
+                        <RefreshCw size={12} />
+                        Refresh
+                      </button>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      className="btn-pill"
-                      onClick={() =>
-                        onActiveGameIndexChange(activeGameIndex - 1)
-                      }
-                      disabled={activeGameIndex <= 0}
-                    >
-                      Prev
-                    </button>
-                    <div
-                      className="w-16 text-center text-sm font-semibold"
-                      style={{ color: "var(--text-primary)" }}
-                    >
-                      Game {activeGameNumber}
+                    <p className="flex items-center gap-1.5 text-[11px]">
+                      <span
+                        className={
+                          liveUpdatesConnected ? "status-dot status-dot-live" : "status-dot status-dot-offline"
+                        }
+                      />
+                      <span style={{ color: liveUpdatesConnected ? "var(--accent)" : "var(--text-muted)" }}>
+                        Live updates:{" "}
+                        {liveUpdatesConnected ? "Connected" : "Reconnecting\u2026"}
+                      </span>
+                    </p>
+                    {matchLoading && (
+                      <p className="flex items-center gap-1.5 text-[11px]" style={{ color: "var(--accent)" }}>
+                        <Loader2 size={12} className="animate-spin" />
+                        Loading match{"\u2026"}
+                      </p>
+                    )}
+                    {matchError && (
+                      <p className="flex items-center gap-1.5 text-[11px]" style={{ color: "var(--danger)" }}>
+                        <AlertCircle size={12} />
+                        {matchError}
+                      </p>
+                    )}
+                  </label>
+
+                  <div className="surface-card flex w-full items-center justify-between px-4 py-3 text-sm">
+                    <div>
+                      <div className="font-medium" style={{ color: "var(--text-secondary)" }}>
+                        Active Game
+                      </div>
+                      <div
+                        className="text-[11px] uppercase tracking-wide"
+                        style={{ color: "var(--text-muted)" }}
+                      >
+                        {games.length} total &middot; {activeGameStatusLabel}
+                      </div>
                     </div>
-                    <button
-                      type="button"
-                      className="btn-pill"
-                      onClick={() =>
-                        onActiveGameIndexChange(activeGameIndex + 1)
-                      }
-                      disabled={activeGameIndex >= games.length - 1}
-                    >
-                      Next
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        className="btn-pill flex items-center gap-1"
+                        onClick={() =>
+                          onActiveGameIndexChange(activeGameIndex - 1)
+                        }
+                        disabled={activeGameIndex <= 0}
+                      >
+                        <ChevronLeft size={14} />
+                        Prev
+                      </button>
+                      <div
+                        className="w-16 text-center text-sm font-semibold"
+                        style={{ color: "var(--text-primary)" }}
+                      >
+                        Game {activeGameNumber}
+                      </div>
+                      <button
+                        type="button"
+                        className="btn-pill flex items-center gap-1"
+                        onClick={() =>
+                          onActiveGameIndexChange(activeGameIndex + 1)
+                        }
+                        disabled={activeGameIndex >= games.length - 1}
+                      >
+                        Next
+                        <ChevronRight size={14} />
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </AccordionItem>
-          </Accordion>
-        </div>
+              </AccordionItem>
+            </Accordion>
+          </Motion.div>
+        </Motion.div>
 
         {/* ── Right column: Preview + Quick Info ────────────────────────── */}
         <div className="relative lg:sticky lg:top-10 lg:w-200 lg:self-start">
-          <div className="mb-8 ml-2">
-            <h1 className="section-heading mb-2 text-3xl">Display Preview</h1>
+          <Motion.div className="mb-8 ml-2" {...fadeUp(0.15)}>
+            <h1 className="flex items-center gap-2.5 section-heading mb-2 text-3xl">
+              <Monitor size={22} style={{ color: "var(--accent)" }} />
+              Display Preview
+            </h1>
             <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
               Adjust colors and see the scoreboard update instantly.
             </p>
-          </div>
-          <div
+          </Motion.div>
+          <Motion.div
             className="mb-8 flex flex-col items-center justify-center rounded-lg p-6 shadow-lg"
             style={{
               backgroundColor: tickerBg,
               maxHeight: "calc(100vh - 8rem)",
               overflow: "auto",
             }}
+            {...fadeUp(0.2)}
           >
             <Scoreboard
               matchInfo={matchInfo}
@@ -685,98 +790,67 @@ export default function SettingsPage({
               logoDraggable
               onLogoPositionChange={setLogoPosition}
             />
-          </div>
+          </Motion.div>
 
-          <div className="mb-8 ml-2 space-y-4">
-            <h1 className="section-heading text-3xl">Quick Info</h1>
+          <Motion.div className="mb-8 ml-2 space-y-4" {...fadeUp(0.25)}>
+            <h1 className="flex items-center gap-2.5 section-heading text-3xl">
+              <Lightbulb size={22} style={{ color: "var(--accent)" }} />
+              Quick Info
+            </h1>
             <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
               A few tips for using the ticker effectively.
             </p>
-          </div>
-          <div className="surface-card p-6">
+          </Motion.div>
+          <Motion.div className="surface-card p-6" {...fadeUp(0.3)}>
             <div className="space-y-3 text-sm">
-              {[
-                {
-                  title: "Load Data First",
-                  body: (
-                    <>
-                      Enter the match ID and hit{" "}
-                      <span className="font-semibold" style={{ color: "var(--text-primary)" }}>Load</span>.
-                      Watch the status badge under Match Info for success or refresh
-                      if the API times out.
-                    </>
-                  ),
-                },
-                {
-                  title: "Apply Changes",
-                  body: (
-                    <>
-                      Theme, logo, or active game tweaks auto-preview here. Use the
-                      floating{" "}
-                      <span className="font-semibold" style={{ color: "var(--text-primary)" }}>Apply Update</span>{" "}
-                      button to push them to the ticker window.
-                    </>
-                  ),
-                },
-                {
-                  title: "Keep Ticker Open",
-                  body: (
-                    <>
-                      Click{" "}
-                      <span className="font-semibold" style={{ color: "var(--text-primary)" }}>Open Ticker</span>{" "}
-                      to launch a dedicated overlay tab. Capture that tab in OBS or
-                      your switcher for broadcast.
-                    </>
-                  ),
-                },
-                {
-                  title: "Tune Branding",
-                  body: "Use the Design sliders to match your colors and scale team logos up to 1000%. Badge controls live in the Logo accordion for overlays and positioning.",
-                },
-                {
-                  title: "Manual Overrides",
-                  body: "The Content Overrides accordion lets you rewrite any label or score. Leave fields blank or hit Clear Overrides to return to API values.",
-                },
-                {
-                  title: "Cross-Browser Sync",
-                  body: (
-                    <>
-                      Load the ticker URL below once in vMix (or any browser) and
-                      keep this Settings page open. Every time you hit Apply Update
-                      the overlay refreshes automatically in that remote view.
-                      {tickerShareUrl ? (
-                        <span
-                          className="mt-2 block break-all font-mono text-[11px]"
-                          style={{ color: "var(--text-muted)" }}
-                        >
-                          {tickerShareUrl}
-                        </span>
-                      ) : null}
-                    </>
-                  ),
-                },
-              ].map((tip) => (
+              {TIP_ITEMS.map((tip) => (
                 <div key={tip.title}>
-                  <div className="label-accent">{tip.title}</div>
-                  <p style={{ color: "var(--text-muted)" }}>{tip.body}</p>
+                  <div className="flex items-center gap-2 label-accent">
+                    <span style={{ color: "var(--accent)" }}>{tip.icon}</span>
+                    {tip.title}
+                  </div>
+                  <p style={{ color: "var(--text-muted)" }}>
+                    {tip.title === "Cross-Browser Sync" ? (
+                      <>
+                        Load the ticker URL below once in vMix (or any browser) and
+                        keep this Settings page open. Every time you hit Apply Update
+                        the overlay refreshes automatically in that remote view.
+                        {tickerShareUrl ? (
+                          <span
+                            className="mt-2 block break-all font-mono text-[11px]"
+                            style={{ color: "var(--text-muted)" }}
+                          >
+                            {tickerShareUrl}
+                          </span>
+                        ) : null}
+                      </>
+                    ) : (
+                      tip.body
+                    )}
+                  </p>
                 </div>
               ))}
             </div>
-          </div>
+          </Motion.div>
         </div>
       </div>
 
       {/* ── Floating Action Buttons ────────────────────────────────────── */}
-      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+      <Motion.div
+        className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3"
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5, delay: 0.35, ease: EASE_OUT_EXPO }}
+      >
         <Motion.button
           type="button"
-          className="btn-primary rounded-full px-5 py-3 text-sm font-semibold uppercase tracking-wide shadow-lg"
+          className="btn-primary flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold uppercase tracking-wide shadow-lg"
           style={{ boxShadow: "0 4px 20px var(--accent-glow)" }}
           onClick={onApplyTickerUpdate}
           disabled={matchLoading || !matchInfo}
           {...hoverTap}
         >
-          <span className="text-base">\u27F3</span>
+          <RotateCw size={16} />
           <span>Apply Update</span>
         </Motion.button>
 
@@ -793,7 +867,7 @@ export default function SettingsPage({
           disabled={!tickerShareUrl}
           {...hoverTap}
         >
-          <span className="text-base">\uD83D\uDD17</span>
+          <Link size={16} />
           <span>{copyButtonLabel}</span>
         </Motion.button>
 
@@ -819,11 +893,11 @@ export default function SettingsPage({
             className="flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold uppercase tracking-wide"
             style={{ color: "var(--accent)" }}
           >
-            <span className="text-base">\uD83D\uDDD4</span>
+            <ExternalLink size={16} />
             <span>Open Ticker</span>
           </NavLink>
         </Motion.div>
-      </div>
+      </Motion.div>
     </div>
   );
 }

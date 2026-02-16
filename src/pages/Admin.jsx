@@ -3,6 +3,23 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
 import Breadcrumb from "../components/Breadcrumb";
 import { fetchAppConfig, saveAppConfig } from "../utils/configService";
+import {
+  ArrowLeft,
+  Shield,
+  AlertCircle,
+  CheckCircle2,
+  Eye,
+  EyeOff,
+  RotateCcw,
+  Save,
+  Loader2,
+  Info,
+  Database,
+  RefreshCw,
+  Code2,
+  Clock,
+  Server,
+} from "lucide-react";
 
 const FIELD_DEFS = [
   {
@@ -39,6 +56,33 @@ const fadeUp = {
   initial: { opacity: 0, y: 16 },
   animate: { opacity: 1, y: 0 },
 };
+
+const INFO_ITEMS = [
+  {
+    icon: <Database size={14} />,
+    text: "Configuration is stored server-side and loaded when the app starts.",
+  },
+  {
+    icon: <RefreshCw size={14} />,
+    text: (
+      <>
+        Already-open tabs need a{" "}
+        <strong style={{ color: "var(--text-secondary)" }}>page refresh</strong> to
+        pick up changes.
+      </>
+    ),
+  },
+  {
+    icon: <Code2 size={14} />,
+    text: (
+      <>
+        Build-time environment variables (
+        <code className="font-mono text-xs" style={{ color: "var(--text-secondary)" }}>VITE_*</code>
+        ) are used as fallbacks when the server config is empty.
+      </>
+    ),
+  },
+];
 
 export default function AdminPage() {
   const navigate = useNavigate();
@@ -109,7 +153,8 @@ export default function AdminPage() {
   if (loading) {
     return (
       <div className="page-shell flex min-h-screen items-center justify-center">
-        <div className="text-lg" style={{ color: "var(--text-muted)" }}>
+        <div className="flex items-center gap-3 text-lg" style={{ color: "var(--text-muted)" }}>
+          <Loader2 size={22} className="animate-spin" />
           Loading configuration...
         </div>
       </div>
@@ -128,13 +173,15 @@ export default function AdminPage() {
           transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
         >
           <div>
-            <h1 className="section-heading text-3xl">
+            <h1 className="flex items-center gap-2.5 section-heading text-3xl">
+              <Shield size={24} style={{ color: "var(--accent)" }} />
               Admin Configuration
             </h1>
             <p className="mt-1.5 text-sm" style={{ color: "var(--text-secondary)" }}>
               Global settings for the NCPA ticker application.
               {lastSaved && (
-                <span className="ml-2" style={{ color: "var(--text-muted)" }}>
+                <span className="ml-2 inline-flex items-center gap-1" style={{ color: "var(--text-muted)" }}>
+                  <Clock size={12} />
                   Last saved: {new Date(lastSaved).toLocaleString()}
                 </span>
               )}
@@ -147,9 +194,7 @@ export default function AdminPage() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.97 }}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-4">
-              <path fillRule="evenodd" d="M17 10a.75.75 0 0 1-.75.75H5.612l4.158 3.96a.75.75 0 1 1-1.04 1.08l-5.5-5.25a.75.75 0 0 1 0-1.08l5.5-5.25a.75.75 0 1 1 1.04 1.08L5.612 9.25H16.25A.75.75 0 0 1 17 10Z" clipRule="evenodd" />
-            </svg>
+            <ArrowLeft size={16} />
             Dashboard
           </motion.button>
         </motion.div>
@@ -157,7 +202,7 @@ export default function AdminPage() {
         {/* Alerts */}
         {error && (
           <motion.div
-            className="mb-6 rounded-lg px-4 py-3 text-sm"
+            className="mb-6 flex items-center gap-2 rounded-lg px-4 py-3 text-sm"
             style={{
               background: "var(--danger-muted)",
               border: "1px solid rgba(239, 68, 68, 0.3)",
@@ -166,12 +211,13 @@ export default function AdminPage() {
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
           >
+            <AlertCircle size={16} className="shrink-0" />
             {error}
           </motion.div>
         )}
         {success && (
           <motion.div
-            className="mb-6 rounded-lg px-4 py-3 text-sm"
+            className="mb-6 flex items-center gap-2 rounded-lg px-4 py-3 text-sm"
             style={{
               background: "var(--accent-muted)",
               border: "1px solid rgba(0, 229, 160, 0.3)",
@@ -180,8 +226,9 @@ export default function AdminPage() {
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
           >
+            <CheckCircle2 size={16} className="shrink-0" />
             {success}
-            <span className="ml-2 opacity-60">
+            <span className="ml-1 opacity-60">
               Open tabs need a page refresh to pick up changes.
             </span>
           </motion.div>
@@ -195,7 +242,8 @@ export default function AdminPage() {
             {...fadeUp}
             transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
           >
-            <h2 className="mb-5 text-lg font-semibold" style={{ color: "var(--text-primary)" }}>
+            <h2 className="mb-5 flex items-center gap-2 text-lg font-semibold" style={{ color: "var(--text-primary)" }}>
+              <Server size={18} style={{ color: "var(--accent)" }} />
               NCPA Tournament API
             </h2>
             <div className="space-y-5">
@@ -239,17 +287,7 @@ export default function AdminPage() {
                         onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}
                         title={showApiKey ? "Hide API key" : "Show API key"}
                       >
-                        {showApiKey ? (
-                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-4">
-                            <path fillRule="evenodd" d="M3.28 2.22a.75.75 0 0 0-1.06 1.06l14.5 14.5a.75.75 0 1 0 1.06-1.06l-1.745-1.745a10.029 10.029 0 0 0 3.3-4.38 1.651 1.651 0 0 0 0-1.185A10.004 10.004 0 0 0 9.999 3a9.956 9.956 0 0 0-4.744 1.194L3.28 2.22ZM7.752 6.69l1.092 1.092a2.5 2.5 0 0 1 3.374 3.373l1.092 1.092a4 4 0 0 0-5.558-5.558Z" clipRule="evenodd" />
-                            <path d="M10.748 13.93l2.523 2.523a9.987 9.987 0 0 1-3.27.547c-4.258 0-7.894-2.66-9.337-6.41a1.651 1.651 0 0 1 0-1.186A10.007 10.007 0 0 1 4.09 5.12l2.109 2.109a4 4 0 0 0 4.55 4.55 2.5 2.5 0 0 1-.002 2.15Z" />
-                          </svg>
-                        ) : (
-                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-4">
-                            <path d="M10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" />
-                            <path fillRule="evenodd" d="M.664 10.59a1.651 1.651 0 0 1 0-1.186A10.004 10.004 0 0 1 10 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0 1 10 17c-4.257 0-7.893-2.66-9.336-6.41ZM14 10a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z" clipRule="evenodd" />
-                          </svg>
-                        )}
+                        {showApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
                       </button>
                     )}
                   </div>
@@ -277,6 +315,7 @@ export default function AdminPage() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.97 }}
             >
+              <RotateCcw size={14} />
               Reset
             </motion.button>
             <motion.button
@@ -286,11 +325,10 @@ export default function AdminPage() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.97 }}
             >
-              {saving && (
-                <svg className="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
+              {saving ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                <Save size={16} />
               )}
               {saving ? "Saving..." : "Save Configuration"}
             </motion.button>
@@ -304,23 +342,19 @@ export default function AdminPage() {
           {...fadeUp}
           transition={{ duration: 0.4, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
         >
-          <h3 className="mb-2 font-semibold" style={{ color: "var(--text-primary)" }}>
+          <h3 className="mb-3 flex items-center gap-2 font-semibold" style={{ color: "var(--text-primary)" }}>
+            <Info size={16} style={{ color: "var(--accent)" }} />
             How it works
           </h3>
-          <ul className="list-inside list-disc space-y-1" style={{ color: "var(--text-muted)" }}>
-            <li>
-              Configuration is stored server-side and loaded when the app starts.
-            </li>
-            <li>
-              Already-open tabs need a{" "}
-              <strong style={{ color: "var(--text-secondary)" }}>page refresh</strong> to
-              pick up changes.
-            </li>
-            <li>
-              Build-time environment variables (
-              <code className="font-mono text-xs" style={{ color: "var(--text-secondary)" }}>VITE_*</code>
-              ) are used as fallbacks when the server config is empty.
-            </li>
+          <ul className="space-y-2" style={{ color: "var(--text-muted)" }}>
+            {INFO_ITEMS.map((item, i) => (
+              <li key={i} className="flex items-start gap-2.5">
+                <span className="mt-0.5 shrink-0" style={{ color: "var(--text-secondary)" }}>
+                  {item.icon}
+                </span>
+                <span>{item.text}</span>
+              </li>
+            ))}
           </ul>
         </motion.div>
       </div>

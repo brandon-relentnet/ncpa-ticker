@@ -1,4 +1,5 @@
 import { motion as Motion, MotionConfig } from "motion/react";
+import { ChevronDown } from "lucide-react";
 import { useId, useState } from "react";
 
 export function Accordion({ children, className = "", transition }) {
@@ -28,7 +29,7 @@ export function Accordion({ children, className = "", transition }) {
   );
 }
 
-export function AccordionItem({ title, children, defaultOpen = false }) {
+export function AccordionItem({ title, icon, children, defaultOpen = false }) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const id = useId();
 
@@ -51,7 +52,10 @@ export function AccordionItem({ title, children, defaultOpen = false }) {
             outlineColor: "var(--accent)",
           }}
         >
-          <span className="font-display text-sm font-bold uppercase tracking-wider">
+          <span className="flex items-center gap-2.5 font-display text-sm font-bold uppercase tracking-wider">
+            {icon && (
+              <span style={{ color: "var(--accent)" }}>{icon}</span>
+            )}
             {title}
           </span>
           <Motion.span
@@ -60,7 +64,7 @@ export function AccordionItem({ title, children, defaultOpen = false }) {
             className="transition-colors"
             style={{ color: "var(--text-muted)" }}
           >
-            <ChevronDownIcon />
+            <ChevronDown size={20} />
           </Motion.span>
         </Motion.button>
       </h3>
@@ -90,24 +94,6 @@ export function AccordionItem({ title, children, defaultOpen = false }) {
         </Motion.div>
       </Motion.div>
     </Motion.section>
-  );
-}
-
-function ChevronDownIcon() {
-  return (
-    <Motion.svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="m6 9 6 6 6-6" />
-    </Motion.svg>
   );
 }
 

@@ -13,6 +13,7 @@
   "dependencies": {
     "@tailwindcss/vite": "^4.1.13",
     "dotenv": "^16.4.5",
+    "lucide-react": "^0.564.0",
     "motion": "^12.23.22",
     "pg": "^8.13.1",
     "react": "^19.1.1",

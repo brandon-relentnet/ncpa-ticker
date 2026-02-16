@@ -17,6 +17,20 @@ import {
   DEFAULT_SCORE_BACKGROUND,
   DEFAULT_BADGE_BACKGROUND,
 } from "../utils/colors";
+import {
+  Settings,
+  ExternalLink,
+  Copy,
+  Check,
+  Trash2,
+  Plus,
+  Loader2,
+  Pencil,
+  BarChart3,
+  AlertCircle,
+  RotateCcw,
+  Clock,
+} from "lucide-react";
 
 const relativeTime = (dateString) => {
   if (!dateString) return "";
@@ -241,7 +255,8 @@ export default function HomePage() {
   if (loading) {
     return (
       <div className="page-shell flex min-h-screen items-center justify-center">
-        <div className="text-lg" style={{ color: "var(--text-muted)" }}>
+        <div className="flex items-center gap-3 text-lg" style={{ color: "var(--text-muted)" }}>
+          <Loader2 size={22} className="animate-spin" />
           Loading tickers...
         </div>
       </div>
@@ -287,9 +302,7 @@ export default function HomePage() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.97 }}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-4">
-                <path fillRule="evenodd" d="M7.84 1.804A1 1 0 0 1 8.82 1h2.36a1 1 0 0 1 .98.804l.331 1.652a6.993 6.993 0 0 1 1.929 1.115l1.598-.54a1 1 0 0 1 1.186.447l1.18 2.044a1 1 0 0 1-.205 1.251l-1.267 1.113a7.047 7.047 0 0 1 0 2.228l1.267 1.113a1 1 0 0 1 .206 1.25l-1.18 2.045a1 1 0 0 1-1.187.447l-1.598-.54a6.993 6.993 0 0 1-1.929 1.115l-.33 1.652a1 1 0 0 1-.98.804H8.82a1 1 0 0 1-.98-.804l-.331-1.652a6.993 6.993 0 0 1-1.929-1.115l-1.598.54a1 1 0 0 1-1.186-.447l-1.18-2.044a1 1 0 0 1 .205-1.251l1.267-1.114a7.05 7.05 0 0 1 0-2.227L1.821 7.773a1 1 0 0 1-.206-1.25l1.18-2.045a1 1 0 0 1 1.187-.447l1.598.54A6.993 6.993 0 0 1 7.51 3.456l.33-1.652ZM10 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" clipRule="evenodd" />
-              </svg>
+              <Settings size={16} />
               Admin
             </motion.button>
             <motion.button
@@ -301,14 +314,9 @@ export default function HomePage() {
               whileTap={{ scale: 0.97 }}
             >
               {creating ? (
-                <svg className="size-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
+                <Loader2 size={18} className="animate-spin" />
               ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-5">
-                  <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" />
-                </svg>
+                <Plus size={18} />
               )}
               {creating ? "Creating..." : "New Ticker"}
             </motion.button>
@@ -318,7 +326,7 @@ export default function HomePage() {
         {/* Error */}
         {error && (
           <motion.div
-            className="mb-6 rounded-lg px-4 py-3 text-sm"
+            className="mb-6 flex items-center gap-2 rounded-lg px-4 py-3 text-sm"
             style={{
               background: "var(--danger-muted)",
               border: "1px solid rgba(239, 68, 68, 0.3)",
@@ -327,12 +335,14 @@ export default function HomePage() {
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
           >
+            <AlertCircle size={16} className="shrink-0" />
             {error}
             <button
               type="button"
               onClick={fetchTickers}
-              className="ml-3 font-medium underline transition-colors hover:text-white"
+              className="ml-2 flex items-center gap-1 font-medium underline transition-colors hover:text-white"
             >
+              <RotateCcw size={14} />
               Retry
             </button>
           </motion.div>
@@ -354,9 +364,7 @@ export default function HomePage() {
               className="mb-4 rounded-full p-4"
               style={{ background: "var(--bg-elevated)" }}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-10" style={{ color: "var(--text-muted)" }}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0 1 18 16.5h-2.25m-7.5 0h7.5m-7.5 0-1 3m8.5-3 1 3m0 0 .5 1.5m-.5-1.5h-9.5m0 0-.5 1.5m.75-9 3-3 2.148 2.148A12.061 12.061 0 0 1 16.5 7.605" />
-              </svg>
+              <BarChart3 size={40} style={{ color: "var(--text-muted)" }} />
             </div>
             <h2 className="section-heading mb-2 text-xl">No tickers yet</h2>
             <p className="mb-6 max-w-sm text-sm" style={{ color: "var(--text-muted)" }}>
@@ -371,14 +379,9 @@ export default function HomePage() {
               whileTap={{ scale: 0.97 }}
             >
               {creating ? (
-                <svg className="size-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
+                <Loader2 size={18} className="animate-spin" />
               ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-5">
-                  <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" />
-                </svg>
+                <Plus size={18} />
               )}
               {creating ? "Creating..." : "Create Your First Ticker"}
             </motion.button>
@@ -479,9 +482,7 @@ export default function HomePage() {
                           <span className="truncate text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
                             {displayName}
                           </span>
-                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="size-3.5 shrink-0 opacity-0 transition-opacity group-hover/name:opacity-100" style={{ color: "var(--text-muted)" }}>
-                            <path d="M13.488 2.513a1.75 1.75 0 0 0-2.475 0L3.305 10.22a1 1 0 0 0-.26.44l-.873 3.128a.75.75 0 0 0 .926.926l3.128-.873a1 1 0 0 0 .44-.26l7.708-7.708a1.75 1.75 0 0 0 0-2.475l-.886-.886Z" />
-                          </svg>
+                          <Pencil size={12} className="shrink-0 opacity-0 transition-opacity group-hover/name:opacity-100" style={{ color: "var(--text-muted)" }} />
                         </button>
                       )}
 
@@ -527,9 +528,7 @@ export default function HomePage() {
                           <span className="truncate font-mono text-[11px]" style={{ color: "var(--text-secondary)" }}>
                             {ticker.id}
                           </span>
-                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="size-3 shrink-0 opacity-0 transition-opacity group-hover/slug:opacity-100" style={{ color: "var(--text-muted)" }}>
-                            <path d="M13.488 2.513a1.75 1.75 0 0 0-2.475 0L3.305 10.22a1 1 0 0 0-.26.44l-.873 3.128a.75.75 0 0 0 .926.926l3.128-.873a1 1 0 0 0 .44-.26l7.708-7.708a1.75 1.75 0 0 0 0-2.475l-.886-.886Z" />
-                          </svg>
+                          <Pencil size={10} className="shrink-0 opacity-0 transition-opacity group-hover/slug:opacity-100" style={{ color: "var(--text-muted)" }} />
                         </button>
                       )}
 
@@ -550,7 +549,8 @@ export default function HomePage() {
                       {/* Timestamps */}
                       <div className="flex items-center gap-3 text-xs" style={{ color: "var(--text-muted)" }}>
                         {ticker.updated_at && (
-                          <span title={new Date(ticker.updated_at).toLocaleString()}>
+                          <span className="flex items-center gap-1" title={new Date(ticker.updated_at).toLocaleString()}>
+                            <Clock size={11} />
                             Updated {relativeTime(ticker.updated_at)}
                           </span>
                         )}
@@ -566,35 +566,21 @@ export default function HomePage() {
                         {
                           label: "Settings",
                           onClick: () => handleOpenSettings(ticker.id),
-                          icon: (
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="size-3.5">
-                              <path fillRule="evenodd" d="M6.455 1.45A.5.5 0 0 1 6.952 1h2.096a.5.5 0 0 1 .497.45l.186 1.858a4.996 4.996 0 0 1 1.466.848l1.703-.769a.5.5 0 0 1 .639.206l1.048 1.814a.5.5 0 0 1-.142.656l-1.517 1.09a5.026 5.026 0 0 1 0 1.694l1.517 1.09a.5.5 0 0 1 .142.656l-1.048 1.814a.5.5 0 0 1-.639.206l-1.703-.769c-.433.36-.928.649-1.466.848l-.186 1.858a.5.5 0 0 1-.497.45H6.952a.5.5 0 0 1-.497-.45l-.186-1.858a4.993 4.993 0 0 1-1.466-.848l-1.703.769a.5.5 0 0 1-.639-.206L1.413 10.7a.5.5 0 0 1 .142-.656l1.517-1.09a5.026 5.026 0 0 1 0-1.694l-1.517-1.09a.5.5 0 0 1-.142-.656l1.048-1.814a.5.5 0 0 1 .639-.206l1.703.769c.433-.36.928-.649 1.466-.848l.186-1.858ZM8 10.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" clipRule="evenodd" />
-                            </svg>
-                          ),
+                          icon: <Settings size={14} />,
                         },
                         {
                           label: "Ticker",
                           onClick: () => handleOpenTicker(ticker.id),
-                          icon: (
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="size-3.5">
-                              <path d="M6.22 8.72a.75.75 0 0 0 1.06 1.06l5.22-5.22v1.69a.75.75 0 0 0 1.5 0v-3.5a.75.75 0 0 0-.75-.75h-3.5a.75.75 0 0 0 0 1.5h1.69L6.22 8.72Z" />
-                              <path d="M3.5 6.75c0-.69.56-1.25 1.25-1.25H7A.75.75 0 0 0 7 4H4.75A2.75 2.75 0 0 0 2 6.75v4.5A2.75 2.75 0 0 0 4.75 14h4.5A2.75 2.75 0 0 0 12 11.25V9a.75.75 0 0 0-1.5 0v2.25c0 .69-.56 1.25-1.25 1.25h-4.5c-.69 0-1.25-.56-1.25-1.25v-4.5Z" />
-                            </svg>
-                          ),
+                          icon: <ExternalLink size={14} />,
                         },
                         {
                           label: copiedId === ticker.id ? "Copied" : "Copy URL",
                           onClick: () => handleCopyUrl(ticker.id),
                           icon:
                             copiedId === ticker.id ? (
-                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="size-3.5" style={{ color: "var(--accent)" }}>
-                                <path fillRule="evenodd" d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z" clipRule="evenodd" />
-                              </svg>
+                              <Check size={14} style={{ color: "var(--accent)" }} />
                             ) : (
-                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="size-3.5">
-                                <path d="M5.5 3.5A1.5 1.5 0 0 1 7 2h2.879a1.5 1.5 0 0 1 1.06.44l2.122 2.12a1.5 1.5 0 0 1 .439 1.061V9.5A1.5 1.5 0 0 1 12 11V8.621a3 3 0 0 0-.879-2.121L9 4.379A3 3 0 0 0 6.879 3.5H5.5Z" />
-                                <path d="M4 5a1.5 1.5 0 0 0-1.5 1.5v6A1.5 1.5 0 0 0 4 14h5a1.5 1.5 0 0 0 1.5-1.5V8.621a1.5 1.5 0 0 0-.44-1.06L7.94 5.439A1.5 1.5 0 0 0 6.878 5H4Z" />
-                              </svg>
+                              <Copy size={14} />
                             ),
                           accent: copiedId === ticker.id,
                         },
@@ -639,9 +625,11 @@ export default function HomePage() {
                         }}
                         title="Delete ticker"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="size-3.5">
-                          <path fillRule="evenodd" d="M5 3.25V4H2.75a.75.75 0 0 0 0 1.5h.3l.815 8.15A1.5 1.5 0 0 0 5.357 15h5.285a1.5 1.5 0 0 0 1.493-1.35l.815-8.15h.3a.75.75 0 0 0 0-1.5H11v-.75A2.25 2.25 0 0 0 8.75 1h-1.5A2.25 2.25 0 0 0 5 3.25Zm2.25-.75a.75.75 0 0 0-.75.75V4h3v-.75a.75.75 0 0 0-.75-.75h-1.5ZM6.05 6a.75.75 0 0 1 .787.713l.275 5.5a.75.75 0 0 1-1.498.075l-.275-5.5A.75.75 0 0 1 6.05 6Zm3.9 0a.75.75 0 0 1 .712.787l-.275 5.5a.75.75 0 0 1-1.498-.075l.275-5.5a.75.75 0 0 1 .786-.712Z" clipRule="evenodd" />
-                        </svg>
+                        {isDeleting ? (
+                          <Loader2 size={14} className="animate-spin" />
+                        ) : (
+                          <Trash2 size={14} />
+                        )}
                         {isDeleting ? "..." : "Delete"}
                       </button>
                     </div>
