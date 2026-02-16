@@ -32,9 +32,9 @@ const sendNoContent = (res) => {
 
 const sendNotFound = (res) => json(res, 404, { error: "Not found" });
 
-const sendMethodNotAllowed = (res) => {
+const sendMethodNotAllowed = (res, allowed = "GET, PUT, PATCH, DELETE") => {
   res.statusCode = 405;
-  res.setHeader("Allow", "GET, PUT");
+  res.setHeader("Allow", allowed);
   res.end();
 };
 
@@ -71,11 +71,35 @@ const ensureSchema = async () => {
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
   `);
+
+  await pool.query(`
+    ALTER TABLE ticker_state
+      ADD COLUMN IF NOT EXISTS name TEXT NOT NULL DEFAULT '',
+      ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+  `);
 };
 
+/* ── List all tickers ──────────────────────────────────────────────────────── */
+const handleListTickers = async (res) => {
+  const result = await pool.query(
+    "SELECT id, name, payload, created_at, updated_at FROM ticker_state ORDER BY updated_at DESC"
+  );
+
+  const tickers = result.rows.map((row) => ({
+    id: row.id,
+    name: row.name ?? "",
+    payload: row.payload,
+    createdAt: row.created_at?.toISOString?.() ?? new Date().toISOString(),
+    updatedAt: row.updated_at?.toISOString?.() ?? new Date().toISOString(),
+  }));
+
+  json(res, 200, tickers);
+};
+
+/* ── Get single ticker ─────────────────────────────────────────────────────── */
 const handleGetState = async (res, id) => {
   const result = await pool.query(
-    "SELECT payload, updated_at FROM ticker_state WHERE id = $1",
+    "SELECT name, payload, created_at, updated_at FROM ticker_state WHERE id = $1",
     [id]
   );
 
@@ -86,11 +110,14 @@ const handleGetState = async (res, id) => {
 
   const row = result.rows[0];
   json(res, 200, {
+    name: row.name ?? "",
     payload: row.payload,
+    createdAt: row.created_at?.toISOString?.() ?? new Date().toISOString(),
     updatedAt: row.updated_at?.toISOString?.() ?? new Date().toISOString(),
   });
 };
 
+/* ── Create / update ticker ────────────────────────────────────────────────── */
 const handlePutState = async (res, id, body) => {
   if (!body || typeof body !== "object" || body.payload === undefined) {
     json(res, 400, { error: "payload is required" });
@@ -98,27 +125,75 @@ const handlePutState = async (res, id, body) => {
   }
 
   const payload = body.payload;
+  const name = typeof body.name === "string" ? body.name : "";
   const updatedAt = new Date();
 
   const result = await pool.query(
-    `INSERT INTO ticker_state (id, payload, updated_at)
-     VALUES ($1, $2, $3)
+    `INSERT INTO ticker_state (id, name, payload, created_at, updated_at)
+     VALUES ($1, $2, $3, $4, $4)
      ON CONFLICT (id) DO UPDATE
        SET payload = EXCLUDED.payload,
+           name = CASE WHEN EXCLUDED.name <> '' THEN EXCLUDED.name ELSE ticker_state.name END,
            updated_at = EXCLUDED.updated_at
-     RETURNING updated_at`,
-    [id, payload, updatedAt]
+     RETURNING name, created_at, updated_at`,
+    [id, name, payload, updatedAt]
   );
 
+  const row = result.rows[0];
   json(res, 200, {
-    updatedAt: result.rows[0].updated_at?.toISOString?.() ?? updatedAt.toISOString(),
+    name: row.name ?? "",
+    createdAt: row.created_at?.toISOString?.() ?? updatedAt.toISOString(),
+    updatedAt: row.updated_at?.toISOString?.() ?? updatedAt.toISOString(),
   });
 };
 
+/* ── Rename ticker ─────────────────────────────────────────────────────────── */
+const handlePatchState = async (res, id, body) => {
+  if (!body || typeof body !== "object" || typeof body.name !== "string") {
+    json(res, 400, { error: "name (string) is required" });
+    return;
+  }
+
+  const result = await pool.query(
+    `UPDATE ticker_state SET name = $2, updated_at = NOW()
+     WHERE id = $1
+     RETURNING name, created_at, updated_at`,
+    [id, body.name]
+  );
+
+  if (!result.rowCount) {
+    sendNotFound(res);
+    return;
+  }
+
+  const row = result.rows[0];
+  json(res, 200, {
+    name: row.name ?? "",
+    createdAt: row.created_at?.toISOString?.() ?? new Date().toISOString(),
+    updatedAt: row.updated_at?.toISOString?.() ?? new Date().toISOString(),
+  });
+};
+
+/* ── Delete ticker ─────────────────────────────────────────────────────────── */
+const handleDeleteState = async (res, id) => {
+  const result = await pool.query(
+    "DELETE FROM ticker_state WHERE id = $1",
+    [id]
+  );
+
+  if (!result.rowCount) {
+    sendNotFound(res);
+    return;
+  }
+
+  sendNoContent(res);
+};
+
+/* ── HTTP server ───────────────────────────────────────────────────────────── */
 const server = http.createServer(async (req, res) => {
   res.setHeader("Cache-Control", "no-store");
   res.setHeader("Access-Control-Allow-Origin", CORS_ORIGIN);
-  res.setHeader("Access-Control-Allow-Methods", "GET, PUT, OPTIONS");
+  res.setHeader("Access-Control-Allow-Methods", "GET, PUT, PATCH, DELETE, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") {
@@ -133,26 +208,49 @@ const server = http.createServer(async (req, res) => {
   }
 
   const segments = parsed.pathname.slice(BASE_PATH.length).split("/").filter(Boolean);
-  if (segments.length !== 1) {
-    sendNotFound(res);
-    return;
-  }
-
-  const id = segments[0];
 
   try {
-    if (req.method === "GET") {
-      await handleGetState(res, id);
+    /* LIST: GET /api/ticker-sync  (no id segment) */
+    if (segments.length === 0) {
+      if (req.method === "GET") {
+        await handleListTickers(res);
+        return;
+      }
+      sendMethodNotAllowed(res, "GET");
       return;
     }
 
-    if (req.method === "PUT") {
-      const body = await readBody(req);
-      await handlePutState(res, id, body);
+    /* Single ticker: /api/ticker-sync/:id */
+    if (segments.length === 1) {
+      const id = segments[0];
+
+      if (req.method === "GET") {
+        await handleGetState(res, id);
+        return;
+      }
+
+      if (req.method === "PUT") {
+        const body = await readBody(req);
+        await handlePutState(res, id, body);
+        return;
+      }
+
+      if (req.method === "PATCH") {
+        const body = await readBody(req);
+        await handlePatchState(res, id, body);
+        return;
+      }
+
+      if (req.method === "DELETE") {
+        await handleDeleteState(res, id);
+        return;
+      }
+
+      sendMethodNotAllowed(res);
       return;
     }
 
-    sendMethodNotAllowed(res);
+    sendNotFound(res);
   } catch (error) {
     console.error("Ticker sync request failed", error);
     json(res, 500, { error: "Internal server error" });

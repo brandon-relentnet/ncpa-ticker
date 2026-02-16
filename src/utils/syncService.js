@@ -48,12 +48,50 @@ export const fetchSyncState = async (syncId) => {
   return parseResponse(response);
 };
 
-export const pushSyncState = async ({ syncId, payload }) => {
+export const pushSyncState = async ({ syncId, payload, name }) => {
   if (!syncId) throw new Error("syncId is required to push state");
+  const body = { payload };
+  if (name !== undefined) body.name = name;
   const response = await fetch(buildSyncUrl(syncId), {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ payload }),
+    body: JSON.stringify(body),
   });
   return parseResponse(response);
+};
+
+const buildListUrl = () => {
+  if (!BASE_URL) return "/api/ticker-sync";
+  return BASE_URL;
+};
+
+export const listTickers = async () => {
+  const response = await fetch(buildListUrl(), {
+    method: "GET",
+    headers: { Accept: "application/json" },
+  });
+  return parseResponse(response);
+};
+
+export const renameTicker = async (syncId, name) => {
+  if (!syncId) throw new Error("syncId is required");
+  const response = await fetch(buildSyncUrl(syncId), {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name }),
+  });
+  return parseResponse(response);
+};
+
+export const deleteTicker = async (syncId) => {
+  if (!syncId) throw new Error("syncId is required");
+  const response = await fetch(buildSyncUrl(syncId), {
+    method: "DELETE",
+  });
+  if (response.status === 204) return true;
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => "");
+    throw new Error(errorText || `Delete failed (${response.status})`);
+  }
+  return true;
 };

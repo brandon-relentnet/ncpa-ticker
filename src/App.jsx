@@ -7,6 +7,7 @@ import {
   useNavigate,
 } from "react-router-dom";
 import "./App.css";
+import HomePage from "./pages/Home";
 import SettingsPage from "./pages/Settings";
 import TickerPage from "./pages/Ticker";
 import {
@@ -830,10 +831,14 @@ export default function App() {
   useEffect(() => {
     if (!shareToken) return;
     persistShareId(shareToken);
-    if (syncTokenFromUrl !== shareToken) {
+    // Only inject ?sync= param when we are on /settings or /ticker
+    // (not on homepage) to avoid a navigation race on first visit
+    const onSyncPage =
+      location.pathname === "/settings" || location.pathname === "/ticker";
+    if (onSyncPage && syncTokenFromUrl !== shareToken) {
       updateSyncParam(shareToken);
     }
-  }, [shareToken, syncTokenFromUrl, updateSyncParam]);
+  }, [shareToken, syncTokenFromUrl, updateSyncParam, location.pathname]);
 
   useEffect(() => {
     if (!syncTokenFromUrl || syncTokenFromUrl === shareToken) return;
@@ -1027,95 +1032,109 @@ export default function App() {
     ? "min-h-screen"
     : "min-h-screen bg-slate-950 text-slate-100";
 
+  // Redirect to homepage if /settings or /ticker lack a ?sync= param
+  const requiresSyncRedirect =
+    (location.pathname === "/settings" || location.pathname === "/ticker") &&
+    !syncTokenFromUrl;
+
   return (
     <div className={appClassName}>
       <Routes>
+        <Route path="/" element={<HomePage />} />
         <Route
           path="/settings"
           element={
-            <SettingsPage
-              matchInfo={matchInfo}
-              matchIdInput={matchIdInput}
-              activeMatchId={activeMatchId}
-              onMatchIdInputChange={handleMatchIdInputChange}
-              onApplyMatchId={handleApplyMatchId}
-              onReloadMatch={handleReloadMatch}
-              onActiveGameIndexChange={handleActiveGameIndexChange}
-              matchLoading={matchLoading}
-              matchError={matchError}
-              liveUpdatesConnected={liveUpdatesConnected}
-              onApplyTickerUpdate={handleApplyTickerUpdate}
-              tickerShareSearch={tickerShareSearch}
-              tickerShareUrl={tickerShareUrl}
-              primaryColor={primaryColor}
-              secondaryColor={secondaryColor}
-              scoreBackground={scoreBackground}
-              badgeBackground={badgeBackground}
-              setPrimaryColor={setPrimaryColor}
-              setSecondaryColor={setSecondaryColor}
-              setScoreBackground={setScoreBackground}
-              setBadgeBackground={setBadgeBackground}
-              tickerBackground={tickerBackground}
-              setTickerBackground={setTickerBackground}
-              manualTextColor={manualTextColor}
-              manualTextColorEnabled={manualTextColorEnabled}
-              setManualTextColor={setManualTextColor}
-              setManualTextColorEnabled={setManualTextColorEnabled}
-              showBorder={showBorder}
-              setShowBorder={setShowBorder}
-              useFullAssociationName={useFullAssociationName}
-              setUseFullAssociationName={setUseFullAssociationName}
-              logoImage={logoImage}
-              setLogoImage={setLogoImage}
-              logoTransparentBackground={logoTransparentBackground}
-              setLogoTransparentBackground={setLogoTransparentBackground}
-              logoTextHidden={logoTextHidden}
-              setLogoTextHidden={setLogoTextHidden}
-              logoPosition={logoPosition}
-              setLogoPosition={setLogoPosition}
-              logoScale={logoScale}
-              setLogoScale={(value) => setLogoScale(clampLogoScale(value))}
-              teamLogoScale={teamLogoScale}
-              setTeamLogoScale={(value) =>
-                setTeamLogoScale(clampTeamLogoScale(value))
-              }
-              tickerOverrides={tickerOverrides}
-              onTickerOverrideChange={(key, value) =>
-                setTickerOverrides((previous) => ({
-                  ...previous,
-                  [key]: value,
-                }))
-              }
-              onResetTickerOverrides={() =>
-                setTickerOverrides({ ...DEFAULT_TICKER_OVERRIDES })
-              }
-            />
+            requiresSyncRedirect ? (
+              <Navigate to="/" replace />
+            ) : (
+              <SettingsPage
+                matchInfo={matchInfo}
+                matchIdInput={matchIdInput}
+                activeMatchId={activeMatchId}
+                onMatchIdInputChange={handleMatchIdInputChange}
+                onApplyMatchId={handleApplyMatchId}
+                onReloadMatch={handleReloadMatch}
+                onActiveGameIndexChange={handleActiveGameIndexChange}
+                matchLoading={matchLoading}
+                matchError={matchError}
+                liveUpdatesConnected={liveUpdatesConnected}
+                onApplyTickerUpdate={handleApplyTickerUpdate}
+                tickerShareSearch={tickerShareSearch}
+                tickerShareUrl={tickerShareUrl}
+                primaryColor={primaryColor}
+                secondaryColor={secondaryColor}
+                scoreBackground={scoreBackground}
+                badgeBackground={badgeBackground}
+                setPrimaryColor={setPrimaryColor}
+                setSecondaryColor={setSecondaryColor}
+                setScoreBackground={setScoreBackground}
+                setBadgeBackground={setBadgeBackground}
+                tickerBackground={tickerBackground}
+                setTickerBackground={setTickerBackground}
+                manualTextColor={manualTextColor}
+                manualTextColorEnabled={manualTextColorEnabled}
+                setManualTextColor={setManualTextColor}
+                setManualTextColorEnabled={setManualTextColorEnabled}
+                showBorder={showBorder}
+                setShowBorder={setShowBorder}
+                useFullAssociationName={useFullAssociationName}
+                setUseFullAssociationName={setUseFullAssociationName}
+                logoImage={logoImage}
+                setLogoImage={setLogoImage}
+                logoTransparentBackground={logoTransparentBackground}
+                setLogoTransparentBackground={setLogoTransparentBackground}
+                logoTextHidden={logoTextHidden}
+                setLogoTextHidden={setLogoTextHidden}
+                logoPosition={logoPosition}
+                setLogoPosition={setLogoPosition}
+                logoScale={logoScale}
+                setLogoScale={(value) => setLogoScale(clampLogoScale(value))}
+                teamLogoScale={teamLogoScale}
+                setTeamLogoScale={(value) =>
+                  setTeamLogoScale(clampTeamLogoScale(value))
+                }
+                tickerOverrides={tickerOverrides}
+                onTickerOverrideChange={(key, value) =>
+                  setTickerOverrides((previous) => ({
+                    ...previous,
+                    [key]: value,
+                  }))
+                }
+                onResetTickerOverrides={() =>
+                  setTickerOverrides({ ...DEFAULT_TICKER_OVERRIDES })
+                }
+              />
+            )
           }
         />
         <Route
           path="/ticker"
           element={
-            <TickerPage
-              matchInfo={matchInfo}
-              primaryColor={primaryColor}
-              secondaryColor={secondaryColor}
-              scoreBackground={scoreBackground}
-              badgeBackground={badgeBackground}
-              showBorder={showBorder}
-              manualTextColor={manualTextColorEnabled ? manualTextColor : null}
-              tickerBackground={tickerBackground}
-              useFullAssociationName={useFullAssociationName}
-              logoImage={logoImage}
-              logoTransparentBackground={logoTransparentBackground}
-              logoTextHidden={logoTextHidden}
-              logoPosition={logoPosition}
-              logoScale={logoScale}
-              teamLogoScale={teamLogoScale}
-              tickerOverrides={tickerOverrides}
-            />
+            requiresSyncRedirect ? (
+              <Navigate to="/" replace />
+            ) : (
+              <TickerPage
+                matchInfo={matchInfo}
+                primaryColor={primaryColor}
+                secondaryColor={secondaryColor}
+                scoreBackground={scoreBackground}
+                badgeBackground={badgeBackground}
+                showBorder={showBorder}
+                manualTextColor={manualTextColorEnabled ? manualTextColor : null}
+                tickerBackground={tickerBackground}
+                useFullAssociationName={useFullAssociationName}
+                logoImage={logoImage}
+                logoTransparentBackground={logoTransparentBackground}
+                logoTextHidden={logoTextHidden}
+                logoPosition={logoPosition}
+                logoScale={logoScale}
+                teamLogoScale={teamLogoScale}
+                tickerOverrides={tickerOverrides}
+              />
+            )
           }
         />
-        <Route path="*" element={<Navigate to="/settings" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>
   );
