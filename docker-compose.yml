@@ -11,7 +11,8 @@ services:
         VITE_NCPA_SOCKET_URL: ${VITE_NCPA_SOCKET_URL:-https://tournaments.ncpaofficial.com}
         VITE_DEFAULT_MATCH_ID: ${VITE_DEFAULT_MATCH_ID:-5092}
     depends_on:
-      - sync-server
+      sync-server:
+        condition: service_healthy
     restart: unless-stopped
 
   sync-server:
@@ -24,6 +25,12 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:4000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     restart: unless-stopped
 
   postgres:

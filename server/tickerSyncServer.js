@@ -2,7 +2,6 @@
 import "dotenv/config";
 import http from "node:http";
 import process from "node:process";
-import { parse } from "node:url";
 import { Pool } from "pg";
 
 const PORT = process.env.SYNC_SERVER_PORT
@@ -10,7 +9,31 @@ const PORT = process.env.SYNC_SERVER_PORT
   : 4000;
 const HOST = process.env.SYNC_SERVER_HOST ?? "0.0.0.0";
 const BASE_PATH = process.env.SYNC_BASE_PATH ?? "/api/ticker-sync";
-const CORS_ORIGIN = process.env.SYNC_CORS_ORIGIN ?? "*";
+const CORS_ORIGIN = process.env.SYNC_CORS_ORIGIN ?? "";
+
+/* ── Simple in-memory rate limiter ─────────────────────────────────────────── */
+const RATE_WINDOW_MS = 60_000; // 1 minute
+const RATE_MAX_REQUESTS = 120; // per window per IP
+const ipHits = new Map(); // ip -> { count, resetAt }
+
+const checkRateLimit = (ip) => {
+  const now = Date.now();
+  let entry = ipHits.get(ip);
+  if (!entry || now >= entry.resetAt) {
+    entry = { count: 0, resetAt: now + RATE_WINDOW_MS };
+    ipHits.set(ip, entry);
+  }
+  entry.count++;
+  return entry.count <= RATE_MAX_REQUESTS;
+};
+
+// Periodically prune expired entries to prevent unbounded growth
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, entry] of ipHits) {
+    if (now >= entry.resetAt) ipHits.delete(ip);
+  }
+}, RATE_WINDOW_MS);
 
 if (!process.env.DATABASE_URL) {
   console.error("DATABASE_URL env var is required to start ticker sync server");
@@ -253,16 +276,25 @@ const handleChangeSlug = async (res, currentId, body) => {
     currentId,
   ]);
 
-  // Clean up any ghost row that racing PUT requests from other tabs might
-  // re-create with the old ID between this rename and the BroadcastChannel
-  // notification reaching those tabs.
-  setTimeout(async () => {
-    try {
-      await pool.query("DELETE FROM ticker_state WHERE id = $1", [currentId]);
-    } catch {
-      /* ignore — row may not exist */
-    }
-  }, 3000);
+  // Atomic rename: insert new row, copy data, delete old — all in one
+  // transaction so racing PUT requests from other tabs cannot re-create
+  // a ghost row with the old ID.
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    await client.query("UPDATE ticker_state SET id = $1 WHERE id = $2", [
+      slug,
+      currentId,
+    ]);
+    // Delete any ghost row that a racing PUT may have re-created with the old ID
+    await client.query("DELETE FROM ticker_state WHERE id = $1", [currentId]);
+    await client.query("COMMIT");
+  } catch (err) {
+    await client.query("ROLLBACK");
+    throw err;
+  } finally {
+    client.release();
+  }
 
   json(res, 200, { id: slug, oldId: currentId });
 };
@@ -364,8 +396,9 @@ const handleDeleteState = async (res, id) => {
 
 /* ── HTTP server ───────────────────────────────────────────────────────────── */
 const server = http.createServer(async (req, res) => {
+  const origin = CORS_ORIGIN || req.headers.origin || "";
   res.setHeader("Cache-Control", "no-store");
-  res.setHeader("Access-Control-Allow-Origin", CORS_ORIGIN);
+  res.setHeader("Access-Control-Allow-Origin", origin);
   res.setHeader("Access-Control-Allow-Methods", "GET, PUT, PATCH, DELETE, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
@@ -374,13 +407,37 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  const parsed = parse(req.url ?? "", true);
-  if (!parsed.pathname?.startsWith(BASE_PATH)) {
+  /* ── Health check (no rate limiting) ─────────────────────────────────────── */
+  const url = new URL(req.url ?? "", `http://${req.headers.host ?? "localhost"}`);
+
+  if (url.pathname === "/health") {
+    try {
+      await pool.query("SELECT 1");
+      json(res, 200, { status: "ok" });
+    } catch {
+      json(res, 503, { status: "unhealthy" });
+    }
+    return;
+  }
+
+  /* ── Rate limiting ───────────────────────────────────────────────────────── */
+  const clientIp = req.headers["x-forwarded-for"]?.toString().split(",")[0]?.trim()
+    || req.socket.remoteAddress
+    || "unknown";
+
+  if (!checkRateLimit(clientIp)) {
+    res.statusCode = 429;
+    res.setHeader("Retry-After", String(Math.ceil(RATE_WINDOW_MS / 1000)));
+    json(res, 429, { error: "Too many requests" });
+    return;
+  }
+
+  if (!url.pathname.startsWith(BASE_PATH)) {
     sendNotFound(res);
     return;
   }
 
-  const segments = parsed.pathname.slice(BASE_PATH.length).split("/").filter(Boolean);
+  const segments = url.pathname.slice(BASE_PATH.length).split("/").filter(Boolean);
 
   try {
     /* LIST: GET /api/ticker-sync  (no id segment) */
