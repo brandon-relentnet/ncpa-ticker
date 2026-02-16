@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { HslColorPicker } from "react-colorful";
 import Scoreboard from "../components/Scoreboard";
-import Accordion, { AccordionItem } from "../components/Accordian";
+import Accordion, { AccordionItem } from "../components/Accordion";
 import { contrastTextColor, hsl } from "../utils/colors";
+import { copyToClipboard } from "../utils/clipboard";
 import { deriveMatchState } from "../utils/matchState";
 import {
   DEFAULT_LOGO_POSITION,
@@ -313,26 +314,8 @@ export default function SettingsPage({
 
   const handleCopyTickerUrl = async () => {
     if (!tickerShareUrl) return;
-
-    try {
-      if (navigator?.clipboard?.writeText) {
-        await navigator.clipboard.writeText(tickerShareUrl);
-      } else {
-        const helper = document.createElement("textarea");
-        helper.value = tickerShareUrl;
-        helper.setAttribute("readonly", "");
-        helper.style.position = "absolute";
-        helper.style.left = "-9999px";
-        document.body.appendChild(helper);
-        helper.select();
-        document.execCommand("copy");
-        document.body.removeChild(helper);
-      }
-      setCopyStatus("copied");
-    } catch (error) {
-      console.warn("Failed to copy ticker URL", error);
-      setCopyStatus("error");
-    }
+    const ok = await copyToClipboard(tickerShareUrl);
+    setCopyStatus(ok ? "copied" : "error");
   };
 
   const copyButtonLabel =

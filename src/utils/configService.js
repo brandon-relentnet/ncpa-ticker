@@ -3,25 +3,9 @@
  * stored in the sync server's `app_config` table.
  */
 
-const defaultBaseUrl = import.meta.env.DEV
-  ? "http://localhost:4000/api/ticker-sync"
-  : "/api/ticker-sync";
+import { API_BASE_URL } from "./apiBase";
 
-const rawBaseUrl = import.meta.env.VITE_SYNC_SERVICE_URL ?? defaultBaseUrl;
-
-const resolveBaseUrl = () => {
-  let url = rawBaseUrl;
-  if (url && /^https?:\/\//i.test(url)) {
-    try {
-      url = new URL(url).toString().replace(/\/$/, "");
-    } catch {
-      url = defaultBaseUrl;
-    }
-  }
-  return url;
-};
-
-const CONFIG_URL = `${resolveBaseUrl()}/config`;
+const CONFIG_URL = `${API_BASE_URL}/config`;
 
 /**
  * Fetch the current app config from the server.

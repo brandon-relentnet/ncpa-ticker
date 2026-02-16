@@ -24,10 +24,6 @@
   --accent-muted: rgba(0, 229, 160, 0.15);
   --accent-glow: rgba(0, 229, 160, 0.25);
 
-  /* Secondary accent — blue */
-  --accent-blue: #3b82f6;
-  --accent-blue-muted: rgba(59, 130, 246, 0.15);
-
   /* Danger */
   --danger: #ef4444;
   --danger-muted: rgba(239, 68, 68, 0.15);
@@ -36,8 +32,6 @@
   --text-primary: #f1f5f9;
   --text-secondary: #94a3b8;
   --text-muted: #64748b;
-  --text-faint: #475569;
-
   /* Fonts */
   --font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
   --font-body: "DM Sans", system-ui, -apple-system, sans-serif;
@@ -106,21 +100,6 @@ body {
 
 .surface-card:hover {
   border-color: var(--border-default);
-}
-
-.surface-card-elevated {
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-default);
-  border-radius: 0.75rem;
-}
-
-/* ── Glow Effects ────────────────────────────────────────────────── */
-.glow-accent {
-  box-shadow: 0 0 20px var(--accent-glow), 0 0 60px rgba(0, 229, 160, 0.08);
-}
-
-.glow-accent-sm {
-  box-shadow: 0 0 10px var(--accent-glow);
 }
 
 /* ── Input Styling ───────────────────────────────────────────────── */
@@ -227,11 +206,6 @@ body {
 .btn-pill:disabled {
   opacity: 0.4;
   cursor: not-allowed;
-}
-
-.btn-pill-danger:hover {
-  border-color: var(--danger);
-  color: var(--danger);
 }
 
 /* ── Status Pulse Indicator ──────────────────────────────────────── */

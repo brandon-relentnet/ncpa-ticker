@@ -1,22 +1,4 @@
-const defaultBaseUrl = import.meta.env.DEV
-  ? "http://localhost:4000/api/ticker-sync"
-  : "/api/ticker-sync";
-
-const rawBaseUrl = import.meta.env.VITE_SYNC_SERVICE_URL ?? defaultBaseUrl;
-let BASE_URL = rawBaseUrl;
-
-// Only validate with URL constructor if it looks like an absolute URL.
-// Relative paths (e.g. "/api/ticker-sync") are valid for fetch() and
-// don't need normalization.
-if (BASE_URL && /^https?:\/\//i.test(BASE_URL)) {
-  try {
-    const asUrl = new URL(BASE_URL);
-    BASE_URL = asUrl.toString().replace(/\/$/, "");
-  } catch (error) {
-    console.warn("Invalid VITE_SYNC_SERVICE_URL provided", error);
-    BASE_URL = defaultBaseUrl;
-  }
-}
+import { API_BASE_URL as BASE_URL } from "./apiBase";
 
 const ensureTrailingSlash = (url) =>
   url.endsWith("/") ? url : `${url}/`;

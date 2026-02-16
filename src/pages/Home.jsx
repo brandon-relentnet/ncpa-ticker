@@ -10,6 +10,7 @@ import {
   pushSyncState,
   renameTicker,
 } from "../utils/syncService";
+import { copyToClipboard } from "../utils/clipboard";
 import { broadcastSlugChange } from "../utils/slugBroadcast";
 import {
   DEFAULT_PRIMARY,
@@ -59,15 +60,6 @@ const suggestName = (payload) => {
   if (parts.length === 2) return `${parts[0]} vs ${parts[1]}`;
   if (parts.length === 1) return parts[0];
   return matchInfo.tournament_name || "";
-};
-
-const copyToClipboard = async (text) => {
-  try {
-    await navigator.clipboard.writeText(text);
-    return true;
-  } catch {
-    return false;
-  }
 };
 
 const buildTickerUrl = (syncId) => {
