@@ -419,32 +419,13 @@ export default function SettingsPage({
                     onChange={(v) => setField("scoreBackground", v)}
                   />
 
-                  <section className="space-y-3">
-                    <header>
-                      <div className="flex items-center justify-between">
-                        <h3 className="label-accent">Ticker Background</h3>
-                        <label
-                          className="flex items-center gap-2 text-[11px] font-semibold uppercase"
-                          style={{ color: "var(--text-muted)" }}
-                        >
-                          {tickerBackgroundTransparent ? "Transparent" : "Color"}
-                          <input
-                            type="checkbox"
-                            className="h-3.5 w-3.5"
-                            style={{ accentColor: "var(--accent)" }}
-                            checked={tickerBackgroundTransparent}
-                            onChange={(e) => setField("tickerBackgroundTransparent", e.target.checked)}
-                          />
-                        </label>
-                      </div>
-                      <p className="text-[11px]" style={{ color: "var(--text-muted)" }}>
-                        {tickerBackgroundTransparent ? "Background removed for OBS chroma-free capture" : hsl(tickerBackground)}
-                      </p>
-                    </header>
-                    <div style={{ opacity: tickerBackgroundTransparent ? 0.35 : 1, pointerEvents: tickerBackgroundTransparent ? "none" : "auto" }}>
-                      <HslColorPicker color={tickerBackground} onChange={(v) => setField("tickerBackground", v)} />
-                    </div>
-                  </section>
+                  <div style={{ opacity: tickerBackgroundTransparent ? 0.35 : 1, pointerEvents: tickerBackgroundTransparent ? "none" : "auto", transition: "opacity 0.2s ease" }}>
+                    <ColorControl
+                      label="Ticker Background"
+                      color={tickerBackground}
+                      onChange={(v) => setField("tickerBackground", v)}
+                    />
+                  </div>
 
                   <TextColorControl
                     manualEnabled={manualTextColorEnabled}
@@ -490,6 +471,12 @@ export default function SettingsPage({
                     label="Use full association name"
                     checked={useFullAssociationName}
                     onChange={(v) => setField("useFullAssociationName", v)}
+                  />
+
+                  <LabeledToggle
+                    label="Transparent background"
+                    checked={tickerBackgroundTransparent}
+                    onChange={(v) => setField("tickerBackgroundTransparent", v)}
                   />
                 </div>
               </AccordionItem>

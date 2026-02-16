@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import Scoreboard from "../components/Scoreboard";
 import { hsl } from "../utils/colors";
 
@@ -20,6 +21,22 @@ export default function TickerPage({
   teamLogoScale,
   tickerOverrides,
 }) {
+  /* When transparent mode is on, override the html/body backgrounds so
+     nothing bleeds through behind the ticker wrapper. */
+  useEffect(() => {
+    if (!tickerBackgroundTransparent) return;
+    const html = document.documentElement;
+    const body = document.body;
+    const prevHtml = html.style.background;
+    const prevBody = body.style.background;
+    html.style.background = "transparent";
+    body.style.background = "transparent";
+    return () => {
+      html.style.background = prevHtml;
+      body.style.background = prevBody;
+    };
+  }, [tickerBackgroundTransparent]);
+
   return (
     <div
       className="flex min-h-screen items-center justify-center p-10"
