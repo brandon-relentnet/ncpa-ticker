@@ -4,7 +4,12 @@ import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "motion/react";
 import Scoreboard from "../components/Scoreboard";
 import { generateSyncId, SYNC_QUERY_PARAM } from "../utils/syncCodec";
-import { deleteTicker, listTickers, renameTicker } from "../utils/syncService";
+import {
+  deleteTicker,
+  listTickers,
+  pushSyncState,
+  renameTicker,
+} from "../utils/syncService";
 import {
   DEFAULT_PRIMARY,
   DEFAULT_SECONDARY,
@@ -69,6 +74,7 @@ export default function HomePage() {
   const [editValue, setEditValue] = useState("");
   const [copiedId, setCopiedId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
+  const [creating, setCreating] = useState(false);
   const editInputRef = useRef(null);
 
   const fetchTickers = useCallback(async () => {
@@ -88,9 +94,18 @@ export default function HomePage() {
     fetchTickers();
   }, [fetchTickers]);
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
+    if (creating) return;
+    setCreating(true);
     const id = generateSyncId();
-    navigate(`/settings?${SYNC_QUERY_PARAM}=${encodeURIComponent(id)}`);
+    try {
+      // Pre-create the DB row so fetch effects on /settings don't 404
+      await pushSyncState({ syncId: id, payload: {} });
+      navigate(`/settings?${SYNC_QUERY_PARAM}=${encodeURIComponent(id)}`);
+    } catch (err) {
+      console.warn("Failed to create ticker", err);
+      setCreating(false);
+    }
   };
 
   const handleOpenSettings = (syncId) => {
@@ -179,12 +194,20 @@ export default function HomePage() {
           <button
             type="button"
             onClick={handleCreate}
-            className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition-colors hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-950"
+            disabled={creating}
+            className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition-colors hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-950 disabled:opacity-60"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-5">
-              <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" />
-            </svg>
-            New Ticker
+            {creating ? (
+              <svg className="size-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-5">
+                <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" />
+              </svg>
+            )}
+            {creating ? "Creating..." : "New Ticker"}
           </button>
         </div>
 
@@ -222,12 +245,20 @@ export default function HomePage() {
             <button
               type="button"
               onClick={handleCreate}
-              className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-lg transition-colors hover:bg-indigo-500"
+              disabled={creating}
+              className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-lg transition-colors hover:bg-indigo-500 disabled:opacity-60"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-5">
-                <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" />
-              </svg>
-              Create Your First Ticker
+              {creating ? (
+                <svg className="size-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-5">
+                  <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" />
+                </svg>
+              )}
+              {creating ? "Creating..." : "Create Your First Ticker"}
             </button>
           </motion.div>
         )}
