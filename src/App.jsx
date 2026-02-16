@@ -691,6 +691,7 @@ export default function App() {
                   ticker.manualTextColorEnabled ? ticker.manualTextColor : null
                 }
                 tickerBackground={ticker.tickerBackground}
+                tickerBackgroundTransparent={ticker.tickerBackgroundTransparent}
                 useFullAssociationName={ticker.useFullAssociationName}
                 logoImage={ticker.logoImage}
                 logoTransparentBackground={ticker.logoTransparentBackground}

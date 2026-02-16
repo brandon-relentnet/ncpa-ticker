@@ -10,6 +10,7 @@ export default function TickerPage({
   showBorder,
   manualTextColor,
   tickerBackground,
+  tickerBackgroundTransparent,
   useFullAssociationName,
   logoImage,
   logoTransparentBackground,
@@ -22,7 +23,7 @@ export default function TickerPage({
   return (
     <div
       className="flex min-h-screen items-center justify-center p-10"
-      style={{ backgroundColor: hsl(tickerBackground) }}
+      style={{ backgroundColor: tickerBackgroundTransparent ? "transparent" : hsl(tickerBackground) }}
     >
       <Scoreboard
         matchInfo={matchInfo}

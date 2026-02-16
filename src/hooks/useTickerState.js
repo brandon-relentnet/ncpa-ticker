@@ -177,6 +177,8 @@ function tickerReducer(state, action) {
         next.badgeBackground = p.badgeBackground ?? DEFAULT_BADGE_BACKGROUND;
       if (p.tickerBackground !== undefined)
         next.tickerBackground = p.tickerBackground ?? DEFAULT_TICKER_BACKGROUND;
+      if (p.tickerBackgroundTransparent !== undefined)
+        next.tickerBackgroundTransparent = !!p.tickerBackgroundTransparent;
       if (p.manualTextColorEnabled !== undefined)
         next.manualTextColorEnabled = !!p.manualTextColorEnabled;
       if (p.manualTextColor !== undefined)
@@ -277,6 +279,10 @@ function buildInitialState(sharedState, defaultMatchId) {
       "tickerBackground",
       storedTheme?.tickerBackground ?? DEFAULT_TICKER_BACKGROUND
     ),
+    tickerBackgroundTransparent: !!pick(
+      "tickerBackgroundTransparent",
+      storedTheme?.tickerBackgroundTransparent ?? false
+    ),
     manualTextColorEnabled: !!pick(
       "manualTextColorEnabled",
       storedTheme?.manualTextColorEnabled ?? false
@@ -348,6 +354,7 @@ export default function useTickerState(sharedState, defaultMatchId) {
       scoreBackground: state.scoreBackground,
       badgeBackground: state.badgeBackground,
       tickerBackground: state.tickerBackground,
+      tickerBackgroundTransparent: state.tickerBackgroundTransparent,
       manualTextColorEnabled: state.manualTextColorEnabled,
       manualTextColor: state.manualTextColor,
       showBorder: state.showBorder,
@@ -377,6 +384,7 @@ export default function useTickerState(sharedState, defaultMatchId) {
           scoreBackground: state.scoreBackground,
           badgeBackground: state.badgeBackground,
           tickerBackground: state.tickerBackground,
+          tickerBackgroundTransparent: state.tickerBackgroundTransparent,
           manualTextColorEnabled: state.manualTextColorEnabled,
           manualTextColor: state.manualTextColor,
           showBorder: state.showBorder,
@@ -404,6 +412,7 @@ export default function useTickerState(sharedState, defaultMatchId) {
         state.scoreBackground,
         state.badgeBackground,
         state.tickerBackground,
+        state.tickerBackgroundTransparent,
         state.manualTextColorEnabled,
         state.manualTextColor,
         state.showBorder,
@@ -422,6 +431,7 @@ export default function useTickerState(sharedState, defaultMatchId) {
       state.scoreBackground,
       state.badgeBackground,
       state.tickerBackground,
+      state.tickerBackgroundTransparent,
       state.manualTextColorEnabled,
       state.manualTextColor,
       state.showBorder,

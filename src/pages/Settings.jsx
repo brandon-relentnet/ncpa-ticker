@@ -246,6 +246,7 @@ export default function SettingsPage({
     scoreBackground,
     badgeBackground,
     tickerBackground,
+    tickerBackgroundTransparent,
     manualTextColor,
     manualTextColorEnabled,
     showBorder,
@@ -278,7 +279,7 @@ export default function SettingsPage({
     activeGameStatusLabel,
   } = deriveMatchState(matchInfo);
 
-  const tickerBg = hsl(tickerBackground);
+  const tickerBg = tickerBackgroundTransparent ? "transparent" : hsl(tickerBackground);
   const overrides = tickerOverrides ?? {};
   const defaultAssociationLabel = useFullAssociationName
     ? "National College Pickleball Association"
@@ -418,11 +419,32 @@ export default function SettingsPage({
                     onChange={(v) => setField("scoreBackground", v)}
                   />
 
-                  <ColorControl
-                    label="Ticker Background"
-                    color={tickerBackground}
-                    onChange={(v) => setField("tickerBackground", v)}
-                  />
+                  <section className="space-y-3">
+                    <header>
+                      <div className="flex items-center justify-between">
+                        <h3 className="label-accent">Ticker Background</h3>
+                        <label
+                          className="flex items-center gap-2 text-[11px] font-semibold uppercase"
+                          style={{ color: "var(--text-muted)" }}
+                        >
+                          {tickerBackgroundTransparent ? "Transparent" : "Color"}
+                          <input
+                            type="checkbox"
+                            className="h-3.5 w-3.5"
+                            style={{ accentColor: "var(--accent)" }}
+                            checked={tickerBackgroundTransparent}
+                            onChange={(e) => setField("tickerBackgroundTransparent", e.target.checked)}
+                          />
+                        </label>
+                      </div>
+                      <p className="text-[11px]" style={{ color: "var(--text-muted)" }}>
+                        {tickerBackgroundTransparent ? "Background removed for OBS chroma-free capture" : hsl(tickerBackground)}
+                      </p>
+                    </header>
+                    <div style={{ opacity: tickerBackgroundTransparent ? 0.35 : 1, pointerEvents: tickerBackgroundTransparent ? "none" : "auto" }}>
+                      <HslColorPicker color={tickerBackground} onChange={(v) => setField("tickerBackground", v)} />
+                    </div>
+                  </section>
 
                   <TextColorControl
                     manualEnabled={manualTextColorEnabled}
