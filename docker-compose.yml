@@ -8,8 +8,6 @@ services:
         VITE_NCPA_API_BASE: ${VITE_NCPA_API_BASE:-https://tournaments.ncpaofficial.com}
         VITE_NCPA_SOCKET_URL: ${VITE_NCPA_SOCKET_URL:-https://tournaments.ncpaofficial.com}
         VITE_DEFAULT_MATCH_ID: ${VITE_DEFAULT_MATCH_ID:-5092}
-    ports:
-      - "80:80"
     depends_on:
       - sync-server
     restart: unless-stopped
