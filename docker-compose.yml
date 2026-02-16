@@ -4,7 +4,9 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        VITE_NCPA_API_KEY: ${VITE_NCPA_API_KEY:-CGdX1XsVxshMqZ4e06lV}
+        # These are optional build-time fallbacks. Primary configuration
+        # should be set via the Admin page (/admin) at runtime.
+        VITE_NCPA_API_KEY: ${VITE_NCPA_API_KEY:-}
         VITE_NCPA_API_BASE: ${VITE_NCPA_API_BASE:-https://tournaments.ncpaofficial.com}
         VITE_NCPA_SOCKET_URL: ${VITE_NCPA_SOCKET_URL:-https://tournaments.ncpaofficial.com}
         VITE_DEFAULT_MATCH_ID: ${VITE_DEFAULT_MATCH_ID:-5092}

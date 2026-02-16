@@ -7,8 +7,9 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 
-# Accept VITE_* build args so they are baked into the static bundle
-ARG VITE_NCPA_API_KEY=CGdX1XsVxshMqZ4e06lV
+# VITE_* build args are optional fallbacks — primary config lives in the
+# Admin page (/admin) and is stored server-side in the app_config table.
+ARG VITE_NCPA_API_KEY=
 ARG VITE_NCPA_API_BASE=https://tournaments.ncpaofficial.com
 ARG VITE_NCPA_SOCKET_URL=https://tournaments.ncpaofficial.com
 ARG VITE_DEFAULT_MATCH_ID=5092

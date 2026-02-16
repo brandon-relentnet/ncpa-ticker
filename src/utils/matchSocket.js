@@ -5,15 +5,17 @@ const DEBUG_LIVE =
   import.meta.env.VITE_DEBUG_MATCH_SOCKET === "true" ||
   (import.meta.env.DEV && import.meta.env.VITE_DEBUG_MATCH_SOCKET !== "false");
 
-const buildSocketUrl = () => {
-  const raw = import.meta.env.VITE_NCPA_SOCKET_URL ?? DEFAULT_SOCKET_URL;
+const buildSocketUrl = (overrideUrl) => {
+  const raw = overrideUrl || import.meta.env.VITE_NCPA_SOCKET_URL || DEFAULT_SOCKET_URL;
   return typeof raw === "string" ? raw.replace(/\/+$/, "") : DEFAULT_SOCKET_URL;
 };
 
-const getSocketApiKey = () => {
-  const key = import.meta.env.VITE_NCPA_API_KEY;
+const getSocketApiKey = (overrideKey) => {
+  const key = overrideKey || import.meta.env.VITE_NCPA_API_KEY;
   if (!key) {
-    throw new Error("Missing VITE_NCPA_API_KEY environment variable");
+    throw new Error(
+      "Missing API key — configure it on the Admin page or set VITE_NCPA_API_KEY"
+    );
   }
   return key;
 };
@@ -23,16 +25,28 @@ const logDebug = (...args) => {
   console.debug("[matchSocket]", ...args);
 };
 
+/**
+ * @param {Object}  opts
+ * @param {string|number} opts.matchId
+ * @param {Function} [opts.onGamesUpdate]
+ * @param {Function} [opts.onConnect]
+ * @param {Function} [opts.onDisconnect]
+ * @param {Function} [opts.onError]
+ * @param {string}   [opts.socketUrl]  - Runtime override for socket server URL
+ * @param {string}   [opts.apiKey]     - Runtime override for API key
+ */
 export function createMatchSocket({
   matchId,
   onGamesUpdate,
   onConnect,
   onDisconnect,
   onError,
+  socketUrl: overrideSocketUrl,
+  apiKey: overrideApiKey,
 } = {}) {
   if (!matchId) throw new Error("matchId is required for live match updates");
 
-  const socketUrl = buildSocketUrl();
+  const socketUrl = buildSocketUrl(overrideSocketUrl);
   const numericMatchId = Number.parseInt(
     typeof matchId === "string" ? matchId.trim() : matchId,
     10
@@ -40,7 +54,7 @@ export function createMatchSocket({
   const bracketMatchId = Number.isFinite(numericMatchId)
     ? numericMatchId
     : matchId;
-  const apiKey = getSocketApiKey();
+  const apiKey = getSocketApiKey(overrideApiKey);
 
   const socket = io(socketUrl, {
     forceNew: true,

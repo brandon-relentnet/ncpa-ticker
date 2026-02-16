@@ -77,6 +77,23 @@ const ensureSchema = async () => {
       ADD COLUMN IF NOT EXISTS name TEXT NOT NULL DEFAULT '',
       ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
   `);
+
+  /* ── App-wide runtime configuration (singleton row) ──────────────────────── */
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS app_config (
+      id INTEGER PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+      ncpa_api_key TEXT NOT NULL DEFAULT '',
+      ncpa_api_base TEXT NOT NULL DEFAULT 'https://tournaments.ncpaofficial.com',
+      ncpa_socket_url TEXT NOT NULL DEFAULT 'https://tournaments.ncpaofficial.com',
+      default_match_id TEXT NOT NULL DEFAULT '5092',
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `);
+
+  // Seed the singleton row if it doesn't already exist
+  await pool.query(`
+    INSERT INTO app_config (id) VALUES (1) ON CONFLICT DO NOTHING;
+  `);
 };
 
 /* ── List all tickers ──────────────────────────────────────────────────────── */
@@ -250,6 +267,86 @@ const handleChangeSlug = async (res, currentId, body) => {
   json(res, 200, { id: slug, oldId: currentId });
 };
 
+/* ── Get app config ────────────────────────────────────────────────────────── */
+const handleGetConfig = async (res) => {
+  const result = await pool.query(
+    "SELECT ncpa_api_key, ncpa_api_base, ncpa_socket_url, default_match_id, updated_at FROM app_config WHERE id = 1"
+  );
+
+  if (!result.rowCount) {
+    // Should never happen (seed in ensureSchema), but handle gracefully
+    json(res, 200, {
+      ncpaApiKey: "",
+      ncpaApiBase: "https://tournaments.ncpaofficial.com",
+      ncpaSocketUrl: "https://tournaments.ncpaofficial.com",
+      defaultMatchId: "5092",
+      updatedAt: new Date().toISOString(),
+    });
+    return;
+  }
+
+  const row = result.rows[0];
+  json(res, 200, {
+    ncpaApiKey: row.ncpa_api_key ?? "",
+    ncpaApiBase: row.ncpa_api_base ?? "https://tournaments.ncpaofficial.com",
+    ncpaSocketUrl: row.ncpa_socket_url ?? "https://tournaments.ncpaofficial.com",
+    defaultMatchId: row.default_match_id ?? "5092",
+    updatedAt: row.updated_at?.toISOString?.() ?? new Date().toISOString(),
+  });
+};
+
+/* ── Update app config ─────────────────────────────────────────────────────── */
+const handlePutConfig = async (res, body) => {
+  if (!body || typeof body !== "object") {
+    json(res, 400, { error: "Request body is required" });
+    return;
+  }
+
+  const fields = {};
+  const setClauses = [];
+  const values = [];
+  let paramIndex = 1;
+
+  const allowedFields = {
+    ncpaApiKey: "ncpa_api_key",
+    ncpaApiBase: "ncpa_api_base",
+    ncpaSocketUrl: "ncpa_socket_url",
+    defaultMatchId: "default_match_id",
+  };
+
+  for (const [jsonKey, dbColumn] of Object.entries(allowedFields)) {
+    if (Object.prototype.hasOwnProperty.call(body, jsonKey)) {
+      const value = typeof body[jsonKey] === "string" ? body[jsonKey].trim() : "";
+      fields[dbColumn] = value;
+      setClauses.push(`${dbColumn} = $${paramIndex}`);
+      values.push(value);
+      paramIndex++;
+    }
+  }
+
+  if (setClauses.length === 0) {
+    json(res, 400, { error: "At least one config field is required" });
+    return;
+  }
+
+  setClauses.push("updated_at = NOW()");
+
+  const result = await pool.query(
+    `UPDATE app_config SET ${setClauses.join(", ")} WHERE id = 1
+     RETURNING ncpa_api_key, ncpa_api_base, ncpa_socket_url, default_match_id, updated_at`,
+    values
+  );
+
+  const row = result.rows[0];
+  json(res, 200, {
+    ncpaApiKey: row.ncpa_api_key ?? "",
+    ncpaApiBase: row.ncpa_api_base ?? "",
+    ncpaSocketUrl: row.ncpa_socket_url ?? "",
+    defaultMatchId: row.default_match_id ?? "",
+    updatedAt: row.updated_at?.toISOString?.() ?? new Date().toISOString(),
+  });
+};
+
 /* ── Delete ticker ─────────────────────────────────────────────────────────── */
 const handleDeleteState = async (res, id) => {
   const result = await pool.query(
@@ -293,6 +390,21 @@ const server = http.createServer(async (req, res) => {
         return;
       }
       sendMethodNotAllowed(res, "GET");
+      return;
+    }
+
+    /* App config: /api/ticker-sync/config */
+    if (segments.length === 1 && segments[0] === "config") {
+      if (req.method === "GET") {
+        await handleGetConfig(res);
+        return;
+      }
+      if (req.method === "PUT") {
+        const body = await readBody(req);
+        await handlePutConfig(res, body);
+        return;
+      }
+      sendMethodNotAllowed(res, "GET, PUT");
       return;
     }
 

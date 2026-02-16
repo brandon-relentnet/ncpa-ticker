@@ -7,6 +7,8 @@ import {
   useNavigate,
 } from "react-router-dom";
 import "./App.css";
+import useAppConfig from "./hooks/useAppConfig";
+import AdminPage from "./pages/Admin";
 import HomePage from "./pages/Home";
 import SettingsPage from "./pages/Settings";
 import TickerPage from "./pages/Ticker";
@@ -155,6 +157,7 @@ const toPlainSyncPayload = (value) => {
 };
 
 export default function App() {
+  const { config: appConfig } = useAppConfig();
   const location = useLocation();
   const navigate = useNavigate();
   const isTickerRoute = location.pathname.startsWith("/ticker");
@@ -187,7 +190,7 @@ export default function App() {
     return fallback;
   };
 
-  const defaultMatchId = import.meta.env.VITE_DEFAULT_MATCH_ID ?? "5092";
+  const defaultMatchId = appConfig.defaultMatchId || "5092";
   const tabId = useMemo(() => {
     if (typeof crypto !== "undefined" && crypto.randomUUID) {
       return crypto.randomUUID();
@@ -356,7 +359,10 @@ export default function App() {
       setMatchError(null);
 
       try {
-        const bundle = await fetchMatchBundle(targetMatchId);
+        const bundle = await fetchMatchBundle(targetMatchId, {
+          apiKey: appConfig.ncpaApiKey,
+          apiBase: appConfig.ncpaApiBase,
+        });
         applySyncPayload({
           matchInfo: bundle.matchInfo,
           gamesPayload: bundle.gamesPayload,
@@ -374,7 +380,7 @@ export default function App() {
         setMatchLoading(false);
       }
     },
-    [applySyncPayload, markLocalUpdate]
+    [applySyncPayload, markLocalUpdate, appConfig.ncpaApiKey, appConfig.ncpaApiBase]
   );
 
   useEffect(() => {
@@ -688,6 +694,8 @@ export default function App() {
     try {
       const handle = createMatchSocket({
         matchId: activeMatchId,
+        socketUrl: appConfig.ncpaSocketUrl,
+        apiKey: appConfig.ncpaApiKey,
         onConnect: () => {
           if (disposed) return;
           setLiveUpdatesConnected(true);
@@ -804,7 +812,7 @@ export default function App() {
         matchSocketRef.current = null;
       }
     };
-  }, [activeMatchId, sendSyncPayload]);
+  }, [activeMatchId, sendSyncPayload, appConfig.ncpaSocketUrl, appConfig.ncpaApiKey]);
 
   const syncTokenFromUrl = useMemo(
     () => extractSyncTokenFromSearch(location.search),
@@ -1080,6 +1088,7 @@ export default function App() {
     <div className={appClassName}>
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/admin" element={<AdminPage />} />
         <Route
           path="/settings"
           element={

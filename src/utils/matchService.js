@@ -6,11 +6,11 @@ import {
 const DEFAULT_API_BASE = "https://tournaments.ncpaofficial.com";
 const API_PATH_PREFIX = "/api";
 
-const resolveApiBase = () => {
-  const rawBase = import.meta.env.VITE_NCPA_API_BASE;
+const resolveApiBase = (overrideBase) => {
+  const candidate = overrideBase || import.meta.env.VITE_NCPA_API_BASE;
   const trimmed =
-    typeof rawBase === "string" && rawBase.trim()
-      ? rawBase.trim()
+    typeof candidate === "string" && candidate.trim()
+      ? candidate.trim()
       : DEFAULT_API_BASE;
   const withoutTrailingSlash = trimmed.replace(/\/+$/, "");
   return withoutTrailingSlash || DEFAULT_API_BASE;
@@ -38,8 +38,8 @@ const normalizeApiPath = (baseUrl, path) => {
   return normalized;
 };
 
-const buildEndpoint = (path, params = {}) => {
-  const apiBase = resolveApiBase();
+const buildEndpoint = (path, params = {}, { apiBase: overrideBase } = {}) => {
+  const apiBase = resolveApiBase(overrideBase);
   const normalizedPath = normalizeApiPath(apiBase, path);
   const urlBase = apiBase.replace(/\/+$/, "");
   const fullPath = normalizedPath.startsWith("/")
@@ -56,10 +56,12 @@ const buildEndpoint = (path, params = {}) => {
   return query ? `${fullPath}?${query}` : fullPath;
 };
 
-const getApiKey = () => {
-  const key = import.meta.env.VITE_NCPA_API_KEY;
+const getApiKey = (overrideKey) => {
+  const key = overrideKey || import.meta.env.VITE_NCPA_API_KEY;
   if (!key) {
-    throw new Error("Missing VITE_NCPA_API_KEY environment variable");
+    throw new Error(
+      "Missing API key — configure it on the Admin page or set VITE_NCPA_API_KEY"
+    );
   }
   return key;
 };
@@ -149,12 +151,21 @@ export function buildMatchInfo({
   };
 }
 
-export async function fetchMatchBundle(matchId) {
+/**
+ * @param {string|number} matchId
+ * @param {Object}  [runtimeConfig]          - Optional runtime config overrides
+ * @param {string}  [runtimeConfig.apiKey]   - NCPA API key
+ * @param {string}  [runtimeConfig.apiBase]  - NCPA API base URL
+ */
+export async function fetchMatchBundle(matchId, runtimeConfig) {
   if (!matchId) throw new Error("matchId is required");
-  const key = getApiKey();
+  const key = getApiKey(runtimeConfig?.apiKey);
+  const endpointOpts = runtimeConfig?.apiBase
+    ? { apiBase: runtimeConfig.apiBase }
+    : undefined;
 
-  const gamesUrl = buildEndpoint("get-games", { key, match_id: matchId });
-  const matchUrl = buildEndpoint("get-match", { key, match_id: matchId });
+  const gamesUrl = buildEndpoint("get-games", { key, match_id: matchId }, endpointOpts);
+  const matchUrl = buildEndpoint("get-match", { key, match_id: matchId }, endpointOpts);
 
   const [gamesPayload, teamsPayload] = await Promise.all([
     fetchJson(gamesUrl),
