@@ -1,0 +1,45 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VITE_NCPA_API_KEY: ${VITE_NCPA_API_KEY:-CGdX1XsVxshMqZ4e06lV}
+        VITE_NCPA_API_BASE: ${VITE_NCPA_API_BASE:-https://tournaments.ncpaofficial.com}
+        VITE_NCPA_SOCKET_URL: ${VITE_NCPA_SOCKET_URL:-https://tournaments.ncpaofficial.com}
+        VITE_DEFAULT_MATCH_ID: ${VITE_DEFAULT_MATCH_ID:-5092}
+    ports:
+      - "80:80"
+    depends_on:
+      - sync-server
+    restart: unless-stopped
+
+  sync-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.sync
+    environment:
+      DATABASE_URL: postgres://ticker:${POSTGRES_PASSWORD:-ticker}@postgres:5432/ticker
+      SYNC_SERVER_PORT: "4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ticker
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ticker}
+      POSTGRES_DB: ticker
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ticker"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  pgdata:
