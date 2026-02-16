@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { memo, useCallback, useRef } from "react";
 import { contrastTextColor, hsl } from "../utils/colors";
 import { deriveMatchState } from "../utils/matchState";
 import {
@@ -7,7 +7,60 @@ import {
   normalizeLogoPosition,
 } from "../utils/logo";
 
-export default function Scoreboard({
+/** Shallow-compare two HSL objects { h, s, l } by value. */
+const hslEqual = (a, b) => {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  return a.h === b.h && a.s === b.s && a.l === b.l;
+};
+
+/** Shallow-compare two plain objects one level deep. */
+const shallowEqual = (a, b) => {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  const keysA = Object.keys(a);
+  const keysB = Object.keys(b);
+  if (keysA.length !== keysB.length) return false;
+  return keysA.every((key) => a[key] === b[key]);
+};
+
+/** Custom comparator for React.memo — value-compares HSL and object props. */
+const arePropsEqual = (prev, next) => {
+  const keys = Object.keys(next);
+  if (keys.length !== Object.keys(prev).length) return false;
+
+  for (const key of keys) {
+    const a = prev[key];
+    const b = next[key];
+    if (a === b) continue;
+
+    // Value-compare known HSL color props
+    if (
+      key === "primaryColor" ||
+      key === "secondaryColor" ||
+      key === "scoreBackground" ||
+      key === "badgeBackground" ||
+      key === "manualTextColor"
+    ) {
+      if (!hslEqual(a, b)) return false;
+      continue;
+    }
+
+    // Value-compare known plain-object props
+    if (key === "logoPosition" || key === "tickerOverrides") {
+      if (!shallowEqual(a, b)) return false;
+      continue;
+    }
+
+    // matchInfo is a complex nested object — compare by reference
+    // (it only changes when the API returns new data, which creates a new ref)
+    return false;
+  }
+
+  return true;
+};
+
+function Scoreboard({
   matchInfo,
   primaryColor,
   secondaryColor,
@@ -282,3 +335,5 @@ export default function Scoreboard({
     </div>
   );
 }
+
+export default memo(Scoreboard, arePropsEqual);

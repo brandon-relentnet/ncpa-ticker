@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { HslColorPicker } from "react-colorful";
 import Scoreboard from "../components/Scoreboard";
 import Accordion, { AccordionItem } from "../components/Accordion";
@@ -46,7 +46,26 @@ const fadeUp = (delay = 0) => ({
   transition: { duration: 0.5, delay, ease: EASE_OUT_EXPO },
 });
 
+/** Throttle a callback to fire at most once per animation frame. */
+function useRafThrottle(callback) {
+  const latestRef = useRef(null);
+  const rafRef = useRef(null);
+
+  return useCallback(
+    (value) => {
+      latestRef.current = value;
+      if (rafRef.current != null) return;
+      rafRef.current = requestAnimationFrame(() => {
+        rafRef.current = null;
+        callback(latestRef.current);
+      });
+    },
+    [callback]
+  );
+}
+
 function ColorControl({ label, color, onChange, className = "" }) {
+  const throttledOnChange = useRafThrottle(onChange);
   const textColor = contrastTextColor(color);
   const swatchColor = hsl(color);
 
@@ -58,7 +77,7 @@ function ColorControl({ label, color, onChange, className = "" }) {
           {swatchColor}
         </p>
       </header>
-      <HslColorPicker color={color} onChange={onChange} />
+      <HslColorPicker color={color} onChange={throttledOnChange} />
       <div
         className="flex items-center justify-between rounded-lg px-3 py-2 text-xs"
         style={{
@@ -80,6 +99,7 @@ function TextColorControl({
   onToggleManual,
   onColorChange,
 }) {
+  const throttledOnChange = useRafThrottle(onColorChange);
   const description = "Auto B/W for contrast";
   const manualSwatch = hsl(manualColor);
   const manualContrast = contrastTextColor(manualColor).toUpperCase();
@@ -110,7 +130,7 @@ function TextColorControl({
       <HslColorPicker
         color={manualColor}
         onChange={(value) => {
-          onColorChange(value);
+          throttledOnChange(value);
           if (!manualEnabled) onToggleManual(true);
         }}
       />
