@@ -224,53 +224,46 @@ const TIP_ITEMS = [
 ];
 
 export default function SettingsPage({
-  matchInfo,
-  matchIdInput,
-  activeMatchId,
+  ticker,
+  dispatch,
   onMatchIdInputChange,
   onApplyMatchId,
   onReloadMatch,
   onActiveGameIndexChange,
-  matchLoading,
-  matchError,
-  liveUpdatesConnected = false,
   onApplyTickerUpdate,
-  primaryColor,
-  secondaryColor,
-  scoreBackground,
-  badgeBackground,
-  setPrimaryColor,
-  setSecondaryColor,
-  setScoreBackground,
-  setBadgeBackground,
-  tickerBackground,
-  setTickerBackground,
-  manualTextColor,
-  manualTextColorEnabled,
-  setManualTextColor,
-  setManualTextColorEnabled,
-  showBorder,
-  setShowBorder,
-  useFullAssociationName,
-  setUseFullAssociationName,
-  logoImage,
-  setLogoImage,
-  logoTransparentBackground,
-  setLogoTransparentBackground,
-  logoTextHidden,
-  setLogoTextHidden,
-  logoPosition,
-  setLogoPosition,
-  logoScale,
-  setLogoScale,
-  teamLogoScale,
-  setTeamLogoScale,
-  tickerOverrides,
-  onTickerOverrideChange,
-  onResetTickerOverrides,
   tickerShareSearch,
   tickerShareUrl,
 }) {
+  const {
+    matchInfo,
+    matchIdInput,
+    activeMatchId,
+    matchLoading,
+    matchError,
+    liveUpdatesConnected,
+    primaryColor,
+    secondaryColor,
+    scoreBackground,
+    badgeBackground,
+    tickerBackground,
+    manualTextColor,
+    manualTextColorEnabled,
+    showBorder,
+    useFullAssociationName,
+    logoImage,
+    logoTransparentBackground,
+    logoTextHidden,
+    logoPosition,
+    logoScale,
+    teamLogoScale,
+    tickerOverrides,
+  } = ticker;
+
+  const setField = useCallback(
+    (field, value) => dispatch({ type: "SET_FIELD", field, value }),
+    [dispatch]
+  );
+
   const autoHeaderColor = contrastTextColor(primaryColor);
   const autoBodyColor = contrastTextColor(secondaryColor);
   const autoBadgeColor = contrastTextColor(badgeBackground);
@@ -347,9 +340,9 @@ export default function SettingsPage({
     const reader = new FileReader();
     reader.onload = () => {
       if (typeof reader.result === "string") {
-        setLogoImage(reader.result);
-        setLogoPosition({ ...DEFAULT_LOGO_POSITION });
-        setLogoScale(DEFAULT_LOGO_SCALE);
+        setField("logoImage", reader.result);
+        setField("logoPosition", { ...DEFAULT_LOGO_POSITION });
+        dispatch({ type: "SET_LOGO_SCALE", value: DEFAULT_LOGO_SCALE });
       }
     };
     reader.readAsDataURL(file);
@@ -357,25 +350,21 @@ export default function SettingsPage({
   };
 
   const handleRemoveLogo = () => {
-    setLogoImage(null);
-    setLogoPosition({ ...DEFAULT_LOGO_POSITION });
-    setLogoScale(DEFAULT_LOGO_SCALE);
+    setField("logoImage", null);
+    setField("logoPosition", { ...DEFAULT_LOGO_POSITION });
+    dispatch({ type: "SET_LOGO_SCALE", value: DEFAULT_LOGO_SCALE });
   };
 
   const handleResetLogoPosition = () => {
-    setLogoPosition({ ...DEFAULT_LOGO_POSITION });
+    setField("logoPosition", { ...DEFAULT_LOGO_POSITION });
   };
 
   const handleLogoScaleChange = (value) => {
-    const clamped = Math.min(Math.max(value, 0.5), 10);
-    setLogoScale(Number.isFinite(clamped) ? clamped : DEFAULT_LOGO_SCALE);
+    dispatch({ type: "SET_LOGO_SCALE", value });
   };
 
   const handleTeamLogoScaleChange = (value) => {
-    const clamped = Math.min(Math.max(value, 0.5), 10);
-    setTeamLogoScale(
-      Number.isFinite(clamped) ? clamped : DEFAULT_TEAM_LOGO_SCALE
-    );
+    dispatch({ type: "SET_TEAM_LOGO_SCALE", value });
   };
 
   const hoverTap = {
@@ -408,38 +397,38 @@ export default function SettingsPage({
                   <ColorControl
                     label="Header & Footer"
                     color={primaryColor}
-                    onChange={setPrimaryColor}
+                    onChange={(v) => setField("primaryColor", v)}
                   />
 
                   <ColorControl
                     label="Body"
                     color={secondaryColor}
-                    onChange={setSecondaryColor}
+                    onChange={(v) => setField("secondaryColor", v)}
                   />
 
                   <ColorControl
                     label="Badge Background"
                     color={badgeBackground}
-                    onChange={setBadgeBackground}
+                    onChange={(v) => setField("badgeBackground", v)}
                   />
 
                   <ColorControl
                     label="Score Column"
                     color={scoreBackground}
-                    onChange={setScoreBackground}
+                    onChange={(v) => setField("scoreBackground", v)}
                   />
 
                   <ColorControl
                     label="Ticker Background"
                     color={tickerBackground}
-                    onChange={setTickerBackground}
+                    onChange={(v) => setField("tickerBackground", v)}
                   />
 
                   <TextColorControl
                     manualEnabled={manualTextColorEnabled}
                     manualColor={manualTextColor}
-                    onToggleManual={setManualTextColorEnabled}
-                    onColorChange={setManualTextColor}
+                    onToggleManual={(v) => setField("manualTextColorEnabled", v)}
+                    onColorChange={(v) => setField("manualTextColor", v)}
                     autoHeaderColor={autoHeaderColor}
                     autoBadgeColor={autoBadgeColor}
                     autoBodyColor={autoBodyColor}
@@ -472,13 +461,13 @@ export default function SettingsPage({
                   <LabeledToggle
                     label="Show inner border"
                     checked={showBorder}
-                    onChange={setShowBorder}
+                    onChange={(v) => setField("showBorder", v)}
                   />
 
                   <LabeledToggle
                     label="Use full association name"
                     checked={useFullAssociationName}
-                    onChange={setUseFullAssociationName}
+                    onChange={(v) => setField("useFullAssociationName", v)}
                   />
                 </div>
               </AccordionItem>
@@ -498,7 +487,7 @@ export default function SettingsPage({
                         value={overrides[key] ?? ""}
                         placeholder={placeholder || "(from API)"}
                         onChange={(event) =>
-                          onTickerOverrideChange(key, event.target.value)
+                          dispatch({ type: "SET_TICKER_OVERRIDE", key, value: event.target.value })
                         }
                       />
                     </label>
@@ -511,7 +500,7 @@ export default function SettingsPage({
                       value={overrides.footerText ?? ""}
                       placeholder={defaultFooterText || "(from API)"}
                       onChange={(event) =>
-                        onTickerOverrideChange("footerText", event.target.value)
+                        dispatch({ type: "SET_TICKER_OVERRIDE", key: "footerText", value: event.target.value })
                       }
                     />
                   </label>
@@ -520,7 +509,7 @@ export default function SettingsPage({
                   <button
                     type="button"
                     className="btn-pill flex items-center gap-1.5"
-                    onClick={onResetTickerOverrides}
+                    onClick={() => dispatch({ type: "RESET_TICKER_OVERRIDES" })}
                   >
                     <Eraser size={14} />
                     Clear Overrides
@@ -616,12 +605,12 @@ export default function SettingsPage({
                     <LabeledToggle
                       label="Transparent badge background"
                       checked={logoTransparentBackground}
-                      onChange={setLogoTransparentBackground}
+                      onChange={(v) => setField("logoTransparentBackground", v)}
                     />
                     <LabeledToggle
                       label="Hide default NCPA logo"
                       checked={logoTextHidden}
-                      onChange={setLogoTextHidden}
+                      onChange={(v) => setField("logoTextHidden", v)}
                     />
                     {logoImage && (
                       <div className="surface-card px-4 py-3 text-xs" style={{ color: "var(--text-muted)" }}>
@@ -791,7 +780,7 @@ export default function SettingsPage({
               teamLogoScale={teamLogoScale}
               tickerOverrides={tickerOverrides}
               logoDraggable
-              onLogoPositionChange={setLogoPosition}
+              onLogoPositionChange={(v) => setField("logoPosition", v)}
             />
           </Motion.div>
 
