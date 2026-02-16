@@ -215,6 +215,10 @@ export default function HomePage() {
       setEditingSlugId(null);
       // Notify other tabs (Settings/Ticker) that may be using the old id
       broadcastSlugChange({ oldId: currentId, newId });
+      // Clean up any ghost row that racing pushes from other tabs might
+      // re-create with the old ID before the broadcast arrives.
+      deleteTicker(currentId).catch(() => {});
+      setTimeout(() => deleteTicker(currentId).catch(() => {}), 2000);
     } catch (err) {
       if (err.status === 409) {
         setSlugError("This slug is already taken");

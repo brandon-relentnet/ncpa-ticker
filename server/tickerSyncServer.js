@@ -236,6 +236,17 @@ const handleChangeSlug = async (res, currentId, body) => {
     currentId,
   ]);
 
+  // Clean up any ghost row that racing PUT requests from other tabs might
+  // re-create with the old ID between this rename and the BroadcastChannel
+  // notification reaching those tabs.
+  setTimeout(async () => {
+    try {
+      await pool.query("DELETE FROM ticker_state WHERE id = $1", [currentId]);
+    } catch {
+      /* ignore — row may not exist */
+    }
+  }, 3000);
+
   json(res, 200, { id: slug, oldId: currentId });
 };
 
