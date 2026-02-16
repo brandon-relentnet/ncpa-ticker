@@ -142,6 +142,11 @@ export default function HomePage() {
   };
 
   const handleDelete = async (syncId) => {
+    const ticker = tickers.find((t) => t.id === syncId);
+    const label = ticker?.name || syncId.slice(0, 8);
+    if (!window.confirm(`Delete ticker "${label}"? This cannot be undone.`)) {
+      return;
+    }
     setDeletingId(syncId);
     try {
       await deleteTicker(syncId);

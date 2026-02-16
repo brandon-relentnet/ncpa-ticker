@@ -188,13 +188,31 @@ function Scoreboard({
   if (!activeGame && !hasManualContent) {
     return (
       <div
-        className={`flex flex-col items-center justify-between ${className}`.trim()}
+        className={`flex flex-col items-end justify-between ${className}`.trim()}
       >
         <div
-          className="w-fit rounded px-4 py-2 text-center text-base font-semibold"
+          className="w-full rounded-t px-4 py-1 text-right text-base font-semibold tracking-wide"
           style={{ backgroundColor: hsl(primaryColor), color: headerTextColor }}
         >
-          No game data available
+          {defaultHeaderTitle}
+        </div>
+        <div
+          className="flex w-full min-w-120 items-center justify-center py-6"
+          style={{
+            backgroundColor: hsl(bodyBackgroundColor),
+            color: bodyTextColor,
+            opacity: 0.6,
+          }}
+        >
+          <span className="text-sm font-medium tracking-wide uppercase">
+            Awaiting match data
+          </span>
+        </div>
+        <div
+          className="w-full rounded-b px-4 py-1 text-right text-base font-medium"
+          style={{ backgroundColor: hsl(primaryColor), color: headerTextColor }}
+        >
+          &nbsp;
         </div>
       </div>
     );
