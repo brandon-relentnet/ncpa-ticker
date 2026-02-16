@@ -308,6 +308,23 @@ body {
   background: var(--accent-glow);
 }
 
+/* ── Reduced Motion ──────────────────────────────────────────────── */
+/* Respect the user's OS-level "reduce motion" preference.
+   Disables CSS transitions, infinite keyframe animations, and
+   Tailwind's animate-* utilities.  Motion library animations are
+   handled separately via <MotionConfig reducedMotion="user"> in
+   the app root (App.jsx).                                          */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* ── DaisyUI Overrides ───────────────────────────────────────────── */
 .checkbox {
   --chkbg: var(--accent);

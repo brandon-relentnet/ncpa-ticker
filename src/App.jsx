@@ -6,6 +6,7 @@ import {
   useLocation,
   useNavigate,
 } from "react-router-dom";
+import { MotionConfig } from "motion/react";
 import "./App.css";
 import useAppConfig from "./hooks/useAppConfig";
 import useTickerState, { ACTIONS } from "./hooks/useTickerState";
@@ -648,6 +649,7 @@ export default function App() {
 
   /* ── Render ────────────────────────────────────────────────────────────── */
   return (
+    <MotionConfig reducedMotion="user">
     <div className={appClassName}>
       <Routes>
         <Route path="/" element={<HomePage />} />
@@ -704,5 +706,6 @@ export default function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>
+    </MotionConfig>
   );
 }
