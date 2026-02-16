@@ -861,7 +861,16 @@ export default function App() {
 
     fetchSyncState(shareToken)
       .then((result) => {
-        if (!result?.payload) return;
+        if (!result?.payload) {
+          // Ticker doesn't exist on the server yet (404). Bootstrap the
+          // row with the current local state so the polling loop has
+          // something to find instead of hammering 404s.
+          const payload = toPlainSyncPayload(
+            latestSyncPayloadRef.current ?? buildCurrentPayload()
+          );
+          pushSyncState({ syncId: shareToken, payload }).catch(() => {});
+          return;
+        }
         if (!shouldApplyRemoteState(result.updatedAt)) return;
         skipSyncRef.current = true;
         try {
@@ -882,7 +891,12 @@ export default function App() {
       .catch((error) => {
         console.warn("Failed to load remote ticker state", error);
       });
-  }, [
+  },
+  // buildCurrentPayload is intentionally omitted — it changes on every state
+  // update which would re-fire this fetch constantly. The ref
+  // latestSyncPayloadRef is the real source for the bootstrap push.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  [
     shareToken,
     isOnSyncPage,
     activeMatchId,
