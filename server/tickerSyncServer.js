@@ -174,6 +174,71 @@ const handlePatchState = async (res, id, body) => {
   });
 };
 
+/* ── Change slug (custom URL) ───────────────────────────────────────────────── */
+const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+const SLUG_MIN_LENGTH = 3;
+const SLUG_MAX_LENGTH = 64;
+
+const handleChangeSlug = async (res, currentId, body) => {
+  if (!body || typeof body !== "object" || typeof body.slug !== "string") {
+    json(res, 400, { error: "slug (string) is required" });
+    return;
+  }
+
+  const slug = body.slug.trim().toLowerCase();
+
+  if (slug.length < SLUG_MIN_LENGTH || slug.length > SLUG_MAX_LENGTH) {
+    json(res, 400, {
+      error: `Slug must be between ${SLUG_MIN_LENGTH} and ${SLUG_MAX_LENGTH} characters`,
+    });
+    return;
+  }
+
+  if (!SLUG_PATTERN.test(slug)) {
+    json(res, 400, {
+      error:
+        "Slug may only contain lowercase letters, numbers, and hyphens (no leading/trailing/consecutive hyphens)",
+    });
+    return;
+  }
+
+  if (slug === currentId) {
+    // No-op: slug is already the current id
+    json(res, 200, { id: slug, oldId: currentId });
+    return;
+  }
+
+  // Check for collision
+  const existing = await pool.query(
+    "SELECT 1 FROM ticker_state WHERE id = $1",
+    [slug]
+  );
+
+  if (existing.rowCount > 0) {
+    json(res, 409, { error: "This slug is already in use" });
+    return;
+  }
+
+  // Verify the current ticker exists
+  const current = await pool.query(
+    "SELECT 1 FROM ticker_state WHERE id = $1",
+    [currentId]
+  );
+
+  if (!current.rowCount) {
+    sendNotFound(res);
+    return;
+  }
+
+  // Update the primary key
+  await pool.query("UPDATE ticker_state SET id = $1 WHERE id = $2", [
+    slug,
+    currentId,
+  ]);
+
+  json(res, 200, { id: slug, oldId: currentId });
+};
+
 /* ── Delete ticker ─────────────────────────────────────────────────────────── */
 const handleDeleteState = async (res, id) => {
   const result = await pool.query(
@@ -247,6 +312,18 @@ const server = http.createServer(async (req, res) => {
       }
 
       sendMethodNotAllowed(res);
+      return;
+    }
+
+    /* Sub-resource: /api/ticker-sync/:id/slug */
+    if (segments.length === 2 && segments[1] === "slug") {
+      const id = segments[0];
+      if (req.method === "PATCH") {
+        const body = await readBody(req);
+        await handleChangeSlug(res, id, body);
+        return;
+      }
+      sendMethodNotAllowed(res, "PATCH");
       return;
     }
 

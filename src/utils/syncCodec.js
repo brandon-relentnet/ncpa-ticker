@@ -58,6 +58,18 @@ export const generateSyncId = () => {
   return `sync-${Math.random().toString(36).slice(2, 11)}`;
 };
 
+/* ── Slug validation (custom URL) ──────────────────────────────────────────── */
+export const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+export const SLUG_MIN_LENGTH = 3;
+export const SLUG_MAX_LENGTH = 64;
+
+export const isValidSlug = (slug) => {
+  if (typeof slug !== "string") return false;
+  const trimmed = slug.trim().toLowerCase();
+  if (trimmed.length < SLUG_MIN_LENGTH || trimmed.length > SLUG_MAX_LENGTH) return false;
+  return SLUG_PATTERN.test(trimmed);
+};
+
 export const loadShareIdFromStorage = () => {
   if (typeof window === "undefined") return null;
 

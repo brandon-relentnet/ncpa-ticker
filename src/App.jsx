@@ -36,6 +36,7 @@ import {
   SYNC_QUERY_PARAM,
 } from "./utils/syncCodec";
 import { fetchSyncState, pushSyncState } from "./utils/syncService";
+import { onSlugChange } from "./utils/slugBroadcast";
 
 const STORAGE_KEY = "pickleball-ticker-theme";
 const SYNC_STORAGE_KEY = "pickleball-ticker-sync";
@@ -846,6 +847,19 @@ export default function App() {
     if (!syncTokenFromUrl || syncTokenFromUrl === shareToken) return;
     setShareToken(syncTokenFromUrl);
   }, [syncTokenFromUrl, shareToken]);
+
+  // Listen for slug changes broadcast from the dashboard. When a user
+  // renames a ticker's slug on the homepage, update this tab's URL and
+  // internal state so it keeps syncing with the renamed ticker.
+  useEffect(() => {
+    const unsubscribe = onSlugChange(({ oldId, newId }) => {
+      if (shareToken !== oldId) return;
+      setShareToken(newId);
+      persistShareId(newId);
+      updateSyncParam(newId);
+    });
+    return unsubscribe;
+  }, [shareToken, updateSyncParam]);
 
   const initialPayloadAppliedRef = useRef(false);
   useEffect(() => {

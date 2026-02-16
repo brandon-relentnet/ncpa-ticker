@@ -83,6 +83,34 @@ export const renameTicker = async (syncId, name) => {
   return parseResponse(response);
 };
 
+export const changeSlug = async (currentId, newSlug) => {
+  if (!currentId) throw new Error("currentId is required");
+  if (!newSlug) throw new Error("newSlug is required");
+  const url = `${buildSyncUrl(currentId)}/slug`;
+  const response = await fetch(url, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ slug: newSlug }),
+  });
+  if (response.status === 409) {
+    const body = await response.json().catch(() => ({}));
+    const err = new Error(body.error || "Slug already in use");
+    err.status = 409;
+    throw err;
+  }
+  if (response.status === 400) {
+    const body = await response.json().catch(() => ({}));
+    const err = new Error(body.error || "Invalid slug");
+    err.status = 400;
+    throw err;
+  }
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => "");
+    throw new Error(errorText || `Slug change failed (${response.status})`);
+  }
+  return response.json();
+};
+
 export const deleteTicker = async (syncId) => {
   if (!syncId) throw new Error("syncId is required");
   const response = await fetch(buildSyncUrl(syncId), {

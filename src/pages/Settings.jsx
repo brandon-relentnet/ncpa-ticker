@@ -11,6 +11,7 @@ import {
 } from "../utils/logo";
 import { NavLink } from "react-router-dom";
 import { motion as Motion } from "motion/react";
+import Breadcrumb from "../components/Breadcrumb";
 
 function ColorControl({ label, color, onChange, className = "" }) {
   const textColor = contrastTextColor(color);
@@ -309,8 +310,11 @@ export default function SettingsPage({
     whileTap: { scale: 0.97 },
   };
 
-  return (
+   return (
     <div className="bg-slate-950 py-10 text-slate-100">
+      <div className="mx-auto max-w-[1600px] px-6">
+        <Breadcrumb current="Settings" />
+      </div>
       <div className="mx-auto flex max-w-[1600px] justify-center flex-col gap-8 px-6 lg:flex-row">
         <div className="w-114 space-y-6 rounded-3xl">
           <div className="mb-8 ml-2">

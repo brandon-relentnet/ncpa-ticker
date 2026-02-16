@@ -3,13 +3,15 @@ import { useNavigate } from "react-router-dom";
 // eslint-disable-next-line no-unused-vars -- motion is used as <motion.div> in JSX
 import { AnimatePresence, motion } from "motion/react";
 import Scoreboard from "../components/Scoreboard";
-import { generateSyncId, SYNC_QUERY_PARAM } from "../utils/syncCodec";
+import { generateSyncId, isValidSlug, SYNC_QUERY_PARAM } from "../utils/syncCodec";
 import {
+  changeSlug,
   deleteTicker,
   listTickers,
   pushSyncState,
   renameTicker,
 } from "../utils/syncService";
+import { broadcastSlugChange } from "../utils/slugBroadcast";
 import {
   DEFAULT_PRIMARY,
   DEFAULT_SECONDARY,
@@ -75,7 +77,12 @@ export default function HomePage() {
   const [copiedId, setCopiedId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
   const [creating, setCreating] = useState(false);
+  const [editingSlugId, setEditingSlugId] = useState(null);
+  const [slugValue, setSlugValue] = useState("");
+  const [slugError, setSlugError] = useState(null);
+  const [slugSaving, setSlugSaving] = useState(false);
   const editInputRef = useRef(null);
+  const slugInputRef = useRef(null);
 
   const fetchTickers = useCallback(async () => {
     try {
@@ -167,6 +174,67 @@ export default function HomePage() {
       commitRename(syncId);
     } else if (event.key === "Escape") {
       setEditingId(null);
+    }
+  };
+
+  /* ── Slug editing ──────────────────────────────────────────────────────── */
+  const startEditingSlug = (ticker) => {
+    setEditingSlugId(ticker.id);
+    setSlugValue(ticker.id);
+    setSlugError(null);
+    setTimeout(() => slugInputRef.current?.select(), 0);
+  };
+
+  const cancelSlugEdit = () => {
+    setEditingSlugId(null);
+    setSlugError(null);
+  };
+
+  const commitSlugChange = async (currentId) => {
+    const trimmed = slugValue.trim().toLowerCase();
+    setSlugError(null);
+
+    if (trimmed === currentId) {
+      setEditingSlugId(null);
+      return;
+    }
+
+    if (!isValidSlug(trimmed)) {
+      setSlugError("3-64 chars, lowercase letters, numbers & hyphens only");
+      return;
+    }
+
+    setSlugSaving(true);
+    try {
+      const result = await changeSlug(currentId, trimmed);
+      const newId = result.id;
+      // Update all local references from old id to new id
+      setTickers((prev) =>
+        prev.map((t) => (t.id === currentId ? { ...t, id: newId } : t))
+      );
+      setEditingSlugId(null);
+      // Notify other tabs (Settings/Ticker) that may be using the old id
+      broadcastSlugChange({ oldId: currentId, newId });
+    } catch (err) {
+      if (err.status === 409) {
+        setSlugError("This slug is already taken");
+      } else if (err.status === 400) {
+        setSlugError(err.message);
+      } else {
+        setSlugError("Failed to update slug");
+        console.warn("Slug change failed", err);
+      }
+    } finally {
+      setSlugSaving(false);
+    }
+  };
+
+  const handleSlugKeyDown = (event, currentId) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      commitSlugChange(currentId);
+    } else if (event.key === "Escape") {
+      cancelSlugEdit();
     }
   };
 
@@ -341,6 +409,53 @@ export default function HomePage() {
                             {displayName}
                           </span>
                           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="size-3.5 shrink-0 text-slate-500 opacity-0 transition-opacity group-hover/name:opacity-100">
+                            <path d="M13.488 2.513a1.75 1.75 0 0 0-2.475 0L3.305 10.22a1 1 0 0 0-.26.44l-.873 3.128a.75.75 0 0 0 .926.926l3.128-.873a1 1 0 0 0 .44-.26l7.708-7.708a1.75 1.75 0 0 0 0-2.475l-.886-.886Z" />
+                          </svg>
+                        </button>
+                      )}
+
+                      {/* Editable slug / custom URL */}
+                      {editingSlugId === ticker.id ? (
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-1.5">
+                            <span className="shrink-0 text-[11px] text-slate-500">URL:</span>
+                            <input
+                              ref={slugInputRef}
+                              type="text"
+                              value={slugValue}
+                              onChange={(e) => {
+                                setSlugValue(e.target.value);
+                                setSlugError(null);
+                              }}
+                              onBlur={() => {
+                                if (!slugSaving) commitSlugChange(ticker.id);
+                              }}
+                              onKeyDown={(e) => handleSlugKeyDown(e, ticker.id)}
+                              disabled={slugSaving}
+                              className={`min-w-0 flex-1 rounded border bg-slate-800 px-1.5 py-0.5 font-mono text-[11px] text-slate-200 outline-none transition-colors focus:ring-1 ${
+                                slugError
+                                  ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                                  : "border-slate-600 focus:border-indigo-500 focus:ring-indigo-500"
+                              } disabled:opacity-50`}
+                              autoFocus
+                            />
+                          </div>
+                          {slugError && (
+                            <p className="text-[10px] leading-tight text-red-400">{slugError}</p>
+                          )}
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => startEditingSlug(ticker)}
+                          className="group/slug flex items-center gap-1.5 text-left"
+                          title="Click to customize URL slug"
+                        >
+                          <span className="shrink-0 text-[11px] text-slate-500">URL:</span>
+                          <span className="truncate font-mono text-[11px] text-slate-400">
+                            {ticker.id}
+                          </span>
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="size-3 shrink-0 text-slate-500 opacity-0 transition-opacity group-hover/slug:opacity-100">
                             <path d="M13.488 2.513a1.75 1.75 0 0 0-2.475 0L3.305 10.22a1 1 0 0 0-.26.44l-.873 3.128a.75.75 0 0 0 .926.926l3.128-.873a1 1 0 0 0 .44-.26l7.708-7.708a1.75 1.75 0 0 0 0-2.475l-.886-.886Z" />
                           </svg>
                         </button>
