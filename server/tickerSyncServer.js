@@ -407,8 +407,13 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  /* ── Health check (no rate limiting) ─────────────────────────────────────── */
+  /* ── Liveness & readiness probes (no rate limiting) ────────────────────── */
   const url = new URL(req.url ?? "", `http://${req.headers.host ?? "localhost"}`);
+
+  if (url.pathname === "/ping") {
+    json(res, 200, { status: "ok" });
+    return;
+  }
 
   if (url.pathname === "/health") {
     try {
