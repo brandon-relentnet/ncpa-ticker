@@ -3,7 +3,7 @@ import { useId, useState } from "react";
 
 export function Accordion({ children, className = "", transition }) {
   const wrapperClass = [
-    "divide-y divide-slate-800 overflow-hidden rounded-lg border border-slate-800 bg-slate-900/70",
+    "surface-card divide-y overflow-hidden",
     className,
   ]
     .filter(Boolean)
@@ -18,7 +18,12 @@ export function Accordion({ children, className = "", transition }) {
         }
       }
     >
-      <div className={wrapperClass}>{children}</div>
+      <div
+        className={wrapperClass}
+        style={{ divideColor: "var(--border-subtle)" }}
+      >
+        {children}
+      </div>
     </MotionConfig>
   );
 }
@@ -31,7 +36,7 @@ export function AccordionItem({ title, children, defaultOpen = false }) {
     <Motion.section
       initial={false}
       animate={isOpen ? "open" : "closed"}
-      className="group p-4 overflow-hidden"
+      className="group overflow-hidden p-4"
     >
       <h3>
         <Motion.button
@@ -40,15 +45,20 @@ export function AccordionItem({ title, children, defaultOpen = false }) {
           aria-expanded={isOpen}
           aria-controls={id}
           onClick={() => setIsOpen((value) => !value)}
-          className="flex w-full cursor-pointer items-center justify-between gap-4 bg-transparent py-4 text-slate-200 transition focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-lime-400"
+          className="flex w-full cursor-pointer items-center justify-between gap-4 bg-transparent py-4 transition focus-visible:outline focus-visible:outline-offset-2"
+          style={{
+            color: "var(--text-primary)",
+            outlineColor: "var(--accent)",
+          }}
         >
-          <span className="text-md font-semibold uppercase tracking-wide">
+          <span className="font-display text-sm font-bold uppercase tracking-wider">
             {title}
           </span>
           <Motion.span
             variants={{ open: { rotate: 180 }, closed: { rotate: 0 } }}
-            transition={{ duration: 0.08, ease: [0.22, 1, 0.36, 1] }}
-            className="text-slate-500 transition group-hover:text-slate-300"
+            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            className="transition-colors"
+            style={{ color: "var(--text-muted)" }}
           >
             <ChevronDownIcon />
           </Motion.span>
@@ -73,7 +83,8 @@ export function AccordionItem({ title, children, defaultOpen = false }) {
             open: { opacity: 1, filter: "blur(0px)", y: 0 },
             closed: { opacity: 0, filter: "blur(4px)", y: -8 },
           }}
-          className="space-y-5 pt-2 text-sm text-slate-300"
+          className="space-y-5 pt-2 text-sm"
+          style={{ color: "var(--text-secondary)" }}
         >
           {children}
         </Motion.div>

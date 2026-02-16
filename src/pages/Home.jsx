@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-// eslint-disable-next-line no-unused-vars -- motion is used as <motion.div> in JSX
 import { AnimatePresence, motion } from "motion/react";
 import Scoreboard from "../components/Scoreboard";
 import { generateSyncId, isValidSlug, SYNC_QUERY_PARAM } from "../utils/syncCodec";
@@ -67,6 +66,8 @@ const buildTickerUrl = (syncId) => {
   }
 };
 
+const EASE_OUT_EXPO = [0.16, 1, 0.3, 1];
+
 export default function HomePage() {
   const navigate = useNavigate();
   const [tickers, setTickers] = useState([]);
@@ -106,7 +107,6 @@ export default function HomePage() {
     setCreating(true);
     const id = generateSyncId();
     try {
-      // Pre-create the DB row so fetch effects on /settings don't 404
       await pushSyncState({ syncId: id, payload: {} });
       navigate(`/settings?${SYNC_QUERY_PARAM}=${encodeURIComponent(id)}`);
     } catch (err) {
@@ -208,15 +208,11 @@ export default function HomePage() {
     try {
       const result = await changeSlug(currentId, trimmed);
       const newId = result.id;
-      // Update all local references from old id to new id
       setTickers((prev) =>
         prev.map((t) => (t.id === currentId ? { ...t, id: newId } : t))
       );
       setEditingSlugId(null);
-      // Notify other tabs (Settings/Ticker) that may be using the old id
       broadcastSlugChange({ oldId: currentId, newId });
-      // Clean up any ghost row that racing pushes from other tabs might
-      // re-create with the old ID before the broadcast arrives.
       deleteTicker(currentId).catch(() => {});
       setTimeout(() => deleteTicker(currentId).catch(() => {}), 2000);
     } catch (err) {
@@ -244,41 +240,65 @@ export default function HomePage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-950 text-slate-100">
-        <div className="text-lg text-slate-400">Loading tickers...</div>
+      <div className="page-shell flex min-h-screen items-center justify-center">
+        <div className="text-lg" style={{ color: "var(--text-muted)" }}>
+          Loading tickers...
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
+    <div className="page-shell">
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-white">
-              NCPA Ticker Dashboard
-            </h1>
-            <p className="mt-1 text-sm text-slate-400">
-              Manage your pickleball match tickers
-            </p>
+        <motion.div
+          className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+          initial={{ opacity: 0, y: -16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: EASE_OUT_EXPO }}
+        >
+          <div className="flex items-center gap-4">
+            <img
+              src="/NCPA-Logo.jpg"
+              alt="NCPA"
+              className="size-11 rounded-lg object-cover shadow-lg"
+              style={{ border: "1px solid var(--border-default)" }}
+            />
+            <div>
+              <h1 className="section-heading text-3xl">
+                Ticker Dashboard
+              </h1>
+              <p className="mt-0.5 text-sm" style={{ color: "var(--text-muted)" }}>
+                Manage your pickleball match tickers
+              </p>
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            <button
+          <motion.div
+            className="flex items-center gap-3"
+            initial={{ opacity: 0, x: 16 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.1, ease: EASE_OUT_EXPO }}
+          >
+            <motion.button
               type="button"
               onClick={() => navigate("/admin")}
-              className="inline-flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm font-medium text-slate-300 transition-colors hover:bg-slate-700 hover:text-white"
+              className="btn-ghost"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-4">
                 <path fillRule="evenodd" d="M7.84 1.804A1 1 0 0 1 8.82 1h2.36a1 1 0 0 1 .98.804l.331 1.652a6.993 6.993 0 0 1 1.929 1.115l1.598-.54a1 1 0 0 1 1.186.447l1.18 2.044a1 1 0 0 1-.205 1.251l-1.267 1.113a7.047 7.047 0 0 1 0 2.228l1.267 1.113a1 1 0 0 1 .206 1.25l-1.18 2.045a1 1 0 0 1-1.187.447l-1.598-.54a6.993 6.993 0 0 1-1.929 1.115l-.33 1.652a1 1 0 0 1-.98.804H8.82a1 1 0 0 1-.98-.804l-.331-1.652a6.993 6.993 0 0 1-1.929-1.115l-1.598.54a1 1 0 0 1-1.186-.447l-1.18-2.044a1 1 0 0 1 .205-1.251l1.267-1.114a7.05 7.05 0 0 1 0-2.227L1.821 7.773a1 1 0 0 1-.206-1.25l1.18-2.045a1 1 0 0 1 1.187-.447l1.598.54A6.993 6.993 0 0 1 7.51 3.456l.33-1.652ZM10 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" clipRule="evenodd" />
               </svg>
               Admin
-            </button>
-            <button
+            </motion.button>
+            <motion.button
               type="button"
               onClick={handleCreate}
               disabled={creating}
-              className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition-colors hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-950 disabled:opacity-60"
+              className="btn-primary"
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
             >
               {creating ? (
                 <svg className="size-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -291,22 +311,31 @@ export default function HomePage() {
                 </svg>
               )}
               {creating ? "Creating..." : "New Ticker"}
-            </button>
-          </div>
-        </div>
+            </motion.button>
+          </motion.div>
+        </motion.div>
 
         {/* Error */}
         {error && (
-          <div className="mb-6 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          <motion.div
+            className="mb-6 rounded-lg px-4 py-3 text-sm"
+            style={{
+              background: "var(--danger-muted)",
+              border: "1px solid rgba(239, 68, 68, 0.3)",
+              color: "#fca5a5",
+            }}
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
             {error}
             <button
               type="button"
               onClick={fetchTickers}
-              className="ml-3 font-medium text-red-200 underline hover:text-white"
+              className="ml-3 font-medium underline transition-colors hover:text-white"
             >
               Retry
             </button>
-          </div>
+          </motion.div>
         )}
 
         {/* Empty state */}
@@ -314,23 +343,32 @@ export default function HomePage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-700 bg-slate-900/50 px-6 py-20 text-center"
+            transition={{ duration: 0.5, ease: EASE_OUT_EXPO }}
+            className="flex flex-col items-center justify-center rounded-2xl px-6 py-20 text-center"
+            style={{
+              background: "var(--bg-surface)",
+              border: "1px dashed var(--border-default)",
+            }}
           >
-            <div className="mb-4 rounded-full bg-slate-800 p-4">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-10 text-slate-500">
+            <div
+              className="mb-4 rounded-full p-4"
+              style={{ background: "var(--bg-elevated)" }}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-10" style={{ color: "var(--text-muted)" }}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0 1 18 16.5h-2.25m-7.5 0h7.5m-7.5 0-1 3m8.5-3 1 3m0 0 .5 1.5m-.5-1.5h-9.5m0 0-.5 1.5m.75-9 3-3 2.148 2.148A12.061 12.061 0 0 1 16.5 7.605" />
               </svg>
             </div>
-            <h2 className="mb-2 text-xl font-semibold text-slate-200">No tickers yet</h2>
-            <p className="mb-6 max-w-sm text-sm text-slate-400">
+            <h2 className="section-heading mb-2 text-xl">No tickers yet</h2>
+            <p className="mb-6 max-w-sm text-sm" style={{ color: "var(--text-muted)" }}>
               Create your first ticker to start broadcasting a live pickleball scoreboard.
             </p>
-            <button
+            <motion.button
               type="button"
               onClick={handleCreate}
               disabled={creating}
-              className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-lg transition-colors hover:bg-indigo-500 disabled:opacity-60"
+              className="btn-primary px-6 py-3"
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
             >
               {creating ? (
                 <svg className="size-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -343,7 +381,7 @@ export default function HomePage() {
                 </svg>
               )}
               {creating ? "Creating..." : "Create Your First Ticker"}
-            </button>
+            </motion.button>
           </motion.div>
         )}
 
@@ -351,7 +389,7 @@ export default function HomePage() {
         {tickers.length > 0 && (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             <AnimatePresence mode="popLayout">
-              {tickers.map((ticker) => {
+              {tickers.map((ticker, i) => {
                 const payload = ticker.payload ?? {};
                 const displayName =
                   ticker.name || suggestName(payload) || `Ticker ${ticker.id.slice(0, 8)}`;
@@ -364,14 +402,31 @@ export default function HomePage() {
                   <motion.div
                     key={ticker.id}
                     layout
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
+                    initial={{ opacity: 0, y: 20, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.9 }}
-                    transition={{ duration: 0.25 }}
-                    className="group relative flex flex-col overflow-hidden rounded-xl border border-slate-800 bg-slate-900 shadow-md transition-colors hover:border-slate-700"
+                    transition={{ duration: 0.4, delay: i * 0.06, ease: EASE_OUT_EXPO }}
+                    className="group surface-card relative flex flex-col overflow-hidden"
+                    style={{
+                      transition: "border-color 0.2s, box-shadow 0.3s",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = "var(--border-strong)";
+                      e.currentTarget.style.boxShadow = "0 0 30px rgba(0, 229, 160, 0.06)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = "var(--border-subtle)";
+                      e.currentTarget.style.boxShadow = "none";
+                    }}
                   >
                     {/* Mini Scoreboard preview */}
-                    <div className="relative overflow-hidden border-b border-slate-800 bg-slate-950 px-3 pt-3 pb-2">
+                    <div
+                      className="relative overflow-hidden px-3 pt-3 pb-2"
+                      style={{
+                        background: "var(--bg-base)",
+                        borderBottom: "1px solid var(--border-subtle)",
+                      }}
+                    >
                       <div
                         className="pointer-events-none origin-top-left"
                         style={{ transform: "scale(0.48)", height: 100, width: "208%" }}
@@ -411,7 +466,7 @@ export default function HomePage() {
                           onChange={(e) => setEditValue(e.target.value)}
                           onBlur={() => commitRename(ticker.id)}
                           onKeyDown={(e) => handleEditKeyDown(e, ticker.id)}
-                          className="rounded border border-slate-600 bg-slate-800 px-2 py-1 text-sm font-semibold text-white outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                          className="input-field px-2 py-1 text-sm font-semibold"
                           autoFocus
                         />
                       ) : (
@@ -421,10 +476,10 @@ export default function HomePage() {
                           className="group/name flex items-center gap-1.5 text-left"
                           title="Click to rename"
                         >
-                          <span className="truncate text-sm font-semibold text-slate-100">
+                          <span className="truncate text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
                             {displayName}
                           </span>
-                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="size-3.5 shrink-0 text-slate-500 opacity-0 transition-opacity group-hover/name:opacity-100">
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="size-3.5 shrink-0 opacity-0 transition-opacity group-hover/name:opacity-100" style={{ color: "var(--text-muted)" }}>
                             <path d="M13.488 2.513a1.75 1.75 0 0 0-2.475 0L3.305 10.22a1 1 0 0 0-.26.44l-.873 3.128a.75.75 0 0 0 .926.926l3.128-.873a1 1 0 0 0 .44-.26l7.708-7.708a1.75 1.75 0 0 0 0-2.475l-.886-.886Z" />
                           </svg>
                         </button>
@@ -434,7 +489,7 @@ export default function HomePage() {
                       {editingSlugId === ticker.id ? (
                         <div className="space-y-1">
                           <div className="flex items-center gap-1.5">
-                            <span className="shrink-0 text-[11px] text-slate-500">URL:</span>
+                            <span className="shrink-0 text-[11px]" style={{ color: "var(--text-muted)" }}>URL:</span>
                             <input
                               ref={slugInputRef}
                               type="text"
@@ -448,16 +503,17 @@ export default function HomePage() {
                               }}
                               onKeyDown={(e) => handleSlugKeyDown(e, ticker.id)}
                               disabled={slugSaving}
-                              className={`min-w-0 flex-1 rounded border bg-slate-800 px-1.5 py-0.5 font-mono text-[11px] text-slate-200 outline-none transition-colors focus:ring-1 ${
+                              className="input-field min-w-0 flex-1 px-1.5 py-0.5 font-mono text-[11px] disabled:opacity-50"
+                              style={
                                 slugError
-                                  ? "border-red-500 focus:border-red-500 focus:ring-red-500"
-                                  : "border-slate-600 focus:border-indigo-500 focus:ring-indigo-500"
-                              } disabled:opacity-50`}
+                                  ? { borderColor: "var(--danger)", boxShadow: "0 0 0 3px var(--danger-muted)" }
+                                  : {}
+                              }
                               autoFocus
                             />
                           </div>
                           {slugError && (
-                            <p className="text-[10px] leading-tight text-red-400">{slugError}</p>
+                            <p className="text-[10px] leading-tight" style={{ color: "#fca5a5" }}>{slugError}</p>
                           )}
                         </div>
                       ) : (
@@ -467,18 +523,18 @@ export default function HomePage() {
                           className="group/slug flex items-center gap-1.5 text-left"
                           title="Click to customize URL slug"
                         >
-                          <span className="shrink-0 text-[11px] text-slate-500">URL:</span>
-                          <span className="truncate font-mono text-[11px] text-slate-400">
+                          <span className="shrink-0 text-[11px]" style={{ color: "var(--text-muted)" }}>URL:</span>
+                          <span className="truncate font-mono text-[11px]" style={{ color: "var(--text-secondary)" }}>
                             {ticker.id}
                           </span>
-                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="size-3 shrink-0 text-slate-500 opacity-0 transition-opacity group-hover/slug:opacity-100">
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="size-3 shrink-0 opacity-0 transition-opacity group-hover/slug:opacity-100" style={{ color: "var(--text-muted)" }}>
                             <path d="M13.488 2.513a1.75 1.75 0 0 0-2.475 0L3.305 10.22a1 1 0 0 0-.26.44l-.873 3.128a.75.75 0 0 0 .926.926l3.128-.873a1 1 0 0 0 .44-.26l7.708-7.708a1.75 1.75 0 0 0 0-2.475l-.886-.886Z" />
                           </svg>
                         </button>
                       )}
 
                       {/* Match details */}
-                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400">
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs" style={{ color: "var(--text-secondary)" }}>
                         {game?.t1_name && game?.t2_name && (
                           <span className="truncate">
                             {game.t1_name} vs {game.t2_name}
@@ -492,7 +548,7 @@ export default function HomePage() {
                       </div>
 
                       {/* Timestamps */}
-                      <div className="flex items-center gap-3 text-xs text-slate-500">
+                      <div className="flex items-center gap-3 text-xs" style={{ color: "var(--text-muted)" }}>
                         {ticker.updated_at && (
                           <span title={new Date(ticker.updated_at).toLocaleString()}>
                             Updated {relativeTime(ticker.updated_at)}
@@ -502,58 +558,85 @@ export default function HomePage() {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex border-t border-slate-800">
-                      <button
-                        type="button"
-                        onClick={() => handleOpenSettings(ticker.id)}
-                        className="flex flex-1 items-center justify-center gap-1.5 px-2 py-2.5 text-xs font-medium text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
-                        title="Open Settings"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="size-3.5">
-                          <path fillRule="evenodd" d="M6.455 1.45A.5.5 0 0 1 6.952 1h2.096a.5.5 0 0 1 .497.45l.186 1.858a4.996 4.996 0 0 1 1.466.848l1.703-.769a.5.5 0 0 1 .639.206l1.048 1.814a.5.5 0 0 1-.142.656l-1.517 1.09a5.026 5.026 0 0 1 0 1.694l1.517 1.09a.5.5 0 0 1 .142.656l-1.048 1.814a.5.5 0 0 1-.639.206l-1.703-.769c-.433.36-.928.649-1.466.848l-.186 1.858a.5.5 0 0 1-.497.45H6.952a.5.5 0 0 1-.497-.45l-.186-1.858a4.993 4.993 0 0 1-1.466-.848l-1.703.769a.5.5 0 0 1-.639-.206L1.413 10.7a.5.5 0 0 1 .142-.656l1.517-1.09a5.026 5.026 0 0 1 0-1.694l-1.517-1.09a.5.5 0 0 1-.142-.656l1.048-1.814a.5.5 0 0 1 .639-.206l1.703.769c.433-.36.928-.649 1.466-.848l.186-1.858ZM8 10.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" clipRule="evenodd" />
-                        </svg>
-                        Settings
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleOpenTicker(ticker.id)}
-                        className="flex flex-1 items-center justify-center gap-1.5 border-l border-slate-800 px-2 py-2.5 text-xs font-medium text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
-                        title="Open Ticker in new tab"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="size-3.5">
-                          <path d="M6.22 8.72a.75.75 0 0 0 1.06 1.06l5.22-5.22v1.69a.75.75 0 0 0 1.5 0v-3.5a.75.75 0 0 0-.75-.75h-3.5a.75.75 0 0 0 0 1.5h1.69L6.22 8.72Z" />
-                          <path d="M3.5 6.75c0-.69.56-1.25 1.25-1.25H7A.75.75 0 0 0 7 4H4.75A2.75 2.75 0 0 0 2 6.75v4.5A2.75 2.75 0 0 0 4.75 14h4.5A2.75 2.75 0 0 0 12 11.25V9a.75.75 0 0 0-1.5 0v2.25c0 .69-.56 1.25-1.25 1.25h-4.5c-.69 0-1.25-.56-1.25-1.25v-4.5Z" />
-                        </svg>
-                        Ticker
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleCopyUrl(ticker.id)}
-                        className="flex flex-1 items-center justify-center gap-1.5 border-l border-slate-800 px-2 py-2.5 text-xs font-medium text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
-                        title="Copy ticker URL"
-                      >
-                        {copiedId === ticker.id ? (
-                          <>
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="size-3.5 text-green-400">
-                              <path fillRule="evenodd" d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z" clipRule="evenodd" />
-                            </svg>
-                            <span className="text-green-400">Copied</span>
-                          </>
-                        ) : (
-                          <>
+                    <div
+                      className="flex"
+                      style={{ borderTop: "1px solid var(--border-subtle)" }}
+                    >
+                      {[
+                        {
+                          label: "Settings",
+                          onClick: () => handleOpenSettings(ticker.id),
+                          icon: (
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="size-3.5">
-                              <path d="M5.5 3.5A1.5 1.5 0 0 1 7 2h2.879a1.5 1.5 0 0 1 1.06.44l2.122 2.12a1.5 1.5 0 0 1 .439 1.061V9.5A1.5 1.5 0 0 1 12 11V8.621a3 3 0 0 0-.879-2.121L9 4.379A3 3 0 0 0 6.879 3.5H5.5Z" />
-                              <path d="M4 5a1.5 1.5 0 0 0-1.5 1.5v6A1.5 1.5 0 0 0 4 14h5a1.5 1.5 0 0 0 1.5-1.5V8.621a1.5 1.5 0 0 0-.44-1.06L7.94 5.439A1.5 1.5 0 0 0 6.878 5H4Z" />
+                              <path fillRule="evenodd" d="M6.455 1.45A.5.5 0 0 1 6.952 1h2.096a.5.5 0 0 1 .497.45l.186 1.858a4.996 4.996 0 0 1 1.466.848l1.703-.769a.5.5 0 0 1 .639.206l1.048 1.814a.5.5 0 0 1-.142.656l-1.517 1.09a5.026 5.026 0 0 1 0 1.694l1.517 1.09a.5.5 0 0 1 .142.656l-1.048 1.814a.5.5 0 0 1-.639.206l-1.703-.769c-.433.36-.928.649-1.466.848l-.186 1.858a.5.5 0 0 1-.497.45H6.952a.5.5 0 0 1-.497-.45l-.186-1.858a4.993 4.993 0 0 1-1.466-.848l-1.703.769a.5.5 0 0 1-.639-.206L1.413 10.7a.5.5 0 0 1 .142-.656l1.517-1.09a5.026 5.026 0 0 1 0-1.694l-1.517-1.09a.5.5 0 0 1-.142-.656l1.048-1.814a.5.5 0 0 1 .639-.206l1.703.769c.433-.36.928-.649 1.466-.848l.186-1.858ZM8 10.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" clipRule="evenodd" />
                             </svg>
-                            Copy URL
-                          </>
-                        )}
-                      </button>
+                          ),
+                        },
+                        {
+                          label: "Ticker",
+                          onClick: () => handleOpenTicker(ticker.id),
+                          icon: (
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="size-3.5">
+                              <path d="M6.22 8.72a.75.75 0 0 0 1.06 1.06l5.22-5.22v1.69a.75.75 0 0 0 1.5 0v-3.5a.75.75 0 0 0-.75-.75h-3.5a.75.75 0 0 0 0 1.5h1.69L6.22 8.72Z" />
+                              <path d="M3.5 6.75c0-.69.56-1.25 1.25-1.25H7A.75.75 0 0 0 7 4H4.75A2.75 2.75 0 0 0 2 6.75v4.5A2.75 2.75 0 0 0 4.75 14h4.5A2.75 2.75 0 0 0 12 11.25V9a.75.75 0 0 0-1.5 0v2.25c0 .69-.56 1.25-1.25 1.25h-4.5c-.69 0-1.25-.56-1.25-1.25v-4.5Z" />
+                            </svg>
+                          ),
+                        },
+                        {
+                          label: copiedId === ticker.id ? "Copied" : "Copy URL",
+                          onClick: () => handleCopyUrl(ticker.id),
+                          icon:
+                            copiedId === ticker.id ? (
+                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="size-3.5" style={{ color: "var(--accent)" }}>
+                                <path fillRule="evenodd" d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z" clipRule="evenodd" />
+                              </svg>
+                            ) : (
+                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="size-3.5">
+                                <path d="M5.5 3.5A1.5 1.5 0 0 1 7 2h2.879a1.5 1.5 0 0 1 1.06.44l2.122 2.12a1.5 1.5 0 0 1 .439 1.061V9.5A1.5 1.5 0 0 1 12 11V8.621a3 3 0 0 0-.879-2.121L9 4.379A3 3 0 0 0 6.879 3.5H5.5Z" />
+                                <path d="M4 5a1.5 1.5 0 0 0-1.5 1.5v6A1.5 1.5 0 0 0 4 14h5a1.5 1.5 0 0 0 1.5-1.5V8.621a1.5 1.5 0 0 0-.44-1.06L7.94 5.439A1.5 1.5 0 0 0 6.878 5H4Z" />
+                              </svg>
+                            ),
+                          accent: copiedId === ticker.id,
+                        },
+                      ].map((action, actionIdx) => (
+                        <button
+                          key={action.label}
+                          type="button"
+                          onClick={action.onClick}
+                          className="flex flex-1 items-center justify-center gap-1.5 px-2 py-2.5 text-xs font-medium transition-colors"
+                          style={{
+                            color: action.accent ? "var(--accent)" : "var(--text-secondary)",
+                            borderLeft: actionIdx > 0 ? "1px solid var(--border-subtle)" : "none",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = "var(--bg-elevated)";
+                            if (!action.accent) e.currentTarget.style.color = "var(--text-primary)";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = "transparent";
+                            if (!action.accent) e.currentTarget.style.color = "var(--text-secondary)";
+                          }}
+                          title={action.label}
+                        >
+                          {action.icon}
+                          {action.label}
+                        </button>
+                      ))}
                       <button
                         type="button"
                         onClick={() => handleDelete(ticker.id)}
                         disabled={isDeleting}
-                        className="flex flex-1 items-center justify-center gap-1.5 border-l border-slate-800 px-2 py-2.5 text-xs font-medium text-red-400 transition-colors hover:bg-red-500/10 hover:text-red-300 disabled:opacity-50"
+                        className="flex flex-1 items-center justify-center gap-1.5 px-2 py-2.5 text-xs font-medium transition-colors disabled:opacity-50"
+                        style={{
+                          color: "var(--danger)",
+                          borderLeft: "1px solid var(--border-subtle)",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = "var(--danger-muted)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = "transparent";
+                        }}
                         title="Delete ticker"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="size-3.5">

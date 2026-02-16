@@ -20,15 +20,19 @@ function ColorControl({ label, color, onChange, className = "" }) {
   return (
     <section className={`space-y-3 ${className}`}>
       <header>
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-300">
-          {label}
-        </h3>
-        <p className="text-[11px] text-slate-500">{swatchColor}</p>
+        <h3 className="label-accent">{label}</h3>
+        <p className="text-[11px]" style={{ color: "var(--text-muted)" }}>
+          {swatchColor}
+        </p>
       </header>
       <HslColorPicker color={color} onChange={onChange} />
       <div
-        className="flex items-center justify-between rounded-lg border border-slate-800 px-3 py-2 text-xs"
-        style={{ backgroundColor: swatchColor, color: textColor }}
+        className="flex items-center justify-between rounded-lg px-3 py-2 text-xs"
+        style={{
+          backgroundColor: swatchColor,
+          color: textColor,
+          border: "1px solid var(--border-subtle)",
+        }}
       >
         <span>Preview swatch</span>
         <span className="font-semibold">{textColor.toUpperCase()}</span>
@@ -51,20 +55,24 @@ function TextColorControl({
     <section className="space-y-3">
       <header>
         <div className="flex items-center justify-between">
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-300">
-            Text Color
-          </h3>
-          <label className="flex items-center gap-2 text-[11px] font-semibold uppercase text-slate-400">
+          <h3 className="label-accent">Text Color</h3>
+          <label
+            className="flex items-center gap-2 text-[11px] font-semibold uppercase"
+            style={{ color: "var(--text-muted)" }}
+          >
             {manualEnabled ? "Manual" : "Auto"}
             <input
               type="checkbox"
-              className="h-3.5 w-3.5 accent-lime-400"
+              className="h-3.5 w-3.5"
+              style={{ accentColor: "var(--accent)" }}
               checked={manualEnabled}
               onChange={(event) => onToggleManual(event.target.checked)}
             />
           </label>
         </div>
-        <p className="text-[11px] text-slate-500">{description}</p>
+        <p className="text-[11px]" style={{ color: "var(--text-muted)" }}>
+          {description}
+        </p>
       </header>
       <HslColorPicker
         color={manualColor}
@@ -74,8 +82,12 @@ function TextColorControl({
         }}
       />
       <div
-        className="flex items-center justify-between rounded-lg border border-slate-800 px-3 py-2 text-xs"
-        style={{ backgroundColor: manualSwatch, color: manualContrast }}
+        className="flex items-center justify-between rounded-lg px-3 py-2 text-xs"
+        style={{
+          backgroundColor: manualSwatch,
+          color: manualContrast,
+          border: "1px solid var(--border-subtle)",
+        }}
       >
         <span>
           {manualEnabled ? "Manual color in use" : "Automatic contrast"}
@@ -88,8 +100,12 @@ function TextColorControl({
 
 function LabeledToggle({ label, checked, onChange }) {
   return (
-    <label className="flex w-full items-center justify-between rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm">
-      <span className="font-medium text-slate-300">{label}</span>
+    <label
+      className="surface-card flex w-full items-center justify-between px-4 py-3 text-sm"
+    >
+      <span className="font-medium" style={{ color: "var(--text-secondary)" }}>
+        {label}
+      </span>
       <input
         type="checkbox"
         className="checkbox"
@@ -191,46 +207,14 @@ export default function SettingsPage({
     .join(" / ");
 
   const overrideFields = [
-    {
-      key: "headerTitle",
-      label: "headerTitle",
-      placeholder: defaultAssociationLabel,
-    },
-    {
-      key: "headerSubtitle",
-      label: "headerSubtitle",
-      placeholder: defaultTournamentName,
-    },
-    {
-      key: "teamOneName",
-      label: "teamOneName",
-      placeholder: defaultTeamOneName,
-    },
-    {
-      key: "teamOnePlayers",
-      label: "teamOnePlayers",
-      placeholder: defaultTeamOnePlayers,
-    },
-    {
-      key: "teamOneScore",
-      label: "teamOneScore",
-      placeholder: defaultTeamOneScore,
-    },
-    {
-      key: "teamTwoName",
-      label: "teamTwoName",
-      placeholder: defaultTeamTwoName,
-    },
-    {
-      key: "teamTwoPlayers",
-      label: "teamTwoPlayers",
-      placeholder: defaultTeamTwoPlayers,
-    },
-    {
-      key: "teamTwoScore",
-      label: "teamTwoScore",
-      placeholder: defaultTeamTwoScore,
-    },
+    { key: "headerTitle", label: "headerTitle", placeholder: defaultAssociationLabel },
+    { key: "headerSubtitle", label: "headerSubtitle", placeholder: defaultTournamentName },
+    { key: "teamOneName", label: "teamOneName", placeholder: defaultTeamOneName },
+    { key: "teamOnePlayers", label: "teamOnePlayers", placeholder: defaultTeamOnePlayers },
+    { key: "teamOneScore", label: "teamOneScore", placeholder: defaultTeamOneScore },
+    { key: "teamTwoName", label: "teamTwoName", placeholder: defaultTeamTwoName },
+    { key: "teamTwoPlayers", label: "teamTwoPlayers", placeholder: defaultTeamTwoPlayers },
+    { key: "teamTwoScore", label: "teamTwoScore", placeholder: defaultTeamTwoScore },
   ];
 
   const [copyStatus, setCopyStatus] = useState("idle");
@@ -310,18 +294,16 @@ export default function SettingsPage({
     whileTap: { scale: 0.97 },
   };
 
-   return (
-    <div className="bg-slate-950 py-10 text-slate-100">
+  return (
+    <div className="page-shell py-10">
       <div className="mx-auto max-w-[1600px] px-6">
         <Breadcrumb current="Settings" />
       </div>
-      <div className="mx-auto flex max-w-[1600px] justify-center flex-col gap-8 px-6 lg:flex-row">
+      <div className="mx-auto flex max-w-[1600px] flex-col justify-center gap-8 px-6 lg:flex-row">
         <div className="w-114 space-y-6 rounded-3xl">
           <div className="mb-8 ml-2">
-            <h1 className="text-3xl mb-2 font-semibold text-lime-400">
-              Ticker Controls
-            </h1>
-            <p className="text-sm text-slate-400">
+            <h1 className="section-heading mb-2 text-3xl">Ticker Controls</h1>
+            <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
               Adjust settings and see the preview update instantly.
             </p>
           </div>
@@ -370,12 +352,10 @@ export default function SettingsPage({
                   autoScoreColor={autoScoreColor}
                 />
 
-                <div className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 sm:col-span-2">
-                  <div className="flex items-center justify-between text-xs text-slate-300">
-                    <span className="font-semibold uppercase tracking-wide">
-                      Team Logos
-                    </span>
-                    <span className="text-slate-200">
+                <div className="surface-card px-4 py-3 sm:col-span-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="label-accent">Team Logos</span>
+                    <span style={{ color: "var(--text-primary)" }}>
                       {Math.round((teamLogoScale ?? 1) * 100)}%
                     </span>
                   </div>
@@ -388,7 +368,8 @@ export default function SettingsPage({
                     onChange={(event) =>
                       handleTeamLogoScaleChange(Number(event.target.value))
                     }
-                    className="mt-3 w-full accent-lime-400"
+                    className="mt-3 w-full"
+                    style={{ accentColor: "var(--accent)" }}
                   />
                 </div>
               </div>
@@ -409,22 +390,17 @@ export default function SettingsPage({
             </AccordionItem>
 
             <AccordionItem title="Content Overrides">
-              <p className="text-xs text-slate-400">
+              <p className="text-xs" style={{ color: "var(--text-muted)" }}>
                 Override individual fields on the ticker. Leave any input blank
                 to fall back to live API data.
               </p>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 {overrideFields.map(({ key, label, placeholder }) => (
-                  <label
-                    key={key}
-                    className="flex flex-col gap-1 rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-xs"
-                  >
-                    <span className="font-semibold uppercase tracking-wide text-slate-300">
-                      {label}
-                    </span>
+                  <label key={key} className="surface-card flex flex-col gap-1 px-4 py-3 text-xs">
+                    <span className="label-accent">{label}</span>
                     <input
                       type="text"
-                      className="rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-lime-400 focus:outline-none focus:ring-1 focus:ring-lime-400"
+                      className="input-field text-sm"
                       value={overrides[key] ?? ""}
                       placeholder={placeholder || "(from API)"}
                       onChange={(event) =>
@@ -433,13 +409,11 @@ export default function SettingsPage({
                     />
                   </label>
                 ))}
-                <label className="sm:col-span-2 flex flex-col gap-1 rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-xs">
-                  <span className="font-semibold uppercase tracking-wide text-slate-300">
-                    footerText
-                  </span>
+                <label className="surface-card flex flex-col gap-1 px-4 py-3 text-xs sm:col-span-2">
+                  <span className="label-accent">footerText</span>
                   <textarea
                     rows={3}
-                    className="rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-lime-400 focus:outline-none focus:ring-1 focus:ring-lime-400"
+                    className="input-field text-sm"
                     value={overrides.footerText ?? ""}
                     placeholder={defaultFooterText || "(from API)"}
                     onChange={(event) =>
@@ -451,7 +425,7 @@ export default function SettingsPage({
               <div className="mt-4 flex justify-end">
                 <button
                   type="button"
-                  className="rounded-full border border-slate-700 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-200 transition hover:border-lime-400 hover:text-lime-300"
+                  className="btn-pill"
                   onClick={onResetTickerOverrides}
                 >
                   Clear Overrides
@@ -462,14 +436,15 @@ export default function SettingsPage({
             <AccordionItem title="Logo">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs" style={{ color: "var(--text-muted)" }}>
                     Upload an image to replace the NCPA badge. Drag it in the
                     preview to adjust placement.
                   </p>
                   {logoImage && (
                     <button
                       type="button"
-                      className="text-xs font-semibold uppercase tracking-wide text-red-300 hover:text-red-200"
+                      className="text-xs font-semibold uppercase tracking-wide"
+                      style={{ color: "var(--danger)" }}
                       onClick={handleRemoveLogo}
                     >
                       Remove
@@ -477,28 +452,34 @@ export default function SettingsPage({
                   )}
                 </div>
 
-                <label className="flex flex-col gap-2 rounded-xl border border-dashed border-slate-700 bg-slate-900 px-4 py-3 text-xs text-slate-300">
-                  <span className="font-semibold uppercase tracking-wide">
-                    Upload logo image
-                  </span>
+                <label
+                  className="flex flex-col gap-2 rounded-xl px-4 py-3 text-xs"
+                  style={{
+                    background: "var(--bg-surface)",
+                    border: "1px dashed var(--border-default)",
+                    color: "var(--text-secondary)",
+                  }}
+                >
+                  <span className="label-accent">Upload logo image</span>
                   <input
                     type="file"
                     accept="image/*"
                     onChange={handleLogoFileChange}
-                    className="text-slate-400 file:mr-4 file:rounded-full file:border-0 file:bg-lime-400/10 file:px-3 file:py-1 file:text-xs file:font-semibold file:uppercase file:tracking-wide file:text-lime-300 hover:file:bg-lime-400/20"
+                    className="file-input-styled"
+                    style={{ color: "var(--text-muted)" }}
                   />
                 </label>
 
                 {logoImage && (
-                  <div className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-900 px-4 py-3">
+                  <div className="surface-card flex items-center justify-between px-4 py-3">
                     <div className="flex items-center gap-3">
                       <img
                         src={logoImage}
                         alt="Custom logo preview"
                         className="h-12 w-12 rounded object-contain"
                       />
-                      <div className="text-xs text-slate-400">
-                        <div className="font-semibold text-slate-200">
+                      <div className="text-xs" style={{ color: "var(--text-muted)" }}>
+                        <div className="font-semibold" style={{ color: "var(--text-primary)" }}>
                           Logo loaded
                         </div>
                         <div>Drag the image on the preview to reposition.</div>
@@ -506,7 +487,7 @@ export default function SettingsPage({
                     </div>
                     <button
                       type="button"
-                      className="text-xs font-semibold uppercase tracking-wide text-lime-300 hover:text-lime-200"
+                      className="btn-pill"
                       onClick={handleResetLogoPosition}
                     >
                       Reset position
@@ -515,12 +496,10 @@ export default function SettingsPage({
                 )}
 
                 <div className="space-y-3">
-                  <div className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-3">
-                    <div className="flex items-center justify-between text-xs text-slate-300">
-                      <span className="font-semibold uppercase tracking-wide">
-                        Logo Scale
-                      </span>
-                      <span className="text-slate-200">
+                  <div className="surface-card px-4 py-3">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="label-accent">Logo Scale</span>
+                      <span style={{ color: "var(--text-primary)" }}>
                         {Math.round((logoScale ?? 1) * 100)}%
                       </span>
                     </div>
@@ -533,7 +512,8 @@ export default function SettingsPage({
                       onChange={(event) =>
                         handleLogoScaleChange(Number(event.target.value))
                       }
-                      className="mt-3 w-full accent-lime-400"
+                      className="mt-3 w-full"
+                      style={{ accentColor: "var(--accent)" }}
                     />
                   </div>
                   <LabeledToggle
@@ -547,8 +527,8 @@ export default function SettingsPage({
                     onChange={setLogoTextHidden}
                   />
                   {logoImage && (
-                    <div className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-xs text-slate-400">
-                      <div className="font-semibold text-slate-200">
+                    <div className="surface-card px-4 py-3 text-xs" style={{ color: "var(--text-muted)" }}>
+                      <div className="font-semibold" style={{ color: "var(--text-primary)" }}>
                         Position
                       </div>
                       <div>
@@ -563,12 +543,14 @@ export default function SettingsPage({
 
             <AccordionItem title="Match Info">
               <div className="space-y-4">
-                <label className="flex w-full flex-col gap-2 rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm">
-                  <span className="font-medium text-slate-300">Match ID</span>
+                <label className="surface-card flex w-full flex-col gap-2 px-4 py-3 text-sm">
+                  <span className="font-medium" style={{ color: "var(--text-secondary)" }}>
+                    Match ID
+                  </span>
                   <div className="flex items-center gap-2">
                     <input
                       type="text"
-                      className="flex-1 rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-lime-400 focus:outline-none focus:ring-1 focus:ring-lime-400"
+                      className="input-field flex-1"
                       value={matchIdInput}
                       onChange={(event) =>
                         onMatchIdInputChange(event.target.value)
@@ -577,7 +559,7 @@ export default function SettingsPage({
                     />
                     <button
                       type="button"
-                      className="rounded-full border border-slate-700 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-200 transition hover:border-lime-400 hover:text-lime-300 disabled:opacity-40"
+                      className="btn-pill"
                       onClick={onApplyMatchId}
                       disabled={matchLoading}
                       aria-label="Load match by ID"
@@ -585,46 +567,59 @@ export default function SettingsPage({
                       Load
                     </button>
                   </div>
-                  <div className="flex items-center justify-between text-[11px] uppercase tracking-wide text-slate-500">
-                    <span>Active: {activeMatchId || "—"}</span>
+                  <div
+                    className="flex items-center justify-between text-[11px] uppercase tracking-wide"
+                    style={{ color: "var(--text-muted)" }}
+                  >
+                    <span>Active: {activeMatchId || "\u2014"}</span>
                     <button
                       type="button"
-                      className="rounded-full border border-slate-700 px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-200 transition hover:border-lime-400 hover:text-lime-300 disabled:opacity-40"
+                      className="btn-pill"
                       onClick={onReloadMatch}
                       disabled={matchLoading || !activeMatchId}
                     >
                       Refresh
                     </button>
                   </div>
-                  <p
-                    className={`text-[11px] ${
-                      liveUpdatesConnected ? "text-lime-300" : "text-slate-500"
-                    }`}
-                  >
-                    Live updates:{" "}
-                    {liveUpdatesConnected ? "Connected" : "Reconnecting…"}
+                  <p className="flex items-center gap-1.5 text-[11px]">
+                    <span
+                      className={
+                        liveUpdatesConnected ? "status-dot status-dot-live" : "status-dot status-dot-offline"
+                      }
+                    />
+                    <span style={{ color: liveUpdatesConnected ? "var(--accent)" : "var(--text-muted)" }}>
+                      Live updates:{" "}
+                      {liveUpdatesConnected ? "Connected" : "Reconnecting\u2026"}
+                    </span>
                   </p>
                   {matchLoading && (
-                    <p className="text-[11px] text-lime-300">Loading match…</p>
+                    <p className="text-[11px]" style={{ color: "var(--accent)" }}>
+                      Loading match\u2026
+                    </p>
                   )}
                   {matchError && (
-                    <p className="text-[11px] text-red-400">{matchError}</p>
+                    <p className="text-[11px]" style={{ color: "var(--danger)" }}>
+                      {matchError}
+                    </p>
                   )}
                 </label>
 
-                <div className="flex w-full items-center justify-between rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm">
+                <div className="surface-card flex w-full items-center justify-between px-4 py-3 text-sm">
                   <div>
-                    <div className="font-medium text-slate-300">
+                    <div className="font-medium" style={{ color: "var(--text-secondary)" }}>
                       Active Game
                     </div>
-                    <div className="text-[11px] uppercase tracking-wide text-slate-500">
+                    <div
+                      className="text-[11px] uppercase tracking-wide"
+                      style={{ color: "var(--text-muted)" }}
+                    >
                       {games.length} total &middot; {activeGameStatusLabel}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
-                      className="rounded-full border border-slate-700 px-2 py-1 text-xs font-semibold uppercase tracking-wide text-slate-200 transition hover:border-lime-400 hover:text-lime-300 disabled:opacity-40"
+                      className="btn-pill"
                       onClick={() =>
                         onActiveGameIndexChange(activeGameIndex - 1)
                       }
@@ -632,12 +627,15 @@ export default function SettingsPage({
                     >
                       Prev
                     </button>
-                    <div className="w-16 text-center text-sm font-semibold text-slate-200">
+                    <div
+                      className="w-16 text-center text-sm font-semibold"
+                      style={{ color: "var(--text-primary)" }}
+                    >
                       Game {activeGameNumber}
                     </div>
                     <button
                       type="button"
-                      className="rounded-full border border-slate-700 px-2 py-1 text-xs font-semibold uppercase tracking-wide text-slate-200 transition hover:border-lime-400 hover:text-lime-300 disabled:opacity-40"
+                      className="btn-pill"
                       onClick={() =>
                         onActiveGameIndexChange(activeGameIndex + 1)
                       }
@@ -651,17 +649,17 @@ export default function SettingsPage({
             </AccordionItem>
           </Accordion>
         </div>
-        <div className="relative lg:sticky lg:top-10 lg:self-start lg:w-200">
+
+        {/* ── Right column: Preview + Quick Info ────────────────────────── */}
+        <div className="relative lg:sticky lg:top-10 lg:w-200 lg:self-start">
           <div className="mb-8 ml-2">
-            <h1 className="text-3xl mb-2 font-semibold text-lime-400">
-              Display Preview
-            </h1>
-            <p className="text-sm text-slate-400">
+            <h1 className="section-heading mb-2 text-3xl">Display Preview</h1>
+            <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
               Adjust colors and see the scoreboard update instantly.
             </p>
           </div>
           <div
-            className="rounded-lg p-6 shadow-lg mb-8 flex flex-col justify-center items-center"
+            className="mb-8 flex flex-col items-center justify-center rounded-lg p-6 shadow-lg"
             style={{
               backgroundColor: tickerBg,
               maxHeight: "calc(100vh - 8rem)",
@@ -688,131 +686,140 @@ export default function SettingsPage({
               onLogoPositionChange={setLogoPosition}
             />
           </div>
+
           <div className="mb-8 ml-2 space-y-4">
-            <h1 className="text-3xl font-semibold text-lime-400">Quick Info</h1>
-            <p className="text-sm text-slate-400">
+            <h1 className="section-heading text-3xl">Quick Info</h1>
+            <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
               A few tips for using the ticker effectively.
             </p>
           </div>
-          <div className="rounded-lg border border-slate-800  p-6">
-            <div className="space-y-3 text-sm text-slate-300">
-              <div>
-                <div className="text-xs font-semibold uppercase tracking-wide text-lime-300">
-                  Load Data First
+          <div className="surface-card p-6">
+            <div className="space-y-3 text-sm">
+              {[
+                {
+                  title: "Load Data First",
+                  body: (
+                    <>
+                      Enter the match ID and hit{" "}
+                      <span className="font-semibold" style={{ color: "var(--text-primary)" }}>Load</span>.
+                      Watch the status badge under Match Info for success or refresh
+                      if the API times out.
+                    </>
+                  ),
+                },
+                {
+                  title: "Apply Changes",
+                  body: (
+                    <>
+                      Theme, logo, or active game tweaks auto-preview here. Use the
+                      floating{" "}
+                      <span className="font-semibold" style={{ color: "var(--text-primary)" }}>Apply Update</span>{" "}
+                      button to push them to the ticker window.
+                    </>
+                  ),
+                },
+                {
+                  title: "Keep Ticker Open",
+                  body: (
+                    <>
+                      Click{" "}
+                      <span className="font-semibold" style={{ color: "var(--text-primary)" }}>Open Ticker</span>{" "}
+                      to launch a dedicated overlay tab. Capture that tab in OBS or
+                      your switcher for broadcast.
+                    </>
+                  ),
+                },
+                {
+                  title: "Tune Branding",
+                  body: "Use the Design sliders to match your colors and scale team logos up to 1000%. Badge controls live in the Logo accordion for overlays and positioning.",
+                },
+                {
+                  title: "Manual Overrides",
+                  body: "The Content Overrides accordion lets you rewrite any label or score. Leave fields blank or hit Clear Overrides to return to API values.",
+                },
+                {
+                  title: "Cross-Browser Sync",
+                  body: (
+                    <>
+                      Load the ticker URL below once in vMix (or any browser) and
+                      keep this Settings page open. Every time you hit Apply Update
+                      the overlay refreshes automatically in that remote view.
+                      {tickerShareUrl ? (
+                        <span
+                          className="mt-2 block break-all font-mono text-[11px]"
+                          style={{ color: "var(--text-muted)" }}
+                        >
+                          {tickerShareUrl}
+                        </span>
+                      ) : null}
+                    </>
+                  ),
+                },
+              ].map((tip) => (
+                <div key={tip.title}>
+                  <div className="label-accent">{tip.title}</div>
+                  <p style={{ color: "var(--text-muted)" }}>{tip.body}</p>
                 </div>
-                <p className="text-slate-400">
-                  Enter the match ID and hit{" "}
-                  <span className="font-semibold text-slate-200">Load</span>.
-                  Watch the status badge under Match Info for success or refresh
-                  if the API times out.
-                </p>
-              </div>
-              <div>
-                <div className="text-xs font-semibold uppercase tracking-wide text-lime-300">
-                  Apply Changes
-                </div>
-                <p className="text-slate-400">
-                  Theme, logo, or active game tweaks auto-preview here. Use the
-                  floating{" "}
-                  <span className="font-semibold text-slate-200">
-                    Apply Update
-                  </span>{" "}
-                  button to push them to the ticker window.
-                </p>
-              </div>
-              <div>
-                <div className="text-xs font-semibold uppercase tracking-wide text-lime-300">
-                  Keep Ticker Open
-                </div>
-                <p className="text-slate-400">
-                  Click{" "}
-                  <span className="font-semibold text-slate-200">
-                    Open Ticker
-                  </span>{" "}
-                  to launch a dedicated overlay tab. Capture that tab in OBS or
-                  your switcher for broadcast.
-                </p>
-              </div>
-              <div>
-                <div className="text-xs font-semibold uppercase tracking-wide text-lime-300">
-                  Tune Branding
-                </div>
-                <p className="text-slate-400">
-                  Use the Design sliders to match your colors and scale team
-                  logos up to 1000%. Badge controls live in the Logo accordion
-                  for overlays and positioning.
-                </p>
-              </div>
-              <div>
-                <div className="text-xs font-semibold uppercase tracking-wide text-lime-300">
-                  Manual Overrides
-                </div>
-                <p className="text-slate-400">
-                  The Content Overrides accordion lets you rewrite any label
-                  or score. Leave fields blank or hit Clear Overrides to return
-                  to API values.
-                </p>
-              </div>
-              <div>
-                <div className="text-xs font-semibold uppercase tracking-wide text-lime-300">
-                  Cross-Browser Sync
-                </div>
-                <p className="text-slate-400">
-                  Load the ticker url below once in vMix (or any browser) and
-                  keep this Settings page open. Every time you hit Apply Update
-                  the overlay refreshes automatically in that remote view.
-                </p>
-                {tickerShareUrl ? (
-                  <p className="mt-2 break-all text-[11px] text-slate-500">
-                    {tickerShareUrl}
-                  </p>
-                ) : null}
-              </div>
+              ))}
             </div>
           </div>
         </div>
       </div>
 
+      {/* ── Floating Action Buttons ────────────────────────────────────── */}
       <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
         <Motion.button
           type="button"
-          className="flex items-center gap-2 rounded-full bg-lime-400 px-5 py-3 text-sm font-semibold uppercase tracking-wide text-slate-900 shadow-lg shadow-lime-500/30 transition hover:bg-lime-300 disabled:cursor-not-allowed disabled:opacity-60"
+          className="btn-primary rounded-full px-5 py-3 text-sm font-semibold uppercase tracking-wide shadow-lg"
+          style={{ boxShadow: "0 4px 20px var(--accent-glow)" }}
           onClick={onApplyTickerUpdate}
           disabled={matchLoading || !matchInfo}
           {...hoverTap}
         >
-          <span className="text-base">⟳</span>
+          <span className="text-base">\u27F3</span>
           <span>Apply Update</span>
         </Motion.button>
 
         <Motion.button
           type="button"
-          className="flex items-center gap-2 rounded-full border border-lime-400 bg-slate-900/90 px-5 py-3 text-sm font-semibold uppercase tracking-wide text-lime-300 shadow-lg shadow-lime-500/20 transition hover:text-lime-200 disabled:cursor-not-allowed disabled:opacity-60"
+          className="flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold uppercase tracking-wide shadow-lg transition"
+          style={{
+            background: "var(--bg-overlay)",
+            border: "1px solid var(--accent)",
+            color: "var(--accent)",
+            boxShadow: "0 4px 20px rgba(0, 229, 160, 0.1)",
+          }}
           onClick={handleCopyTickerUrl}
           disabled={!tickerShareUrl}
           {...hoverTap}
         >
-          <span className="text-base">🔗</span>
+          <span className="text-base">\uD83D\uDD17</span>
           <span>{copyButtonLabel}</span>
         </Motion.button>
 
         {copyStatus === "error" ? (
-          <div className="text-right text-xs font-medium text-rose-300">
+          <div className="text-right text-xs font-medium" style={{ color: "var(--danger)" }}>
             Copy failed. Manually copy the link above.
           </div>
         ) : null}
 
         <Motion.div
           {...hoverTap}
-          className="rounded-full border border-lime-400 bg-slate-900/90 shadow-lg shadow-lime-500/20"
+          className="rounded-full shadow-lg"
+          style={{
+            background: "var(--bg-overlay)",
+            border: "1px solid var(--accent)",
+            boxShadow: "0 4px 20px rgba(0, 229, 160, 0.1)",
+          }}
         >
           <NavLink
             to={`/ticker${tickerShareSearch ?? ""}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold uppercase tracking-wide text-lime-300 hover:text-lime-200"
+            className="flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold uppercase tracking-wide"
+            style={{ color: "var(--accent)" }}
           >
-            <span className="text-base">🗔</span>
+            <span className="text-base">\uD83D\uDDD4</span>
             <span>Open Ticker</span>
           </NavLink>
         </Motion.div>

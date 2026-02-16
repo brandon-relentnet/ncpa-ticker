@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "motion/react";
 import Breadcrumb from "../components/Breadcrumb";
 import { fetchAppConfig, saveAppConfig } from "../utils/configService";
 
@@ -33,6 +34,11 @@ const FIELD_DEFS = [
     help: "Match ID used as the default when creating a new ticker.",
   },
 ];
+
+const fadeUp = {
+  initial: { opacity: 0, y: 16 },
+  animate: { opacity: 1, y: 0 },
+};
 
 export default function AdminPage() {
   const navigate = useNavigate();
@@ -100,81 +106,109 @@ export default function AdminPage() {
     setSuccess(null);
   };
 
-  const breadcrumbItems = [
-    { label: "Dashboard", to: "/" },
-    { label: "Admin" },
-  ];
-
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-950 text-slate-100">
-        <div className="text-lg text-slate-400">Loading configuration...</div>
+      <div className="page-shell flex min-h-screen items-center justify-center">
+        <div className="text-lg" style={{ color: "var(--text-muted)" }}>
+          Loading configuration...
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
+    <div className="page-shell">
       <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
-        {/* Breadcrumb */}
-        <div className="mb-6">
-          <Breadcrumb items={breadcrumbItems} />
-        </div>
+        <Breadcrumb current="Admin" />
 
         {/* Header */}
-        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <motion.div
+          className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+          {...fadeUp}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        >
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-white">
+            <h1 className="section-heading text-3xl">
               Admin Configuration
             </h1>
-            <p className="mt-1 text-sm text-slate-400">
+            <p className="mt-1.5 text-sm" style={{ color: "var(--text-secondary)" }}>
               Global settings for the NCPA ticker application.
               {lastSaved && (
-                <span className="ml-2 text-slate-500">
+                <span className="ml-2" style={{ color: "var(--text-muted)" }}>
                   Last saved: {new Date(lastSaved).toLocaleString()}
                 </span>
               )}
             </p>
           </div>
-          <button
+          <motion.button
             type="button"
             onClick={() => navigate("/")}
-            className="inline-flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-slate-700 hover:text-white"
+            className="btn-ghost"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.97 }}
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-4">
               <path fillRule="evenodd" d="M17 10a.75.75 0 0 1-.75.75H5.612l4.158 3.96a.75.75 0 1 1-1.04 1.08l-5.5-5.25a.75.75 0 0 1 0-1.08l5.5-5.25a.75.75 0 1 1 1.04 1.08L5.612 9.25H16.25A.75.75 0 0 1 17 10Z" clipRule="evenodd" />
             </svg>
             Dashboard
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
 
         {/* Alerts */}
         {error && (
-          <div className="mb-6 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          <motion.div
+            className="mb-6 rounded-lg px-4 py-3 text-sm"
+            style={{
+              background: "var(--danger-muted)",
+              border: "1px solid rgba(239, 68, 68, 0.3)",
+              color: "#fca5a5",
+            }}
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
             {error}
-          </div>
+          </motion.div>
         )}
         {success && (
-          <div className="mb-6 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
+          <motion.div
+            className="mb-6 rounded-lg px-4 py-3 text-sm"
+            style={{
+              background: "var(--accent-muted)",
+              border: "1px solid rgba(0, 229, 160, 0.3)",
+              color: "var(--accent)",
+            }}
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
             {success}
-            <span className="ml-2 text-emerald-500/60">
+            <span className="ml-2 opacity-60">
               Open tabs need a page refresh to pick up changes.
             </span>
-          </div>
+          </motion.div>
         )}
 
         {/* Form */}
         <form onSubmit={handleSave} className="space-y-6">
-          <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-6 shadow-xl">
-            <h2 className="mb-5 text-lg font-semibold text-slate-200">
+          <motion.div
+            className="surface-card p-6"
+            style={{ boxShadow: "0 4px 24px rgba(0, 0, 0, 0.3)" }}
+            {...fadeUp}
+            transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <h2 className="mb-5 text-lg font-semibold" style={{ color: "var(--text-primary)" }}>
               NCPA Tournament API
             </h2>
             <div className="space-y-5">
-              {FIELD_DEFS.map((field) => (
-                <div key={field.key}>
+              {FIELD_DEFS.map((field, i) => (
+                <motion.div
+                  key={field.key}
+                  {...fadeUp}
+                  transition={{ duration: 0.4, delay: 0.15 + i * 0.05, ease: [0.16, 1, 0.3, 1] }}
+                >
                   <label
                     htmlFor={`admin-${field.key}`}
-                    className="mb-1.5 block text-sm font-medium text-slate-300"
+                    className="mb-1.5 block text-sm font-medium"
+                    style={{ color: "var(--text-secondary)" }}
                   >
                     {field.label}
                   </label>
@@ -193,13 +227,16 @@ export default function AdminPage() {
                       placeholder={field.placeholder}
                       autoComplete="off"
                       spellCheck={false}
-                      className="block w-full rounded-lg border border-slate-700 bg-slate-800 px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-500 shadow-sm transition-colors focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      className="input-field w-full"
                     />
                     {field.type === "password" && (
                       <button
                         type="button"
                         onClick={() => setShowApiKey((prev) => !prev)}
-                        className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded p-1 text-slate-400 transition-colors hover:text-slate-200"
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded p-1 transition-colors"
+                        style={{ color: "var(--text-muted)" }}
+                        onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text-primary)")}
+                        onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}
                         title={showApiKey ? "Hide API key" : "Show API key"}
                       >
                         {showApiKey ? (
@@ -217,27 +254,37 @@ export default function AdminPage() {
                     )}
                   </div>
                   {field.help && (
-                    <p className="mt-1 text-xs text-slate-500">{field.help}</p>
+                    <p className="mt-1 text-xs" style={{ color: "var(--text-muted)" }}>
+                      {field.help}
+                    </p>
                   )}
-                </div>
+                </motion.div>
               ))}
             </div>
-          </div>
+          </motion.div>
 
           {/* Actions */}
-          <div className="flex items-center justify-end gap-3">
-            <button
+          <motion.div
+            className="flex items-center justify-end gap-3"
+            {...fadeUp}
+            transition={{ duration: 0.4, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <motion.button
               type="button"
               onClick={handleReset}
               disabled={saving}
-              className="rounded-lg border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm font-medium text-slate-300 transition-colors hover:bg-slate-700 hover:text-white disabled:opacity-50"
+              className="btn-ghost"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
             >
               Reset
-            </button>
-            <button
+            </motion.button>
+            <motion.button
               type="submit"
               disabled={saving}
-              className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition-colors hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-950 disabled:opacity-60"
+              className="btn-primary"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
             >
               {saving && (
                 <svg className="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -246,27 +293,36 @@ export default function AdminPage() {
                 </svg>
               )}
               {saving ? "Saving..." : "Save Configuration"}
-            </button>
-          </div>
+            </motion.button>
+          </motion.div>
         </form>
 
         {/* Info box */}
-        <div className="mt-8 rounded-xl border border-slate-800 bg-slate-900/40 p-5 text-sm text-slate-400">
-          <h3 className="mb-2 font-medium text-slate-300">How it works</h3>
-          <ul className="list-inside list-disc space-y-1">
+        <motion.div
+          className="surface-card mt-8 p-5 text-sm"
+          style={{ color: "var(--text-secondary)" }}
+          {...fadeUp}
+          transition={{ duration: 0.4, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <h3 className="mb-2 font-semibold" style={{ color: "var(--text-primary)" }}>
+            How it works
+          </h3>
+          <ul className="list-inside list-disc space-y-1" style={{ color: "var(--text-muted)" }}>
             <li>
               Configuration is stored server-side and loaded when the app starts.
             </li>
             <li>
-              Already-open tabs need a <strong className="text-slate-300">page refresh</strong> to
+              Already-open tabs need a{" "}
+              <strong style={{ color: "var(--text-secondary)" }}>page refresh</strong> to
               pick up changes.
             </li>
             <li>
-              Build-time environment variables (<code className="text-slate-300">VITE_*</code>) are
-              used as fallbacks when the server config is empty.
+              Build-time environment variables (
+              <code className="font-mono text-xs" style={{ color: "var(--text-secondary)" }}>VITE_*</code>
+              ) are used as fallbacks when the server config is empty.
             </li>
           </ul>
-        </div>
+        </motion.div>
       </div>
     </div>
   );
