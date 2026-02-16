@@ -858,6 +858,9 @@ export default function App() {
 
   useEffect(() => {
     if (!shareToken || !isOnSyncPage) return;
+    // Wait for Effect A to sync shareToken with the URL token before
+    // making any requests — avoids fetching/creating a stale ticker.
+    if (syncTokenFromUrl && syncTokenFromUrl !== shareToken) return;
 
     fetchSyncState(shareToken)
       .then((result) => {
@@ -898,6 +901,7 @@ export default function App() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   [
     shareToken,
+    syncTokenFromUrl,
     isOnSyncPage,
     activeMatchId,
     applySyncPayload,
@@ -910,6 +914,7 @@ export default function App() {
   useEffect(() => {
     if (!shareToken || !isOnSyncPage || typeof window === "undefined")
       return undefined;
+    if (syncTokenFromUrl && syncTokenFromUrl !== shareToken) return undefined;
 
     remoteSyncStateRef.current.lastUpdate = "";
 
@@ -954,6 +959,7 @@ export default function App() {
     };
   }, [
     shareToken,
+    syncTokenFromUrl,
     isOnSyncPage,
     applySyncPayload,
     releaseSyncSkip,
