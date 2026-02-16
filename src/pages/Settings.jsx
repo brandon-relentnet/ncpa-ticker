@@ -629,10 +629,10 @@ export default function SettingsPage({
 
               <AccordionItem title="Match Info" icon={<Trophy size={16} />}>
                 <div className="space-y-4">
-                  <label className="surface-card flex w-full flex-col gap-2 px-4 py-3 text-sm">
-                    <span className="font-medium" style={{ color: "var(--text-secondary)" }}>
+                  <div className="surface-card flex w-full flex-col gap-2 px-4 py-3 text-sm">
+                    <label className="font-medium" style={{ color: "var(--text-secondary)" }}>
                       Match ID
-                    </span>
+                    </label>
                     <div className="flex items-center gap-2">
                       <input
                         type="text"
@@ -692,7 +692,7 @@ export default function SettingsPage({
                         {matchError}
                       </p>
                     )}
-                  </label>
+                  </div>
 
                   <div className="surface-card flex w-full items-center justify-between px-4 py-3 text-sm">
                     <div>

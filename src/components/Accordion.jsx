@@ -71,6 +71,7 @@ export function AccordionItem({ title, icon, children, defaultOpen = false }) {
       <Motion.div
         id={id}
         aria-labelledby={`${id}-button`}
+        className="overflow-hidden"
         variants={{
           open: {
             height: "auto",

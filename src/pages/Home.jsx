@@ -401,7 +401,6 @@ export default function HomePage() {
                 return (
                   <motion.div
                     key={ticker.id}
-                    layout
                     initial={{ opacity: 0, y: 20, scale: 0.97 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.9 }}
@@ -576,7 +575,7 @@ export default function HomePage() {
                           key={action.label}
                           type="button"
                           onClick={action.onClick}
-                          className={`flex flex-1 items-center justify-center gap-1.5 px-2 py-2.5 text-xs font-medium transition-colors hover-bg-elevated ${action.accent ? "" : "hover-text-primary"}`}
+                          className={`flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap px-2 py-2.5 text-xs font-medium transition-colors hover-bg-elevated ${action.accent ? "" : "hover-text-primary"}`}
                           style={{
                             color: action.accent ? "var(--accent)" : "var(--text-secondary)",
                             borderLeft: actionIdx > 0 ? "1px solid var(--border-subtle)" : "none",
@@ -592,7 +591,7 @@ export default function HomePage() {
                         type="button"
                         onClick={() => handleDelete(ticker.id)}
                         disabled={isDeleting}
-                        className="hover-bg-danger flex flex-1 items-center justify-center gap-1.5 px-2 py-2.5 text-xs font-medium transition-colors disabled:opacity-50"
+                        className="hover-bg-danger flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap px-2 py-2.5 text-xs font-medium transition-colors disabled:opacity-50"
                         style={{
                           color: "var(--danger)",
                           borderLeft: "1px solid var(--border-subtle)",
