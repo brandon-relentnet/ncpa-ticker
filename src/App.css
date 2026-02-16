@@ -102,6 +102,28 @@ body {
   border-color: var(--border-default);
 }
 
+/* ── Interactive Hover / Focus Utilities ─────────────────────────── */
+.hover-lift:hover,
+.hover-lift:focus-visible {
+  border-color: var(--border-strong);
+  box-shadow: 0 0 30px rgba(0, 229, 160, 0.06);
+}
+
+.hover-bg-elevated:hover,
+.hover-bg-elevated:focus-visible {
+  background: var(--bg-elevated);
+}
+
+.hover-text-primary:hover,
+.hover-text-primary:focus-visible {
+  color: var(--text-primary);
+}
+
+.hover-bg-danger:hover,
+.hover-bg-danger:focus-visible {
+  background: var(--danger-muted);
+}
+
 /* ── Input Styling ───────────────────────────────────────────────── */
 .input-field {
   background: var(--bg-base);

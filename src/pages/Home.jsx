@@ -406,18 +406,7 @@ export default function HomePage() {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.9 }}
                     transition={{ duration: 0.4, delay: i * 0.06, ease: EASE_OUT_EXPO }}
-                    className="group surface-card relative flex flex-col overflow-hidden"
-                    style={{
-                      transition: "border-color 0.2s, box-shadow 0.3s",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = "var(--border-strong)";
-                      e.currentTarget.style.boxShadow = "0 0 30px rgba(0, 229, 160, 0.06)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = "var(--border-subtle)";
-                      e.currentTarget.style.boxShadow = "none";
-                    }}
+                    className="group surface-card hover-lift relative flex flex-col overflow-hidden"
                   >
                     {/* Mini Scoreboard preview */}
                     <div
@@ -580,25 +569,19 @@ export default function HomePage() {
                               <Copy size={14} />
                             ),
                           accent: copiedId === ticker.id,
+                          ariaLive: "polite",
                         },
                       ].map((action, actionIdx) => (
                         <button
                           key={action.label}
                           type="button"
                           onClick={action.onClick}
-                          className="flex flex-1 items-center justify-center gap-1.5 px-2 py-2.5 text-xs font-medium transition-colors"
+                          className={`flex flex-1 items-center justify-center gap-1.5 px-2 py-2.5 text-xs font-medium transition-colors hover-bg-elevated ${action.accent ? "" : "hover-text-primary"}`}
                           style={{
                             color: action.accent ? "var(--accent)" : "var(--text-secondary)",
                             borderLeft: actionIdx > 0 ? "1px solid var(--border-subtle)" : "none",
                           }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background = "var(--bg-elevated)";
-                            if (!action.accent) e.currentTarget.style.color = "var(--text-primary)";
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = "transparent";
-                            if (!action.accent) e.currentTarget.style.color = "var(--text-secondary)";
-                          }}
+                          aria-live={action.ariaLive}
                           title={action.label}
                         >
                           {action.icon}
@@ -609,16 +592,10 @@ export default function HomePage() {
                         type="button"
                         onClick={() => handleDelete(ticker.id)}
                         disabled={isDeleting}
-                        className="flex flex-1 items-center justify-center gap-1.5 px-2 py-2.5 text-xs font-medium transition-colors disabled:opacity-50"
+                        className="hover-bg-danger flex flex-1 items-center justify-center gap-1.5 px-2 py-2.5 text-xs font-medium transition-colors disabled:opacity-50"
                         style={{
                           color: "var(--danger)",
                           borderLeft: "1px solid var(--border-subtle)",
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = "var(--danger-muted)";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = "transparent";
                         }}
                         title="Delete ticker"
                       >

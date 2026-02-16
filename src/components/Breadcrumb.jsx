@@ -5,6 +5,7 @@ import { Home, ChevronRight } from "lucide-react";
 export default function Breadcrumb({ current }) {
   return (
     <motion.nav
+      aria-label="Breadcrumb"
       className="mb-6 flex items-center gap-2 text-sm"
       initial={{ opacity: 0, x: -12 }}
       animate={{ opacity: 1, x: 0 }}
@@ -12,10 +13,8 @@ export default function Breadcrumb({ current }) {
     >
       <Link
         to="/"
-        className="flex items-center gap-1.5 font-medium transition-colors"
+        className="hover-text-primary flex items-center gap-1.5 font-medium transition-colors"
         style={{ color: "var(--text-muted)" }}
-        onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text-primary)")}
-        onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}
       >
         <Home size={14} />
         Dashboard

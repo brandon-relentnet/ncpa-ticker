@@ -281,10 +281,9 @@ export default function AdminPage() {
                       <button
                         type="button"
                         onClick={() => setShowApiKey((prev) => !prev)}
-                        className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded p-1 transition-colors"
+                        className="hover-text-primary absolute right-2.5 top-1/2 -translate-y-1/2 rounded p-1 transition-colors"
                         style={{ color: "var(--text-muted)" }}
-                        onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text-primary)")}
-                        onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}
+                        aria-label={showApiKey ? "Hide API key" : "Show API key"}
                         title={showApiKey ? "Hide API key" : "Show API key"}
                       >
                         {showApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
