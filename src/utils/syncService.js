@@ -4,26 +4,29 @@ const defaultBaseUrl = import.meta.env.DEV
 
 const rawBaseUrl = import.meta.env.VITE_SYNC_SERVICE_URL ?? defaultBaseUrl;
 let BASE_URL = rawBaseUrl;
-try {
-  if (BASE_URL) {
+
+// Only validate with URL constructor if it looks like an absolute URL.
+// Relative paths (e.g. "/api/ticker-sync") are valid for fetch() and
+// don't need normalization.
+if (BASE_URL && /^https?:\/\//i.test(BASE_URL)) {
+  try {
     const asUrl = new URL(BASE_URL);
     BASE_URL = asUrl.toString().replace(/\/$/, "");
+  } catch (error) {
+    console.warn("Invalid VITE_SYNC_SERVICE_URL provided", error);
+    BASE_URL = defaultBaseUrl;
   }
-} catch (error) {
-  console.warn("Invalid VITE_SYNC_SERVICE_URL provided", error);
-  BASE_URL = "";
 }
+
+const ensureTrailingSlash = (url) =>
+  url.endsWith("/") ? url : `${url}/`;
 
 const buildSyncUrl = (syncId) => {
   if (!syncId) throw new Error("syncId is required");
   const encodedId = encodeURIComponent(syncId);
 
-  if (!BASE_URL) {
-    return `/api/ticker-sync/${encodedId}`;
-  }
-
   if (BASE_URL.startsWith("http")) {
-    const url = new URL(`${encodedId}`, `${BASE_URL}/`);
+    const url = new URL(encodedId, ensureTrailingSlash(BASE_URL));
     return url.toString();
   }
 
@@ -60,10 +63,7 @@ export const pushSyncState = async ({ syncId, payload, name }) => {
   return parseResponse(response);
 };
 
-const buildListUrl = () => {
-  if (!BASE_URL) return "/api/ticker-sync";
-  return BASE_URL;
-};
+const buildListUrl = () => ensureTrailingSlash(BASE_URL);
 
 export const listTickers = async () => {
   const response = await fetch(buildListUrl(), {
